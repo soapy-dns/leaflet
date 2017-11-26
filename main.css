@@ -1,0 +1,15 @@
+html, body {
+    width: 100%;
+    height: 100%;
+    font-size: 100%;
+}
+
+body {
+    font-family: 'Open Sans', helvetica, sans-serif;
+    font-size: 14px;
+    color: #4A4A4A;
+    line-height: 1.5;
+    font-weight: 300;
+}
+
+#mapid { min-height: 100vh; }
