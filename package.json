@@ -1,0 +1,29 @@
+{
+  "name": "leaflet-test",
+  "version": "1.0.0",
+  "description": "test leaflet app",
+  "main": "app/index.html",
+  "author": "Neil",
+  "license": "ISC",
+  "scripts": {
+    "dev": "webpack-dev-server --progress --history-api-fallback --hot --inline --port 9001 --open"
+  },
+  "dependencies": {
+    "esri-leaflet": "^2.1.1",
+    "leaflet": "^1.2.0"
+  },
+  "devDependencies": {
+    "babel-core": "^6.26.0",
+    "babel-loader": "^7.1.2",
+    "babel-plugin-transform-object-assign": "^6.22.0",
+    "babel-polyfill": "^6.26.0",
+    "babel-preset-env": "^1.6.1",
+    "babel-preset-es2015": "^6.24.1",
+    "copy-webpack-plugin": "^4.2.3",
+    "favicons-webpack-plugin": "0.0.7",
+    "html-webpack-plugin": "^2.30.1",
+    "webpack": "^3.9.1",
+    "webpack-config": "^7.5.0",
+    "webpack-dev-server": "^2.9.5"
+  }
+}
