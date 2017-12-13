@@ -7,6 +7,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = new Config().merge({
     entry: {
+        // app: './app/main.js'
         app: './app/index.js'
     },
     output: {
@@ -21,7 +22,7 @@ module.exports = new Config().merge({
             loader: 'babel-loader',
             options: {
                 // plugins: ['lodash'],
-                presets: ['es2015']
+                presets: ['react', 'es2015']
             }
         }, {
             test: /\.(png|jpg|jpeg|gif|svg)$/,
@@ -36,9 +37,9 @@ module.exports = new Config().merge({
             template: './app/index.html'
         }),
         new CopyWebpackPlugin([
-            { from: './app/assets', to: 'assets' }
+            {from: './app/assets', to: 'assets'}
             // { from: './server.js' }
-        ]),
+        ])
         // new FaviconsWebpackPlugin('./app/assets/images/favicon.ico')
     ]
 });
