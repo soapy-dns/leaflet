@@ -12,4 +12,15 @@ body {
     font-weight: 300;
 }
 
+#loading-container {
+    font-family: sans-serif;
+    position: absolute;
+    color: white;
+    letter-spacing: 0.8rem;
+    text-align: center;
+    top: 40%;
+    width: 100%;
+    text-transform: uppercase;
+}
+
 #mapid { min-height: 100vh; }
