@@ -24,3 +24,14 @@ body {
 }
 
 #mapid { min-height: 100vh; }
+
+#search-bar {
+    position: absolute;
+    top: 50px;
+    left: 50px;
+    z-index: 1000;
+}
+
+.search-input {
+    background-color: olivedrab;
+}

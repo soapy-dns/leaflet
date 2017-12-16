@@ -5,7 +5,8 @@ import NotFound from '../views/404';
 import Splash from '../views/splash';
 // import config from './index';
 import Main from '../components/main';
-import Map from '../components/map/index';
+import Map from '../components/map';
+// import Map from '../components/mapbox'
 
 class Routes extends Component {
 
