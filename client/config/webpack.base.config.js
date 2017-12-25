@@ -33,12 +33,14 @@ module.exports = new Config().merge({
         }]
     },
     plugins: [
+        // creates an index.html file as specified in output.path.  This example uses template as the basis
         new HtmlWebpackPlugin({
             template: './app/index.html'
         }),
+        // copies files to output root
         new CopyWebpackPlugin([
-            {from: './app/assets', to: 'assets'}
-            // { from: './server.js' }
+            {from: './app/assets', to: 'assets'},
+            // { from: './server/index.js' }
         ])
         // new FaviconsWebpackPlugin('./app/assets/images/favicon.ico')
     ]
