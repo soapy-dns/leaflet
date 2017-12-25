@@ -1,24 +1,35 @@
 import React, {Component} from 'react'
-import L, { Control, Marker, Map, GeoJSON } from 'leaflet'
+import L, {Control, Marker, Map, GeoJSON} from 'leaflet'
 import {BasemapLayer, TiledMapLayer} from 'esri-leaflet'
+const utmObj = require('utm-latlng');
+const utm = new utmObj(); //Default Ellipsoid is 'WGS 84'
 
 import Search from './search'
 import Location from './location'
 import track from '../data/arethusa'
 import Toolbar from './toolbar'
+import LoadTrackModal from './load-track-modal'
+// import Sidebar from './sidebar'
+import Locate from './locate-modal'
 
 class MyMap extends Component {
     constructor(props) {
         super(props);
         // this.onLocationError = this.onLocationError.bind(this)
         // this.onLocationFound = this.onLocationFound.bind(this)
+        this.onCancelAction = this.onCancelAction.bind(this)
+        this.onOkAction = this.onOkAction.bind(this)
+        this.onLocate = this.onLocate.bind(this)
+
+
         this.state = {
             locate: false,
-            // map: null
+            modal: null
         };
     }
 
     componentDidMount() {
+
         const baseLayer = new BasemapLayer('Gray')
 
         // topo layer
@@ -31,23 +42,8 @@ class MyMap extends Component {
             url: 'http://maps.six.nsw.gov.au/arcgis/rest/services/public/NSW_Imagery/MapServer'
         })
 
-        const myStyle = {
-            "color": "#ff7800",
-            "weight": 5,
-            "opacity": 0.65
-        }
-        const myLines = [{
-            "type": "LineString",
-            "coordinates": [[ -209.59236, -33.75999],
-                [-209.59238, -33.76988],
-                [-209.59240, -33.75989]]
-        }]
-        // console.log('myTrack', track.features[0].geometry)
         const myTrack = track.features[0].geometry
-
-        // const tracksLayer = new GeoJSON(myLines)
         const tracksLayer = new GeoJSON([myTrack])
-
 
         const baseMaps = {
             "Base": baseLayer,
@@ -58,19 +54,18 @@ class MyMap extends Component {
             "Tracks": tracksLayer
         }
 
-        const map = new Map('mapid', {
-            // center: [-33.75999, -209.59236],
-            center:    [-33.668759325519204, 150.34924333915114 ],
-            zoom: 14,
-            maxZoom: 16,
-            layers: [baseLayer, topoLayer],
-            // zoomControl: false
-        })
-        map.zoomControl.setPosition('bottomright');
 
-        // L.control.zoom({position: "bottomRight"}).addTo(map)
+        // const map = new Map('mapid', {
+        //     // center: [-33.75999, -209.59236],
+        //     center: [-33.668759325519204, 150.34924333915114],
+        //     zoom: 14,
+        //     maxZoom: 16,
+        //     layers: [baseLayer, topoLayer],
+        // })
+        // map.zoomControl.setPosition('bottomright');
 
         // location position
+        // -----------------
         // map.locate({setView: true, maxZoom: 16})
         // map.on('locationerror', onLocationError)
         // map.on('locationfound', onLocationFound);
@@ -88,29 +83,47 @@ class MyMap extends Component {
         // }
 
         // add control button for layers
-        const layersControl = new Control.Layers(baseMaps, overlayMaps)
-        layersControl.addTo(map)
-
-        // add scale
-        const scale = new Control.Scale()
-        scale.addTo(map)
+        // const layersControl = new Control.Layers(baseMaps, overlayMaps)
+        // layersControl.addTo(map)
+        //
+        // // add scale
+        // const scale = new Control.Scale()
+        // scale.addTo(map)
 
     }
 
+    onOkAction() {
+        console.log('ok action')
+    }
+
+    onCancelAction() {
+        console.log('cancelAction')
+    }
+
+    onLocate() {
+        console.log('locate')
+        this.setState({ modal: 'locate' })
+    }
 
     render() {
-        return (<div id="mapwrap">
-            <Search />
-            <Toolbar />
-            <div id="mapid"></div>
-        </div>)
+        // todo - I think the toolbar should be another level up eg within main
+        console.log('locate?', this.state.modal)
+        console.log('this.onCancelAction', this.onCancelAction)
+        return (
+            <div id="mapwrap">
+                {(this.state.modal === 'locate') ? (
+                    <LoadTrackModal cancelAction={this.onCancelAction} okAction={this.onOkAction} />
+                ) : null}
 
+                <Locate cancelAction={this.onCancelAction} okAction={this.onOkAction} />
+
+                <Toolbar locate={this.onLocate} />
+                <div id="mapid"></div>
+
+
+            </div>)
     }
 }
 
 export default MyMap;
-
-// return (<div id="mapid">
-//         <Search />
-//     </div>)
 
