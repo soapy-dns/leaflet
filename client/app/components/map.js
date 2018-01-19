@@ -1,24 +1,62 @@
 import React, {Component} from 'react'
 import L, {Control, Marker, Map, GeoJSON} from 'leaflet'
 import {BasemapLayer, TiledMapLayer} from 'esri-leaflet'
-// const utmObj = require('utm-latlng');
-// const utm = new utmObj(); //Default Ellipsoid is 'WGS 84'
 var utm = require('utm')
 
 import Search from './search'
 import Location from './location'
-import track from '../data/arethusa'
 import Toolbar from './toolbar'
 import Locate from './locate-modal'
 import AwaitingFunctionality from './awaiting-functionality-modal'
 import LoadTrackModal from './load-track-modal'
+import Icon from './icon'
 
-const tracksLayer = new GeoJSON()
+var geojsonMarkerOptions = {
+    radius: 8,
+    fillColor: "#ff7800",
+    color: "#000",
+    weight: 1,
+    opacity: 1,
+    fillOpacity: 0.8
+}
+
+//https://gis.stackexchange.com/questions/240738/control-custom-panes-for-leaflet-geojson-svg-icons
+
+/*
+custom icon stuff
+ */
+//https://gist.github.com/clhenrick/6791bb9040a174cd93573f85028e97af
+var CustomIcon = L.Icon.extend({
+    options: {
+        iconSize:     [40, 40],
+        shadowSize:   [50, 64],
+        iconAnchor:   [22, 94],
+        shadowAnchor: [4, 62],
+        popupAnchor:  [-3, -76]
+    }
+})
+
+var myIcon = L.icon({
+    iconUrl: 'assets/svg/start.svg',
+    // iconUrl: 'assets/svg/rect.svg',
+    iconSize: [32, 32],
+    iconAnchor: [0, 16],
+    popupAnchor: [0, -28]
+})
+const tracksLayer = new GeoJSON(null, {
+    pointToLayer: function (feature, latlng) {
+        console.log('feature', feature.properties.sym)
+        console.log('indexof', feature.properties.sym.indexOf('Flag'))
+        if (feature.properties.sym.indexOf('Flag') !== -1) console.log('flag')
+        return L.marker(latlng, {icon: myIcon, pane: 'markerPane'})
+    }
+})
+
 let map
 
 class MyMap extends Component {
     constructor(props) {
-        super(props);
+        super(props)
         // this.onLocationError = this.onLocationError.bind(this)
         // this.onLocationFound = this.onLocationFound.bind(this)
         this.onCancelAction = this.onCancelAction.bind(this)
@@ -33,7 +71,7 @@ class MyMap extends Component {
         this.state = {
             locate: false,
             modal: null
-        };
+        }
     }
 
     componentDidMount() {
@@ -68,8 +106,10 @@ class MyMap extends Component {
             zoom: 14,
             maxZoom: 16,
             layers: [baseLayer, topoLayer]
+            // layers: [baseLayer]
+
         })
-        map.zoomControl.setPosition('bottomright');
+        map.zoomControl.setPosition('bottomright')
 
         // add control button for layers
         const layersControl = new Control.Layers(baseMaps, overlayMaps)
@@ -93,7 +133,7 @@ class MyMap extends Component {
      */
     onLocate(locateData) {
         const { latitude, longitude } = utm.toLatLon(locateData.easting, locateData.northing, locateData.zone, undefined, false )
-        map.panTo(new L.LatLng(latitude, longitude));
+        map.panTo(new L.LatLng(latitude, longitude))
         this.setState({ modal: null })
     }
 
@@ -115,14 +155,17 @@ class MyMap extends Component {
     }
 
     onOpenTrack(fileText) {
-        const myTrack = JSON.parse(fileText).features[0].geometry
+
+        // pointToLayer: function (feature, latlng) {
+        //     return L.circleMarker(latlng, geojsonMarkerOptions)
+        // }
+        const myTrack = JSON.parse(fileText)  //.features[0].geometry
         tracksLayer.addData(myTrack)
 
         // set bounds
-        map.fitBounds(tracksLayer.getBounds());
+        map.fitBounds(tracksLayer.getBounds())
 
         // todo ensure track layer is turned on
-
 
         // turn modal off
         this.setState({ modal: null })
@@ -131,7 +174,7 @@ class MyMap extends Component {
     centreOnCurrentLocation() {
         map.locate({ setView: true })
         map.on('locationerror', onLocationError)
-        map.on('locationfound', onLocationFound);
+        map.on('locationfound', onLocationFound)
 
         function onLocationError(e) {
             alert(e.message)
@@ -139,7 +182,7 @@ class MyMap extends Component {
 
         function onLocationFound(e)  {
             console.log('onLocation found', e)
-            // var radius = e.accuracy / 2;
+            // var radius = e.accuracy / 2
             // console.log(`you are within ${radius} meters from this point`)
 
             // L.circle(e.latlng, radius).addTo(map).bindPopup("You are located within this circle").openPopup()
@@ -148,16 +191,16 @@ class MyMap extends Component {
 
     addWaypoint() {
         // change cursor to crosshairs
-        L.DomUtil.addClass(map._container,'leaflet-crosshair');
+        L.DomUtil.addClass(map._container,'leaflet-crosshair')
 
         const marker = L.marker()
 
         // create function for map click after addWaypoint selected
         function onMapClick(e) {
             marker.setLatLng(e.latlng).addTo(tracksLayer)
-            L.DomUtil.removeClass(map._container,'leaflet-crosshair');
+            L.DomUtil.removeClass(map._container,'leaflet-crosshair')
         }
-        map.on('click', onMapClick);
+        map.on('click', onMapClick)
     }
 
     render() {
@@ -189,5 +232,5 @@ class MyMap extends Component {
     }
 }
 
-export default MyMap;
+export default MyMap
 
