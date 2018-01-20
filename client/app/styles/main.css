@@ -126,3 +126,12 @@ body {
 
 }
 /* layer end*/
+
+/* errors */
+.error {
+    color: red
+}
+
+.ui.menu {
+    border: 0px
+}

@@ -24,7 +24,12 @@ class Toolbar extends Component {
 
     render() {
         const { activeItem } = this.state
-        const { locate } = this.props
+        const { locate,
+            awaitingFunctionality,
+            openTrack,
+            centreOnCurrentLocation,
+            addWaypoint
+        } = this.props
 
         return (
             <div id="toolbar" className={this.state.visible ? "open" : null}>
@@ -32,35 +37,35 @@ class Toolbar extends Component {
                     <span>Menu</span>
                 </button>
                 <div id="menu">
-                    <h2>Controls</h2>
-                    <Menu vertical>
-                        <Menu.Item name='inbox' active={activeItem === 'inbox'} onClick={locate}>
-                            <Label color='teal'>1</Label>
+                    <Menu vertical borderless fluid>
+                        <Menu.Item onClick={centreOnCurrentLocation}>
+                            Centre on current location
+                        </Menu.Item>
+
+                        <Menu.Item onClick={locate}>
                             Locate
                         </Menu.Item>
 
-                        <Menu.Item name='spam' active={activeItem === 'spam'} onClick={this.toggleVisibility}>
-                            <Label>51</Label>
-                            Spam
+                        <Menu.Item onClick={openTrack}>
+                            Open track
                         </Menu.Item>
 
-                        <Menu.Item name='updates' active={activeItem === 'updates'} onClick={this.toggleVisibility}>
-                            <Label>1</Label>
-                            Updates
+                        <Menu.Item onClick={awaitingFunctionality}>
+                            Choose map source
                         </Menu.Item>
+
+                        <Menu.Item onClick={awaitingFunctionality}>
+                            Select
+                        </Menu.Item>
+
+                        <Menu.Item onClick={addWaypoint}>
+                            Add waypoint
+                        </Menu.Item>
+
                         <Menu.Item>
-                            <Input icon='search' placeholder='Search mail...' />
+                            <Input icon='search' placeholder='Search for a track...' />
                         </Menu.Item>
                     </Menu>
-                    <ul>
-                        <li>Open track</li>
-                        <li>Save as GPX</li>
-                        <li>Save as KML</li>
-                        <li>Draw track</li>
-                        <li>Edit track</li>
-                        <li>Show track details</li>
-                        <li>Choose map source</li>
-                    </ul>
                 </div>
             </div>
         )
@@ -69,6 +74,8 @@ class Toolbar extends Component {
 
 Toolbar.propTypes = {
     locate: PropTypes.func,
+    awaitingFunctionality: PropTypes.func,
+    openTrack: PropTypes.func,
     okAction: PropTypes.func,
     cancelAction: PropTypes.func
 };

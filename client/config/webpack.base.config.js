@@ -25,6 +25,7 @@ module.exports = new Config().merge({
                 presets: ['react', 'es2015']
             }
         }, {
+            // test: /\.(png|jpg|jpeg|gif)$/,
             test: /\.(png|jpg|jpeg|gif|svg)$/,
             loader: 'file-loader?limit=8192&name=assets/[name].[ext]?[hash]'
         }, {

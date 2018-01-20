@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg">
+    <symbol id="icon-start" viewBox="0 0 128 128">
+        <g>
+            <ellipse ry="19" rx="19" id="svg_1" cy="159" cx="290" stroke-width="1.5" stroke="#000" fill="#fff"/>
+            <text stroke="#000" transform="matrix(2.125,0,0,1.4203636230988934,-344.8125,-57.710543582135955) " xml:space="preserve" text-anchor="start" font-family="Helvetica, Arial, sans-serif" font-size="24" id="svg_2" y="161" x="290.5" stroke-width="0" fill="#000000">S</text>
+            <line stroke-linecap="null" stroke-linejoin="null" id="svg_3" y2="208" x2="290" y1="181" x1="290" fill-opacity="null" stroke-opacity="null" stroke="#000" fill="none"/>
+        </g>
+    </symbol>
+</svg>
