@@ -28,6 +28,7 @@ class Toolbar extends Component {
             awaitingFunctionality,
             openTrack,
             centreOnCurrentLocation,
+            drawLine,
             addWaypoint,
             selectATrack
         } = this.props
@@ -55,8 +56,8 @@ class Toolbar extends Component {
                             Choose map source
                         </Menu.Item>
 
-                        <Menu.Item onClick={awaitingFunctionality}>
-                            Select
+                        <Menu.Item onClick={drawLine}>
+                            Draw Line
                         </Menu.Item>
 
                         <Menu.Item onClick={addWaypoint}>
@@ -83,7 +84,9 @@ Toolbar.propTypes = {
     openTrack: PropTypes.func,
     okAction: PropTypes.func,
     cancelAction: PropTypes.func,
-    selectATrack: PropTypes.func
+    selectATrack: PropTypes.func,
+    addWaypoint: PropTypes.func,
+    drawLine: PropTypes.func
 };
 
 export default Toolbar;

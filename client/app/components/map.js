@@ -90,6 +90,7 @@ class MyMap extends Component {
         this.centreOnCurrentLocation = this.centreOnCurrentLocation.bind(this)
         this.addWaypoint = this.addWaypoint.bind(this)
         this.selectATrack = this.selectATrack.bind(this)
+        this.drawLine = this.drawLine.bind(this)
 
         this.state = {
             locate: false,
@@ -227,6 +228,78 @@ class MyMap extends Component {
             // L.circle(e.latlng, radius).addTo(map).bindPopup("You are located within this circle").openPopup()
         }
     }
+
+    drawLine() {
+        console.log('draw line')
+        // change cursor to crosshairs
+        L.DomUtil.addClass(map._container,'leaflet-crosshair')
+        // const currentFeatures = currentTrackLayerGroup.toGeoJSON()
+
+        // marker definition options
+        var geojsonMarkerOptions = {
+            radius: 5,
+            fillColor: "#FFF",
+            color: "#F00",
+            weight: 2,
+            opacity: 1,
+            fillOpacity: 0.5
+        };
+        function onMapClick(e) {
+            const currentFeatures = currentTrackLayerGroup.toGeoJSON()
+            const features = Object.assign({}, currentFeatures)
+
+            // set up waypoint geojson
+            const waypointFeature = {
+                "type": "Feature",
+                "properties": {
+                    "name": "",
+                    "time": ""
+                },
+                "geometry": {
+                    "type": "Point",
+                    "coordinates": [
+                        e.latlng.lng,
+                        e.latlng.lat,
+                        null
+                    ]
+                }
+            }
+            console.log('add new point', e.latlng.lat, e.latlng.lng)
+
+            features.features.push(waypointFeature)
+            // console.log('new fetures', features)
+            // console.log('len', currentTrackLayerGroup.getLayers().length)
+            currentTrackLayerGroup.clearLayers()
+            console.log('new features', features)
+            // console.log('len2', currentTrackLayerGroup.getLayers().length)
+
+
+            // create temp waypoint
+            const track = L.geoJSON(features, {
+                // each point will be converted to a marker with the defined options
+                pointToLayer: function (feature, latlng) {
+                    // console.log('lat', e.latlng.lat)
+                    // console.log('lat in feature', feature.geometry.coordinates[0], feature.geometry.coordinates[1])
+                    // console.log('geometry', feature.geometry)
+                    console.log('add marker!! lat long', feature.geometry.coordinates[1], feature.geometry.coordinates[0])
+                    return L.circleMarker([feature.geometry.coordinates[1], feature.geometry.coordinates[0]], geojsonMarkerOptions);
+                }
+            })
+
+            // add to group
+            currentTrackLayerGroup.addLayer(track)
+
+            // const layers = currentTrackLayerGroup.getLayers();
+
+            // console.log('currentLayer2', currentTrackLayerGroup.toGeoJSON())
+
+
+            // L.DomUtil.removeClass(map._container,'leaflet-crosshair')
+            // map.off('click', onMapClick)
+
+        }
+        map.on('click', onMapClick)
+    }
 /*
 GeoJson extends FeatureGroup, which extends LayerGroup, so
 we can add extra GeoJson Layers to the layer group
@@ -272,7 +345,12 @@ we can add extra GeoJson Layers to the layer group
             const waypoint = L.geoJSON(waypointFeature, {
                 // each point will be converted to a marker with the defined options
                 pointToLayer: function (feature, latlng) {
-                    return L.circleMarker(e.latlng, geojsonMarkerOptions);
+                    // return L.circleMarker(e.latlng, geojsonMarkerOptions);
+                    return L.marker(e.latlng);
+                },
+                onEachFeature: function(feature, latlng) {
+                        console.log('open modal')
+                        // todo - allow a popup to be set to add content / change the marker
                 }
             })
 
@@ -331,6 +409,7 @@ we can add extra GeoJson Layers to the layer group
                     awaitingFunctionality={this.showAwaitingFunctionalityModal}
                     openTrack={this.showOpenTrackModal}
                     centreOnCurrentLocation={this.centreOnCurrentLocation}
+                    drawLine={this.drawLine}
                     addWaypoint={this.addWaypoint}
                     selectATrack={this.selectATrack}
 
