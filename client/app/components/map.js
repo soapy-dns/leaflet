@@ -10,6 +10,7 @@ import Locate from './locate-modal'
 import AwaitingFunctionality from './awaiting-functionality-modal'
 import LoadTrackModal from './load-track-modal'
 import Icon from './icon'
+// import _ from 'lodash'
 
 var geojsonMarkerOptions = {
     radius: 8,
@@ -23,16 +24,16 @@ var geojsonMarkerOptions = {
 //https://gis.stackexchange.com/questions/240738/control-custom-panes-for-leaflet-geojson-svg-icons
 
 /*
-custom icon stuff
+ custom icon stuff
  */
 //https://gist.github.com/clhenrick/6791bb9040a174cd93573f85028e97af
 var CustomIcon = L.Icon.extend({
     options: {
-        iconSize:     [40, 40],
-        shadowSize:   [50, 64],
-        iconAnchor:   [22, 94],
+        iconSize: [40, 40],
+        shadowSize: [50, 64],
+        iconAnchor: [22, 94],
         shadowAnchor: [4, 62],
-        popupAnchor:  [-3, -76]
+        popupAnchor: [-3, -76]
     }
 })
 
@@ -75,6 +76,21 @@ let overlayLayers
 let layersControl
 let currentTrack
 let currentTrackLayerGroup
+
+const _getInitialLineFeature = (latlng) => {
+    console.log('_getInitialLineFeature')
+    return {
+        "type": "Feature",
+        "properties": {
+            "name": "",
+            "time": ""
+        },
+        "geometry": {
+            "type": "LineString",
+            "coordinates": []
+        }
+    }
+}
 
 class MyMap extends Component {
     constructor(props) {
@@ -144,41 +160,43 @@ class MyMap extends Component {
         scale.addTo(map)
 
         //add track layer to map
-        currentTrackLayerGroup = new GeoJSON([initialTrack], {style: function (feature) {
-            return {color: line.properties.color || 'red'};
-        }})
+        currentTrackLayerGroup = new GeoJSON([initialTrack], {
+            style: function (feature) {
+                return {color: line.properties.color || 'red'};
+            }
+        })
         currentTrackLayerGroup.addTo(map)
     }
 
     onCancelAction() {
         console.log('cancelAction')
-        this.setState({ modal: null })
+        this.setState({modal: null})
     }
 
     /*
-    convert form data to lat / long and move the map to that point (and turn off the modal)
+     convert form data to lat / long and move the map to that point (and turn off the modal)
      */
     onLocate(locateData) {
-        const { latitude, longitude } = utm.toLatLon(locateData.easting, locateData.northing, locateData.zone, undefined, false )
+        const {latitude, longitude} = utm.toLatLon(locateData.easting, locateData.northing, locateData.zone, undefined, false)
         map.panTo(new L.LatLng(latitude, longitude))
-        this.setState({ modal: null })
+        this.setState({modal: null})
     }
 
     showLocateModal(e) {
         console.log('showLocateModal', e)
-        this.setState({ modal: 'locate' })
+        this.setState({modal: 'locate'})
     }
 
     showAwaitingFunctionalityModal() {
-        this.setState({ modal: 'awaitingFunctionality'})
+        this.setState({modal: 'awaitingFunctionality'})
     }
 
     /*
-    show open track modal
+     show open track modal
      */
     showOpenTrackModal() {
         console.log('showOpenTrack')
-        this.setState({ modal: 'openTrack'})
+        this.setState({modal: 'openTrack'})
     }
 
     onOpenTrack(fileText, colour) {
@@ -191,9 +209,11 @@ class MyMap extends Component {
         // get array of all the fixtures, and add to the layer group
 
         // create new geojson layer for this track
-        const newtracksLayer = new GeoJSON([track], {style: function (feature) {
-            return {color: line.properties.color || 'red'};
-        }})
+        const newtracksLayer = new GeoJSON([track], {
+            style: function (feature) {
+                return {color: line.properties.color || 'red'};
+            }
+        })
 
         // add to map
         newtracksLayer.addTo(map)
@@ -208,11 +228,11 @@ class MyMap extends Component {
         map.fitBounds(newtracksLayer.getBounds())
 
         // turn modal off
-        this.setState({ modal: null })
+        this.setState({modal: null})
     }
 
     centreOnCurrentLocation() {
-        map.locate({ setView: true })
+        map.locate({setView: true})
         map.on('locationerror', onLocationError)
         map.on('locationfound', onLocationFound)
 
@@ -220,7 +240,7 @@ class MyMap extends Component {
             alert(e.message)
         }
 
-        function onLocationFound(e)  {
+        function onLocationFound(e) {
             console.log('onLocation found', e)
             // var radius = e.accuracy / 2
             // console.log(`you are within ${radius} meters from this point`)
@@ -232,7 +252,7 @@ class MyMap extends Component {
     drawLine() {
         console.log('draw line')
         // change cursor to crosshairs
-        L.DomUtil.addClass(map._container,'leaflet-crosshair')
+        L.DomUtil.addClass(map._container, 'leaflet-crosshair')
         // const currentFeatures = currentTrackLayerGroup.toGeoJSON()
 
         // marker definition options
@@ -244,9 +264,14 @@ class MyMap extends Component {
             opacity: 1,
             fillOpacity: 0.5
         };
+
         function onMapClick(e) {
-            const currentFeatures = currentTrackLayerGroup.toGeoJSON()
-            const features = Object.assign({}, currentFeatures)
+            const currentGeoJson = currentTrackLayerGroup.toGeoJSON()
+            console.log('currentGeoJson', currentGeoJson)
+            const pointFeatures = currentGeoJson.features.filter(it => it.geometry.type === 'Point')
+            let lineFeature = currentGeoJson.features.find(it => it.geometry.type === 'LineString')
+            console.log('lineFeature', lineFeature)
+            if (!lineFeature) lineFeature = _getInitialLineFeature(e.latlng)
 
             // set up waypoint geojson
             const waypointFeature = {
@@ -266,22 +291,22 @@ class MyMap extends Component {
             }
             console.log('add new point', e.latlng.lat, e.latlng.lng)
 
-            features.features.push(waypointFeature)
-            // console.log('new fetures', features)
-            // console.log('len', currentTrackLayerGroup.getLayers().length)
+            pointFeatures.push(waypointFeature)
+            console.log('lineFeature', lineFeature)
+            lineFeature.geometry.coordinates.push([e.latlng.lng, e.latlng.lat])
+            const features = []
+            features.push(pointFeatures)
+            features.push(lineFeature)
+
+
             currentTrackLayerGroup.clearLayers()
             console.log('new features', features)
-            // console.log('len2', currentTrackLayerGroup.getLayers().length)
-
 
             // create temp waypoint
             const track = L.geoJSON(features, {
                 // each point will be converted to a marker with the defined options
                 pointToLayer: function (feature, latlng) {
-                    // console.log('lat', e.latlng.lat)
-                    // console.log('lat in feature', feature.geometry.coordinates[0], feature.geometry.coordinates[1])
-                    // console.log('geometry', feature.geometry)
-                    console.log('add marker!! lat long', feature.geometry.coordinates[1], feature.geometry.coordinates[0])
+                    // console.log('add marker!! lat long', feature.geometry.coordinates[1], feature.geometry.coordinates[0])
                     return L.circleMarker([feature.geometry.coordinates[1], feature.geometry.coordinates[0]], geojsonMarkerOptions);
                 }
             })
@@ -298,15 +323,17 @@ class MyMap extends Component {
             // map.off('click', onMapClick)
 
         }
+
         map.on('click', onMapClick)
     }
-/*
-GeoJson extends FeatureGroup, which extends LayerGroup, so
-we can add extra GeoJson Layers to the layer group
- */
+
+    /*
+     GeoJson extends FeatureGroup, which extends LayerGroup, so
+     we can add extra GeoJson Layers to the layer group
+     */
     addWaypoint() {
         // change cursor to crosshairs
-        L.DomUtil.addClass(map._container,'leaflet-crosshair')
+        L.DomUtil.addClass(map._container, 'leaflet-crosshair')
 
         // marker definition options
         var geojsonMarkerOptions = {
@@ -348,9 +375,9 @@ we can add extra GeoJson Layers to the layer group
                     // return L.circleMarker(e.latlng, geojsonMarkerOptions);
                     return L.marker(e.latlng);
                 },
-                onEachFeature: function(feature, latlng) {
-                        console.log('open modal')
-                        // todo - allow a popup to be set to add content / change the marker
+                onEachFeature: function (feature, latlng) {
+                    console.log('open modal')
+                    // todo - allow a popup to be set to add content / change the marker
                 }
             })
 
@@ -360,16 +387,17 @@ we can add extra GeoJson Layers to the layer group
             console.log('currentLayer', currentTrackLayerGroup.toGeoJSON())
 
 
-            L.DomUtil.removeClass(map._container,'leaflet-crosshair')
+            L.DomUtil.removeClass(map._container, 'leaflet-crosshair')
             map.off('click', onMapClick)
 
         }
+
         map.on('click', onMapClick)
     }
 
     selectATrack() {
         // change cursor to crosshairs
-        L.DomUtil.addClass(map._container,'leaflet-crosshair')
+        L.DomUtil.addClass(map._container, 'leaflet-crosshair')
 
         // create function for map click after selectATrack has been selected
         function onSelectTrack(e) {
@@ -383,9 +411,10 @@ we can add extra GeoJson Layers to the layer group
             // marker.setLatLng(e.latlng).addTo(tracksLayer)
 
             // reset cursor
-            L.DomUtil.removeClass(map._container,'leaflet-crosshair')
+            L.DomUtil.removeClass(map._container, 'leaflet-crosshair')
             map.off('click', onSelectTrack)
         }
+
         map.on('click', onSelectTrack)
     }
 
@@ -395,13 +424,13 @@ we can add extra GeoJson Layers to the layer group
         return (
             <div id="mapwrap">
                 {(this.state.modal === 'locate') ? (
-                    <Locate cancelAction={this.onCancelAction} okAction={this.onLocate} />
+                    <Locate cancelAction={this.onCancelAction} okAction={this.onLocate}/>
                 ) : null}
                 {(this.state.modal === 'awaitingFunctionality') ? (
-                    <AwaitingFunctionality cancelAction={this.onCancelAction} />
+                    <AwaitingFunctionality cancelAction={this.onCancelAction}/>
                 ) : null}
                 {(this.state.modal === 'openTrack') ? (
-                    <LoadTrackModal cancelAction={this.onCancelAction} okAction={this.onOpenTrack} />
+                    <LoadTrackModal cancelAction={this.onCancelAction} okAction={this.onOpenTrack}/>
                 ) : null}
 
                 <Toolbar
