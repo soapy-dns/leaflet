@@ -43,16 +43,38 @@ var myIcon = L.icon({
     iconAnchor: [0, 16],
     popupAnchor: [0, -28]
 })
-const tracksLayer = new GeoJSON(null, {
-    pointToLayer: function (feature, latlng) {
-        console.log('feature', feature.properties.sym)
-        console.log('indexof', feature.properties.sym.indexOf('Flag'))
-        if (feature.properties.sym.indexOf('Flag') !== -1) console.log('flag')
-        return L.marker(latlng, {icon: myIcon, pane: 'markerPane'})
-    }
-})
+
+// todo - reinstate something similar - this has got functionality for processing points
+
+// THIS COULD BE NEW TRACK LAYER?
+// const tracksLayer = new GeoJSON(null, {
+//     pointToLayer: function (feature, latlng) {
+//         console.log('feature', feature.properties.sym)
+//         console.log('indexof', feature.properties.sym.indexOf('Flag'))
+//         if (feature.properties.sym.indexOf('Flag') !== -1) console.log('flag')
+//         return L.marker(latlng, {icon: myIcon, pane: 'markerPane'})
+//     }
+// })
+
+let initialTrack = {
+    type: "FeatureCollection",
+    features: [
+        {
+            "type": "Feature",
+            "properties": {
+                "name": "current",
+                "time": "",
+                "color": "blue"
+            }
+        }
+    ]
+}
 
 let map
+let overlayLayers
+let layersControl
+let currentTrack
+let currentTrackLayerGroup
 
 class MyMap extends Component {
     constructor(props) {
@@ -67,6 +89,7 @@ class MyMap extends Component {
         this.onOpenTrack = this.onOpenTrack.bind(this)
         this.centreOnCurrentLocation = this.centreOnCurrentLocation.bind(this)
         this.addWaypoint = this.addWaypoint.bind(this)
+        this.selectATrack = this.selectATrack.bind(this)
 
         this.state = {
             locate: false,
@@ -94,16 +117,16 @@ class MyMap extends Component {
         const baseMaps = {
             "Base": baseLayer,
         }
-        const overlayMaps = {
+        overlayLayers = {
             "Topo": topoLayer,
             "Image": imageLayer,
-            "Tracks": tracksLayer
+            // "Tracks": tracksLayer
         }
 
         map = new Map('mapid', {
             // center: [-33.75999, -209.59236],
             center: [-33.668759325519204, 150.34924333915114],
-            zoom: 14,
+            zoom: 15,
             maxZoom: 16,
             layers: [baseLayer, topoLayer]
             // layers: [baseLayer]
@@ -112,7 +135,7 @@ class MyMap extends Component {
         map.zoomControl.setPosition('bottomright')
 
         // add control button for layers
-        const layersControl = new Control.Layers(baseMaps, overlayMaps)
+        layersControl = new Control.Layers(baseMaps, overlayLayers)
         layersControl.addTo(map)
 
         //add scale
@@ -120,7 +143,10 @@ class MyMap extends Component {
         scale.addTo(map)
 
         //add track layer to map
-        tracksLayer.addTo(map)
+        currentTrackLayerGroup = new GeoJSON([initialTrack], {style: function (feature) {
+            return {color: line.properties.color || 'red'};
+        }})
+        currentTrackLayerGroup.addTo(map)
     }
 
     onCancelAction() {
@@ -154,18 +180,31 @@ class MyMap extends Component {
         this.setState({ modal: 'openTrack'})
     }
 
-    onOpenTrack(fileText) {
+    onOpenTrack(fileText, colour) {
 
-        // pointToLayer: function (feature, latlng) {
-        //     return L.circleMarker(latlng, geojsonMarkerOptions)
-        // }
-        const myTrack = JSON.parse(fileText)  //.features[0].geometry
-        tracksLayer.addData(myTrack)
+        //parse track
+        const track = JSON.parse(fileText)  //.features[0].geometry
+        const line = track.features.find(it => it.geometry.type === 'LineString')
+        const trackName = line.properties.name
 
-        // set bounds
-        map.fitBounds(tracksLayer.getBounds())
+        // get array of all the fixtures, and add to the layer group
 
-        // todo ensure track layer is turned on
+        // create new geojson layer for this track
+        const newtracksLayer = new GeoJSON([track], {style: function (feature) {
+            return {color: line.properties.color || 'red'};
+        }})
+
+        // add to map
+        newtracksLayer.addTo(map)
+
+        // add track to overlay layers
+        overlayLayers[trackName] = newtracksLayer
+
+        // add track layer to layer control
+        layersControl.addOverlay(newtracksLayer, trackName)
+
+        // set bounds to fit this new layer
+        map.fitBounds(newtracksLayer.getBounds())
 
         // turn modal off
         this.setState({ modal: null })
@@ -188,19 +227,88 @@ class MyMap extends Component {
             // L.circle(e.latlng, radius).addTo(map).bindPopup("You are located within this circle").openPopup()
         }
     }
-
+/*
+GeoJson extends FeatureGroup, which extends LayerGroup, so
+we can add extra GeoJson Layers to the layer group
+ */
     addWaypoint() {
         // change cursor to crosshairs
         L.DomUtil.addClass(map._container,'leaflet-crosshair')
 
-        const marker = L.marker()
+        // marker definition options
+        var geojsonMarkerOptions = {
+            radius: 8,
+            fillColor: "#ff7800",
+            color: "#000",
+            weight: 1,
+            opacity: 1,
+            fillOpacity: 0.8
+        };
+
+        //https://stackoverflow.com/questions/34501524/in-place-update-leaflet-geojson-feature
 
         // create function for map click after addWaypoint selected
         function onMapClick(e) {
-            marker.setLatLng(e.latlng).addTo(tracksLayer)
+            // set up waypoint geojson
+            const waypointFeature = {
+                "type": "Feature",
+                "properties": {
+                    "name": "CC THUNDER JT",
+                    "time": "2014-04-12T01:40:46Z",
+                    "sym": "Flag, Blue",
+                    "type": "user"
+                },
+                "geometry": {
+                    "type": "Point",
+                    "coordinates": [
+                        e.latlng.lat,
+                        e.latlng.lng,
+                        null
+                    ]
+                }
+            }
+
+            // create waypoint
+            const waypoint = L.geoJSON(waypointFeature, {
+                // each point will be converted to a marker with the defined options
+                pointToLayer: function (feature, latlng) {
+                    return L.circleMarker(e.latlng, geojsonMarkerOptions);
+                }
+            })
+
+            // add to group
+            currentTrackLayerGroup.addLayer(waypoint)
+
+            console.log('currentLayer', currentTrackLayerGroup.toGeoJSON())
+
+
             L.DomUtil.removeClass(map._container,'leaflet-crosshair')
+            map.off('click', onMapClick)
+
         }
         map.on('click', onMapClick)
+    }
+
+    selectATrack() {
+        // change cursor to crosshairs
+        L.DomUtil.addClass(map._container,'leaflet-crosshair')
+
+        // create function for map click after selectATrack has been selected
+        function onSelectTrack(e) {
+            // find nearest track
+            console.log('find nearest track')
+
+
+            // set current track layer
+
+
+            // marker.setLatLng(e.latlng).addTo(tracksLayer)
+
+            // reset cursor
+            L.DomUtil.removeClass(map._container,'leaflet-crosshair')
+            map.off('click', onSelectTrack)
+        }
+        map.on('click', onSelectTrack)
     }
 
     render() {
@@ -224,6 +332,8 @@ class MyMap extends Component {
                     openTrack={this.showOpenTrackModal}
                     centreOnCurrentLocation={this.centreOnCurrentLocation}
                     addWaypoint={this.addWaypoint}
+                    selectATrack={this.selectATrack}
+
                 />
                 <div id="mapid"></div>
 
