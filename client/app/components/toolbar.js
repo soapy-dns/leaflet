@@ -9,8 +9,12 @@ class Toolbar extends Component {
         this.toggleVisibility = this.toggleVisibility.bind(this)
         this.state = {
             visible: false,
-            activeItem: null
+            activeItem: null,
+            menu: {
+                currentTrack: false
+            }
         }
+        this.toggleCurrentTrackMenu = this.toggleCurrentTrackMenu.bind(this)
     }
 
     componentDidMount() {
@@ -20,6 +24,13 @@ class Toolbar extends Component {
     toggleVisibility() {
         console.log('toggle visibility')
         this.setState({visible: !this.state.visible})
+    }
+
+    toggleCurrentTrackMenu() {
+        console.log('opend current track')
+        const menu = Object.assign({}, this.state.menu)
+        menu.currentTrack = !this.state.menu.currentTrack
+        this.setState({ menu })
     }
 
     render() {
@@ -56,8 +67,19 @@ class Toolbar extends Component {
                             Choose map source
                         </Menu.Item>
 
-                        <Menu.Item onClick={drawLine}>
-                            Draw Line
+                        <Menu.Item>
+                            <Menu.Header>
+                                Current Track
+                                <Icon name="chevron down" onClick={this.toggleCurrentTrackMenu} link />
+                            </Menu.Header>
+                            {this.state.menu.currentTrack === true && (
+                                <Menu.Menu>
+                                    <Menu.Item onClick={drawLine}>
+                                        Draw Track
+                                    </Menu.Item>
+                                </Menu.Menu>
+                            )}
+
                         </Menu.Item>
 
                         <Menu.Item onClick={addWaypoint}>

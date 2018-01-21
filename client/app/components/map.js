@@ -65,7 +65,7 @@ let initialTrack = {
             "properties": {
                 "name": "current",
                 "time": "",
-                "color": "blue"
+                "color": "red"
             }
         }
     ]
@@ -80,14 +80,15 @@ let currentTrackLayerGroup
 const _getInitialLineFeature = (latlng) => {
     console.log('_getInitialLineFeature')
     return {
-        "type": "Feature",
-        "properties": {
-            "name": "",
-            "time": ""
+        type: "Feature",
+        properties: {
+            name: "",
+            time: "",
+            color: 'red'
         },
-        "geometry": {
-            "type": "LineString",
-            "coordinates": []
+        geometry: {
+            type: "LineString",
+            coordinates: []
         }
     }
 }
@@ -128,20 +129,15 @@ class MyMap extends Component {
             url: 'http://maps.six.nsw.gov.au/arcgis/rest/services/public/NSW_Imagery/MapServer'
         })
 
-        // const myTrack = track.features[0].geometry
-        // const tracksLayer = new GeoJSON([myTrack])
-
         const baseMaps = {
             "Base": baseLayer,
         }
         overlayLayers = {
             "Topo": topoLayer,
-            "Image": imageLayer,
-            // "Tracks": tracksLayer
+            "Image": imageLayer
         }
 
         map = new Map('mapid', {
-            // center: [-33.75999, -209.59236],
             center: [-33.668759325519204, 150.34924333915114],
             zoom: 15,
             maxZoom: 16,
@@ -250,10 +246,8 @@ class MyMap extends Component {
     }
 
     drawLine() {
-        console.log('draw line')
         // change cursor to crosshairs
         L.DomUtil.addClass(map._container, 'leaflet-crosshair')
-        // const currentFeatures = currentTrackLayerGroup.toGeoJSON()
 
         // marker definition options
         var geojsonMarkerOptions = {
@@ -267,10 +261,10 @@ class MyMap extends Component {
 
         function onMapClick(e) {
             const currentGeoJson = currentTrackLayerGroup.toGeoJSON()
-            console.log('currentGeoJson', currentGeoJson)
+
             const pointFeatures = currentGeoJson.features.filter(it => it.geometry.type === 'Point')
+
             let lineFeature = currentGeoJson.features.find(it => it.geometry.type === 'LineString')
-            console.log('lineFeature', lineFeature)
             if (!lineFeature) lineFeature = _getInitialLineFeature(e.latlng)
 
             // set up waypoint geojson
@@ -289,35 +283,31 @@ class MyMap extends Component {
                     ]
                 }
             }
-            console.log('add new point', e.latlng.lat, e.latlng.lng)
 
             pointFeatures.push(waypointFeature)
-            console.log('lineFeature', lineFeature)
+
+            //add waypointFeature coords to line
             lineFeature.geometry.coordinates.push([e.latlng.lng, e.latlng.lat])
-            const features = []
-            features.push(pointFeatures)
-            features.push(lineFeature)
-
-
-            currentTrackLayerGroup.clearLayers()
-            console.log('new features', features)
 
             // create temp waypoint
-            const track = L.geoJSON(features, {
+            const points = L.geoJSON(pointFeatures, {
                 // each point will be converted to a marker with the defined options
                 pointToLayer: function (feature, latlng) {
-                    // console.log('add marker!! lat long', feature.geometry.coordinates[1], feature.geometry.coordinates[0])
                     return L.circleMarker([feature.geometry.coordinates[1], feature.geometry.coordinates[0]], geojsonMarkerOptions);
                 }
             })
+            const line = L.geoJSON(lineFeature, {
+                style: function (feature) {
+                    return {color: feature.properties.color};
+                }
+            })
+
+            // clear current track group layer before re-adding
+            currentTrackLayerGroup.clearLayers()
 
             // add to group
-            currentTrackLayerGroup.addLayer(track)
-
-            // const layers = currentTrackLayerGroup.getLayers();
-
-            // console.log('currentLayer2', currentTrackLayerGroup.toGeoJSON())
-
+            currentTrackLayerGroup.addLayer(points)
+            currentTrackLayerGroup.addLayer(line)
 
             // L.DomUtil.removeClass(map._container,'leaflet-crosshair')
             // map.off('click', onMapClick)
