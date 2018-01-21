@@ -28,7 +28,8 @@ class Toolbar extends Component {
             awaitingFunctionality,
             openTrack,
             centreOnCurrentLocation,
-            addWaypoint
+            addWaypoint,
+            selectATrack
         } = this.props
 
         return (
@@ -62,6 +63,10 @@ class Toolbar extends Component {
                             Add waypoint
                         </Menu.Item>
 
+                        <Menu.Item onClick={selectATrack}>
+                            Select a Track
+                        </Menu.Item>
+
                         <Menu.Item>
                             <Input icon='search' placeholder='Search for a track...' />
                         </Menu.Item>
@@ -77,7 +82,8 @@ Toolbar.propTypes = {
     awaitingFunctionality: PropTypes.func,
     openTrack: PropTypes.func,
     okAction: PropTypes.func,
-    cancelAction: PropTypes.func
+    cancelAction: PropTypes.func,
+    selectATrack: PropTypes.func
 };
 
 export default Toolbar;
