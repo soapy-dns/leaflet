@@ -120,29 +120,29 @@ class MyMap extends Component {
         const baseLayer = new BasemapLayer('Gray')
 
         // topo layer
-        const topoLayer = new TiledMapLayer({
-            url: 'http://maps.six.nsw.gov.au/arcgis/rest/services/public/NSW_Topo_Map/MapServer'
-        })
-
-        // satellite image layer
-        const imageLayer = new TiledMapLayer({
-            url: 'http://maps.six.nsw.gov.au/arcgis/rest/services/public/NSW_Imagery/MapServer'
-        })
+        // const topoLayer = new TiledMapLayer({
+        //     url: 'http://maps.six.nsw.gov.au/arcgis/rest/services/public/NSW_Topo_Map/MapServer'
+        // })
+        //
+        // // satellite image layer
+        // const imageLayer = new TiledMapLayer({
+        //     url: 'http://maps.six.nsw.gov.au/arcgis/rest/services/public/NSW_Imagery/MapServer'
+        // })
 
         const baseMaps = {
             "Base": baseLayer,
         }
-        overlayLayers = {
-            "Topo": topoLayer,
-            "Image": imageLayer
-        }
+        // overlayLayers = {
+        //     "Topo": topoLayer,
+        //     "Image": imageLayer
+        // }
 
         map = new Map('mapid', {
             center: [-33.668759325519204, 150.34924333915114],
             zoom: 15,
             maxZoom: 16,
-            layers: [baseLayer, topoLayer]
-            // layers: [baseLayer]
+            // layers: [baseLayer, topoLayer]
+            layers: [baseLayer]
 
         })
         map.zoomControl.setPosition('bottomright')
@@ -263,6 +263,7 @@ class MyMap extends Component {
             const currentGeoJson = currentTrackLayerGroup.toGeoJSON()
 
             const pointFeatures = currentGeoJson.features.filter(it => it.geometry.type === 'Point')
+            console.log('pointFeatures', pointFeatures)
 
             let lineFeature = currentGeoJson.features.find(it => it.geometry.type === 'LineString')
             if (!lineFeature) lineFeature = _getInitialLineFeature(e.latlng)
@@ -292,8 +293,15 @@ class MyMap extends Component {
             // create temp waypoint
             const points = L.geoJSON(pointFeatures, {
                 // each point will be converted to a marker with the defined options
-                pointToLayer: function (feature, latlng) {
-                    return L.circleMarker([feature.geometry.coordinates[1], feature.geometry.coordinates[0]], geojsonMarkerOptions);
+                pointToLayer: function (feature) {
+                    const featureLatlng = [feature.geometry.coordinates[1], feature.geometry.coordinates[0]]
+                    if (feature.properties.type !== "user") {
+                        console.log('circle', feature.geometry.coordinates[1], feature.geometry.coordinates[0])
+                        return L.circleMarker(featureLatlng, geojsonMarkerOptions);
+                    } else {
+                        console.log('default marker', e.latlng)
+                        return L.marker(featureLatlng)
+                    }
                 }
             })
             const line = L.geoJSON(lineFeature, {
@@ -339,6 +347,9 @@ class MyMap extends Component {
 
         // create function for map click after addWaypoint selected
         function onMapClick(e) {
+            const currentGeoJson = currentTrackLayerGroup.toGeoJSON()
+            console.log('currentGeoJson', currentGeoJson)
+
             // set up waypoint geojson
             const waypointFeature = {
                 "type": "Feature",
@@ -357,13 +368,36 @@ class MyMap extends Component {
                     ]
                 }
             }
+            // currentGeoJson.features.push(waypointFeature)
+            // console.log('geojson', currentGeoJson)
+
+            // const waypoint = L.geoJSON(waypointFeature), {
+            //     pointToLayer: function (feature, latlng) {
+            //     return L.marker(e.latlng);
+            //
+            //     //     console.log('waypoint - pointToLayer')
+            //     //     if (feature.properties.type === "user") {
+            //     //         return L.marker([feature.geometry.coordinates[1], feature.geometry.coordinates[0]]);
+            //     //         // return L.circleMarker([feature.geometry.coordinates[1], feature.geometry.coordinates[0]], geojsonMarkerOptions);
+            //     //
+            //     //     }
+            //     // }
+            // })
+            // const currentTrackLayer = L.geoJSON(waypointFeature, {
+                // style: function (feature) {
+                //     return {color: feature.properties.color};
+                // }
+            // })
+            // clear current track group layer before re-adding
+            // currentTrackLayerGroup.clearLayers()
 
             // create waypoint
             const waypoint = L.geoJSON(waypointFeature, {
                 // each point will be converted to a marker with the defined options
                 pointToLayer: function (feature, latlng) {
                     // return L.circleMarker(e.latlng, geojsonMarkerOptions);
-                    return L.marker(e.latlng);
+                    console.log('initial waypoint', e.latlng)
+                    return L.marker(e.latlng)
                 },
                 onEachFeature: function (feature, latlng) {
                     console.log('open modal')
@@ -374,7 +408,7 @@ class MyMap extends Component {
             // add to group
             currentTrackLayerGroup.addLayer(waypoint)
 
-            console.log('currentLayer', currentTrackLayerGroup.toGeoJSON())
+            // console.log('currentLayer', currentTrackLayerGroup.toGeoJSON())
 
 
             L.DomUtil.removeClass(map._container, 'leaflet-crosshair')

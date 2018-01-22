@@ -51,22 +51,6 @@ class Toolbar extends Component {
                 </button>
                 <div id="menu">
                     <Menu vertical borderless fluid>
-                        <Menu.Item onClick={centreOnCurrentLocation}>
-                            Centre on current location
-                        </Menu.Item>
-
-                        <Menu.Item onClick={locate}>
-                            Locate
-                        </Menu.Item>
-
-                        <Menu.Item onClick={openTrack}>
-                            Open track
-                        </Menu.Item>
-
-                        <Menu.Item onClick={awaitingFunctionality}>
-                            Choose map source
-                        </Menu.Item>
-
                         <Menu.Item>
                             <Menu.Header>
                                 Current Track
@@ -85,7 +69,22 @@ class Toolbar extends Component {
 
                                 </Menu.Menu>
                             )}
+                        </Menu.Item>
 
+                        <Menu.Item onClick={centreOnCurrentLocation}>
+                            Centre on current location
+                        </Menu.Item>
+
+                        <Menu.Item onClick={locate}>
+                            Locate
+                        </Menu.Item>
+
+                        <Menu.Item onClick={openTrack}>
+                            Open track
+                        </Menu.Item>
+
+                        <Menu.Item onClick={awaitingFunctionality}>
+                            Choose map source
                         </Menu.Item>
 
                         <Menu.Item onClick={selectATrack}>
