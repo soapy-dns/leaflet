@@ -2,6 +2,8 @@ import React, {Component} from 'react'
 import L, {Control, Marker, Map, GeoJSON} from 'leaflet'
 import {BasemapLayer, TiledMapLayer} from 'esri-leaflet'
 var utm = require('utm')
+import Api from '../utils/api';
+
 
 import Search from './search'
 import Location from './location'
@@ -57,6 +59,17 @@ var myIcon = L.icon({
 //     }
 // })
 
+
+// marker definition options
+const geojsonLineMarkerOptions = {
+    radius: 5,
+    fillColor: "#FFF",
+    color: "#F00",
+    weight: 2,
+    opacity: 1,
+    fillOpacity: 0.5
+};
+
 let initialTrack = {
     type: "FeatureCollection",
     features: [
@@ -93,6 +106,116 @@ const _getInitialLineFeature = (latlng) => {
     }
 }
 
+
+// create function for map click after addWaypoint selected
+function addWaypointOnClick(e) {
+    // set up waypoint geojson
+    const waypointFeature = {
+        "type": "Feature",
+        "properties": {
+            "name": "CC THUNDER JT",
+            "time": "2014-04-12T01:40:46Z",
+            "sym": "Flag, Blue",
+            "type": "user"
+        },
+        "geometry": {
+            "type": "Point",
+            "coordinates": [
+                e.latlng.lat,
+                e.latlng.lng,
+                null
+            ]
+        }
+    }
+
+    // create waypoint
+    const waypoint = L.geoJSON(waypointFeature, {
+        // each point will be converted to a marker with the defined options
+        pointToLayer: function (feature, latlng) {
+            // return L.circleMarker(e.latlng, geojsonMarkerOptions);
+            console.log('initial waypoint', e.latlng)
+            return L.marker(e.latlng)
+        },
+        // onEachFeature: function (feature, latlng) {
+        //     console.log('open modal')
+        //     // todo - allow a popup to be set to add content / change the marker
+        // }
+        onEachFeature: function (feature, layer) {
+            if (feature.properties && feature.properties.name) {
+                layer.bindPopup(feature.properties.name);
+            }
+        }
+    })
+
+    // add to group
+    currentTrackLayerGroup.addLayer(waypoint)
+
+    L.DomUtil.removeClass(map._container, 'leaflet-crosshair')
+    map.off('click', addWaypointOnClick)
+}
+
+function onDrawLineClick(e) {
+    const currentGeoJson = currentTrackLayerGroup.toGeoJSON()
+
+    const pointFeatures = currentGeoJson.features.filter(it => it.geometry.type === 'Point')
+    console.log('pointFeatures', pointFeatures)
+
+    let lineFeature = currentGeoJson.features.find(it => it.geometry.type === 'LineString')
+    if (!lineFeature) lineFeature = _getInitialLineFeature(e.latlng)
+
+    // set up waypoint geojson
+    const waypointFeature = {
+        "type": "Feature",
+        "properties": {
+            "name": "",
+            "time": ""
+        },
+        "geometry": {
+            "type": "Point",
+            "coordinates": [
+                e.latlng.lng,
+                e.latlng.lat,
+                null
+            ]
+        }
+    }
+
+    pointFeatures.push(waypointFeature)
+
+    //add waypointFeature coords to line
+    lineFeature.geometry.coordinates.push([e.latlng.lng, e.latlng.lat])
+
+    // create temp waypoint
+    const points = L.geoJSON(pointFeatures, {
+        // each point will be converted to a marker with the defined options
+        pointToLayer: function (feature) {
+            const featureLatlng = [feature.geometry.coordinates[1], feature.geometry.coordinates[0]]
+            if (feature.properties.type !== "user") {
+                return L.circleMarker(featureLatlng, geojsonLineMarkerOptions);
+            } else {
+                return L.marker(featureLatlng)
+            }
+        }
+    })
+    const line = L.geoJSON(lineFeature, {
+        style: function (feature) {
+            return {color: feature.properties.color};
+        },
+        onEachFeature: function (feature, layer) {
+            if (feature.properties && feature.properties.name) {
+                layer.bindPopup(feature.properties.name);
+            }
+        }
+    })
+
+    // clear current track group layer before re-adding
+    currentTrackLayerGroup.clearLayers()
+
+    // add to group
+    currentTrackLayerGroup.addLayer(points)
+    currentTrackLayerGroup.addLayer(line)
+}
+
 class MyMap extends Component {
     constructor(props) {
         super(props)
@@ -108,6 +231,9 @@ class MyMap extends Component {
         this.addWaypoint = this.addWaypoint.bind(this)
         this.selectATrack = this.selectATrack.bind(this)
         this.drawLine = this.drawLine.bind(this)
+        this.stopDrawLine = this.stopDrawLine.bind(this)
+        this.getMajorIncidents = this.getMajorIncidents.bind(this)
+        this.autoCorrectTrack = this.autoCorrectTrack.bind(this)
 
         this.state = {
             locate: false,
@@ -120,32 +246,36 @@ class MyMap extends Component {
         const baseLayer = new BasemapLayer('Gray')
 
         // topo layer
-        // const topoLayer = new TiledMapLayer({
-        //     url: 'http://maps.six.nsw.gov.au/arcgis/rest/services/public/NSW_Topo_Map/MapServer'
-        // })
-        //
-        // // satellite image layer
-        // const imageLayer = new TiledMapLayer({
-        //     url: 'http://maps.six.nsw.gov.au/arcgis/rest/services/public/NSW_Imagery/MapServer'
-        // })
+        const topoLayer = new TiledMapLayer({
+            url: 'http://maps.six.nsw.gov.au/arcgis/rest/services/public/NSW_Topo_Map/MapServer'
+        })
+
+        // satellite image layer
+        const imageLayer = new TiledMapLayer({
+            url: 'http://maps.six.nsw.gov.au/arcgis/rest/services/public/NSW_Imagery/MapServer'
+        })
 
         const baseMaps = {
             "Base": baseLayer,
         }
-        // overlayLayers = {
-        //     "Topo": topoLayer,
-        //     "Image": imageLayer
-        // }
+
 
         map = new Map('mapid', {
             center: [-33.668759325519204, 150.34924333915114],
             zoom: 15,
             maxZoom: 16,
-            // layers: [baseLayer, topoLayer]
-            layers: [baseLayer]
+            layers: [baseLayer, topoLayer]
+            // layers: [baseLayer]
 
         })
         map.zoomControl.setPosition('bottomright')
+
+
+        // define overlay layers for control
+        overlayLayers = {
+            "Topo": topoLayer,
+            "Image": imageLayer
+        }
 
         // add control button for layers
         layersControl = new Control.Layers(baseMaps, overlayLayers)
@@ -208,6 +338,11 @@ class MyMap extends Component {
         const newtracksLayer = new GeoJSON([track], {
             style: function (feature) {
                 return {color: line.properties.color || 'red'};
+            },
+            onEachFeature: function (feature, layer) {
+                if (feature.properties && feature.properties.name) {
+                    layer.bindPopup(feature.properties.name);
+                }
             }
         })
 
@@ -225,6 +360,75 @@ class MyMap extends Component {
 
         // turn modal off
         this.setState({modal: null})
+    }
+
+    getMajorIncidents() {
+        // flames = https://assets-cdn.github.com/images/icons/emoji/unicode/1f525.png
+        Api.getMajorIncidents().then(data => {
+            console.log('MAJOR INCIDENTS - %J', data)
+            // create waypoint
+            const majorIncidents = L.geoJSON(data, {
+                // each point will be converted to a marker with the defined options
+                pointToLayer: function (feature, latlng) {
+                    // return L.circleMarker(e.latlng, geojsonMarkerOptions);
+                    console.log('initial waypoint', e.latlng)
+                    return L.marker(e.latlng)
+                },
+                onEachFeature: function (feature, latlng) {
+                    console.log('open modal')
+                    // todo - allow a popup to be set to add content / change the marker
+                }
+            })
+
+            // add track to overlay layers
+            overlayLayers['Major Incidents'] = majorIncidents
+
+            // add track layer to layer control
+            layersControl.addOverlay(majorIncidents, 'Major Incidents')
+
+            majorIncidents.addTo(map)
+            // dispatch(contactFormSuccess());
+        }).catch((err) => {
+            console.log('ERROR', err)
+            // dispatch(contactFormFailed(err.message));
+        });
+    }
+
+    autoCorrectTrack() {
+        console.log('autocorrect the current track')
+        const currentGeoJson = currentTrackLayerGroup.toGeoJSON()
+
+        // https://stackoverflow.com/questions/16121236/smoothing-gps-tracked-route-coordinates
+        // filters.max_possible_travel = function(data) {
+        //     //http://en.wikipedia.org/wiki/Preferred_walking_speed
+        //     //I switched to 16, as the route was made by driving with a bus...
+        //     var maxMetersPerSec = 16,
+        //         i, m, last, result = [];
+        //
+        //     for(i=0;i<data.length;i++) {
+        //         m = data[i];
+        //         if (last) {
+        //             // seconds between current and last coord
+        //             var diff = (m.created.getTime() - last.created.getTime()) / 1000;
+        //             // the maximum amount of meters a person,bus,car etc can make per sec.
+        //             var maxDistance = diff * maxMetersPerSec;
+        //             // the actual distance traveled
+        //             var traveledDistance = google.maps.geometry.spherical.computeDistanceBetween(last.googLatLng, m.googLatLng);
+        //
+        //             if (traveledDistance > maxDistance) {
+        //                 continue;
+        //             } else {
+        //                 result.push(m);
+        //             }
+        //         }
+        //         last = m;
+        //     }
+        //     return result;
+        // };
+
+        //loop thru the track, correcting it using stnd params (which I'll allow to be changed sometime)
+
+        //check that there are times in the track
     }
 
     centreOnCurrentLocation() {
@@ -245,84 +449,20 @@ class MyMap extends Component {
         }
     }
 
+    /*
+    remove crosshairs cursor and click functionality
+     */
+    stopDrawLine() {
+        L.DomUtil.removeClass(map._container,'leaflet-crosshair')
+        map.off('click', onDrawLineClick)
+    }
+
+    /*
+    change cursor and add click functionality
+     */
     drawLine() {
-        // change cursor to crosshairs
         L.DomUtil.addClass(map._container, 'leaflet-crosshair')
-
-        // marker definition options
-        var geojsonMarkerOptions = {
-            radius: 5,
-            fillColor: "#FFF",
-            color: "#F00",
-            weight: 2,
-            opacity: 1,
-            fillOpacity: 0.5
-        };
-
-        function onMapClick(e) {
-            const currentGeoJson = currentTrackLayerGroup.toGeoJSON()
-
-            const pointFeatures = currentGeoJson.features.filter(it => it.geometry.type === 'Point')
-            console.log('pointFeatures', pointFeatures)
-
-            let lineFeature = currentGeoJson.features.find(it => it.geometry.type === 'LineString')
-            if (!lineFeature) lineFeature = _getInitialLineFeature(e.latlng)
-
-            // set up waypoint geojson
-            const waypointFeature = {
-                "type": "Feature",
-                "properties": {
-                    "name": "",
-                    "time": ""
-                },
-                "geometry": {
-                    "type": "Point",
-                    "coordinates": [
-                        e.latlng.lng,
-                        e.latlng.lat,
-                        null
-                    ]
-                }
-            }
-
-            pointFeatures.push(waypointFeature)
-
-            //add waypointFeature coords to line
-            lineFeature.geometry.coordinates.push([e.latlng.lng, e.latlng.lat])
-
-            // create temp waypoint
-            const points = L.geoJSON(pointFeatures, {
-                // each point will be converted to a marker with the defined options
-                pointToLayer: function (feature) {
-                    const featureLatlng = [feature.geometry.coordinates[1], feature.geometry.coordinates[0]]
-                    if (feature.properties.type !== "user") {
-                        console.log('circle', feature.geometry.coordinates[1], feature.geometry.coordinates[0])
-                        return L.circleMarker(featureLatlng, geojsonMarkerOptions);
-                    } else {
-                        console.log('default marker', e.latlng)
-                        return L.marker(featureLatlng)
-                    }
-                }
-            })
-            const line = L.geoJSON(lineFeature, {
-                style: function (feature) {
-                    return {color: feature.properties.color};
-                }
-            })
-
-            // clear current track group layer before re-adding
-            currentTrackLayerGroup.clearLayers()
-
-            // add to group
-            currentTrackLayerGroup.addLayer(points)
-            currentTrackLayerGroup.addLayer(line)
-
-            // L.DomUtil.removeClass(map._container,'leaflet-crosshair')
-            // map.off('click', onMapClick)
-
-        }
-
-        map.on('click', onMapClick)
+        map.on('click', onDrawLineClick)
     }
 
     /*
@@ -343,80 +483,7 @@ class MyMap extends Component {
             fillOpacity: 0.8
         };
 
-        //https://stackoverflow.com/questions/34501524/in-place-update-leaflet-geojson-feature
-
-        // create function for map click after addWaypoint selected
-        function onMapClick(e) {
-            const currentGeoJson = currentTrackLayerGroup.toGeoJSON()
-            console.log('currentGeoJson', currentGeoJson)
-
-            // set up waypoint geojson
-            const waypointFeature = {
-                "type": "Feature",
-                "properties": {
-                    "name": "CC THUNDER JT",
-                    "time": "2014-04-12T01:40:46Z",
-                    "sym": "Flag, Blue",
-                    "type": "user"
-                },
-                "geometry": {
-                    "type": "Point",
-                    "coordinates": [
-                        e.latlng.lat,
-                        e.latlng.lng,
-                        null
-                    ]
-                }
-            }
-            // currentGeoJson.features.push(waypointFeature)
-            // console.log('geojson', currentGeoJson)
-
-            // const waypoint = L.geoJSON(waypointFeature), {
-            //     pointToLayer: function (feature, latlng) {
-            //     return L.marker(e.latlng);
-            //
-            //     //     console.log('waypoint - pointToLayer')
-            //     //     if (feature.properties.type === "user") {
-            //     //         return L.marker([feature.geometry.coordinates[1], feature.geometry.coordinates[0]]);
-            //     //         // return L.circleMarker([feature.geometry.coordinates[1], feature.geometry.coordinates[0]], geojsonMarkerOptions);
-            //     //
-            //     //     }
-            //     // }
-            // })
-            // const currentTrackLayer = L.geoJSON(waypointFeature, {
-                // style: function (feature) {
-                //     return {color: feature.properties.color};
-                // }
-            // })
-            // clear current track group layer before re-adding
-            // currentTrackLayerGroup.clearLayers()
-
-            // create waypoint
-            const waypoint = L.geoJSON(waypointFeature, {
-                // each point will be converted to a marker with the defined options
-                pointToLayer: function (feature, latlng) {
-                    // return L.circleMarker(e.latlng, geojsonMarkerOptions);
-                    console.log('initial waypoint', e.latlng)
-                    return L.marker(e.latlng)
-                },
-                onEachFeature: function (feature, latlng) {
-                    console.log('open modal')
-                    // todo - allow a popup to be set to add content / change the marker
-                }
-            })
-
-            // add to group
-            currentTrackLayerGroup.addLayer(waypoint)
-
-            // console.log('currentLayer', currentTrackLayerGroup.toGeoJSON())
-
-
-            L.DomUtil.removeClass(map._container, 'leaflet-crosshair')
-            map.off('click', onMapClick)
-
-        }
-
-        map.on('click', onMapClick)
+        map.on('click', addWaypointOnClick)
     }
 
     selectATrack() {
@@ -463,8 +530,11 @@ class MyMap extends Component {
                     openTrack={this.showOpenTrackModal}
                     centreOnCurrentLocation={this.centreOnCurrentLocation}
                     drawLine={this.drawLine}
+                    stopDrawLine={this.stopDrawLine}
                     addWaypoint={this.addWaypoint}
                     selectATrack={this.selectATrack}
+                    getMajorIncidents={this.getMajorIncidents}
+                    autoCorrectTrack={this.autoCorrectTrack}
 
                 />
                 <div id="mapid"></div>

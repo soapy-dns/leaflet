@@ -13,6 +13,7 @@
     "test": "'mocha **/*.spec.js' --recursive --check-leaks --reporter min"
   },
   "dependencies": {
+    "axios": "^0.17.1",
     "esri-leaflet": "^2.1.1",
     "jquery": "^3.2.1",
     "leaflet": "^1.2.0",
@@ -23,7 +24,11 @@
     "prop-types": "^15.6.0",
     "react": "^16.2.0",
     "react-dom": "^16.2.0",
+    "react-redux": "^5.0.6",
     "react-router": "3.2.0",
+    "redux": "3.6.0",
+    "redux-persist": "4.4.0",
+    "redux-thunk": "2.2.0",
     "semantic-ui-css": "^2.2.12",
     "semantic-ui-react": "^0.77.1",
     "togeojson": "^0.16.0",

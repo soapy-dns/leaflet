@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import { Button, Icon, Menu, Label, Input } from 'semantic-ui-react'
-import PropTypes from 'prop-types';
+import PropTypes from 'prop-types'
 
 class Toolbar extends Component {
     constructor(props) {
@@ -40,8 +40,11 @@ class Toolbar extends Component {
             openTrack,
             centreOnCurrentLocation,
             drawLine,
+            stopDrawLine,
             addWaypoint,
-            selectATrack
+            selectATrack,
+            getMajorIncidents,
+            autoCorrectTrack
         } = this.props
 
         return (
@@ -62,8 +65,15 @@ class Toolbar extends Component {
                                     <Menu.Item onClick={drawLine}>
                                         Draw Track
                                     </Menu.Item>
+                                    <Menu.Item onClick={stopDrawLine}>
+                                        Stop Drawing Track
+                                    </Menu.Item>
 
                                     <Menu.Item onClick={addWaypoint}>
+                                        Add waypoint
+                                    </Menu.Item>
+
+                                    <Menu.Item onClick={autoCorrectTrack}>
                                         Add waypoint
                                     </Menu.Item>
 
@@ -91,6 +101,10 @@ class Toolbar extends Component {
                             Select a Track
                         </Menu.Item>
 
+                        <Menu.Item onClick={getMajorIncidents}>
+                            Get Major Incidents
+                        </Menu.Item>
+
                         <Menu.Item>
                             <Input icon='search' placeholder='Search for a track...' />
                         </Menu.Item>
@@ -109,7 +123,10 @@ Toolbar.propTypes = {
     cancelAction: PropTypes.func,
     selectATrack: PropTypes.func,
     addWaypoint: PropTypes.func,
-    drawLine: PropTypes.func
-};
+    drawLine: PropTypes.func,
+    stopDrawLine: PropTypes.func,
+    getMajorIncidents: PropTypes.func,
+    autoCorrectTrack: PropTypes.func
+}
 
-export default Toolbar;
+export default Toolbar
