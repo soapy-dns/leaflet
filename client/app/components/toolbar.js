@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import { Button, Icon, Menu, Label, Input } from 'semantic-ui-react'
-import PropTypes from 'prop-types';
+import PropTypes from 'prop-types'
 
 class Toolbar extends Component {
     constructor(props) {
@@ -9,8 +9,12 @@ class Toolbar extends Component {
         this.toggleVisibility = this.toggleVisibility.bind(this)
         this.state = {
             visible: false,
-            activeItem: null
+            activeItem: null,
+            menu: {
+                currentTrack: false
+            }
         }
+        this.toggleCurrentTrackMenu = this.toggleCurrentTrackMenu.bind(this)
     }
 
     componentDidMount() {
@@ -22,14 +26,25 @@ class Toolbar extends Component {
         this.setState({visible: !this.state.visible})
     }
 
+    toggleCurrentTrackMenu() {
+        console.log('opend current track')
+        const menu = Object.assign({}, this.state.menu)
+        menu.currentTrack = !this.state.menu.currentTrack
+        this.setState({ menu })
+    }
+
     render() {
         const { activeItem } = this.state
         const { locate,
             awaitingFunctionality,
             openTrack,
             centreOnCurrentLocation,
+            drawLine,
+            stopDrawLine,
             addWaypoint,
-            selectATrack
+            selectATrack,
+            getMajorIncidents,
+            autoCorrectTrack
         } = this.props
 
         return (
@@ -39,6 +54,33 @@ class Toolbar extends Component {
                 </button>
                 <div id="menu">
                     <Menu vertical borderless fluid>
+                        <Menu.Item>
+                            <Menu.Header>
+                                Current Track
+                                <Icon name="chevron down" onClick={this.toggleCurrentTrackMenu} link />
+                            </Menu.Header>
+                            {this.state.menu.currentTrack === true && (
+                                <Menu.Menu>
+
+                                    <Menu.Item onClick={drawLine}>
+                                        Draw Track
+                                    </Menu.Item>
+                                    <Menu.Item onClick={stopDrawLine}>
+                                        Stop Drawing Track
+                                    </Menu.Item>
+
+                                    <Menu.Item onClick={addWaypoint}>
+                                        Add waypoint
+                                    </Menu.Item>
+
+                                    <Menu.Item onClick={autoCorrectTrack}>
+                                        Add waypoint
+                                    </Menu.Item>
+
+                                </Menu.Menu>
+                            )}
+                        </Menu.Item>
+
                         <Menu.Item onClick={centreOnCurrentLocation}>
                             Centre on current location
                         </Menu.Item>
@@ -55,16 +97,12 @@ class Toolbar extends Component {
                             Choose map source
                         </Menu.Item>
 
-                        <Menu.Item onClick={awaitingFunctionality}>
-                            Select
-                        </Menu.Item>
-
-                        <Menu.Item onClick={addWaypoint}>
-                            Add waypoint
-                        </Menu.Item>
-
                         <Menu.Item onClick={selectATrack}>
                             Select a Track
+                        </Menu.Item>
+
+                        <Menu.Item onClick={getMajorIncidents}>
+                            Get Major Incidents
                         </Menu.Item>
 
                         <Menu.Item>
@@ -83,7 +121,12 @@ Toolbar.propTypes = {
     openTrack: PropTypes.func,
     okAction: PropTypes.func,
     cancelAction: PropTypes.func,
-    selectATrack: PropTypes.func
-};
+    selectATrack: PropTypes.func,
+    addWaypoint: PropTypes.func,
+    drawLine: PropTypes.func,
+    stopDrawLine: PropTypes.func,
+    getMajorIncidents: PropTypes.func,
+    autoCorrectTrack: PropTypes.func
+}
 
-export default Toolbar;
+export default Toolbar
