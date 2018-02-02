@@ -1,8 +1,12 @@
 import React, {Component} from 'react'
 import L, {Control, Marker, Map, GeoJSON} from 'leaflet'
 import {BasemapLayer, TiledMapLayer} from 'esri-leaflet'
-var utm = require('utm')
-import Api from '../utils/api';
+import utm from 'utm'
+import PropTypes from 'prop-types'
+import { connect } from 'react-redux'
+
+// import { saveTrack } from '../actions/current-layer'
+import Api from '../utils/api'
 
 
 import Search from './search'
@@ -325,6 +329,7 @@ class MyMap extends Component {
         this.setState({modal: 'openTrack'})
     }
 
+    // todo -change newTracksLayer -> newTrackLayer
     onOpenTrack(fileText, colour) {
 
         //parse track
@@ -544,5 +549,15 @@ class MyMap extends Component {
     }
 }
 
-export default MyMap
+MyMap.propTypes = {
+    dispatch: PropTypes.func,
+    currentLayer: PropTypes.object
+}
 
+function mapStateToProps(state) {
+    return {
+        currentLayer: state.currentLayer
+    }
+}
+
+export default connect(mapStateToProps)(MyMap)
