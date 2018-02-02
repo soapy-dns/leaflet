@@ -5,10 +5,9 @@ import utm from 'utm'
 import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
 
-// import { saveTrack } from '../actions/current-layer'
 import Api from '../utils/api'
 
-
+import { saveTrack } from '../actions/current-layer'
 import Search from './search'
 import Location from './location'
 import Toolbar from './toolbar'
@@ -267,7 +266,9 @@ class MyMap extends Component {
         map = new Map('mapid', {
             center: [-33.668759325519204, 150.34924333915114],
             zoom: 15,
-            maxZoom: 16,
+            maxZoom: 16,  // todo - maybe the zoom thing is caused by the esri thing
+            // maxZoom: 21,
+            // maxNativeZoom: 16,
             layers: [baseLayer, topoLayer]
             // layers: [baseLayer]
 
@@ -353,6 +354,7 @@ class MyMap extends Component {
 
         // add to map
         newtracksLayer.addTo(map)
+        this.props.dispatch(saveTrack(track))
 
         // add track to overlay layers
         overlayLayers[trackName] = newtracksLayer
