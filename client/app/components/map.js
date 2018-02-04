@@ -5,9 +5,7 @@ import utm from 'utm'
 import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
 
-// import { saveTrack } from '../actions/current-layer'
 import Api from '../utils/api'
-
 
 import Search from './search'
 import Location from './location'
@@ -15,6 +13,11 @@ import Toolbar from './toolbar'
 import Locate from './locate-modal'
 import AwaitingFunctionality from './awaiting-functionality-modal'
 import LoadTrackModal from './load-track-modal'
+import Elevation from '../components/stats/elevation'
+
+import { saveTrack } from '../actions/current-layer'
+import { toggleElevation } from '../actions/ui'
+
 import Icon from './icon'
 // import _ from 'lodash'
 
@@ -238,6 +241,7 @@ class MyMap extends Component {
         this.stopDrawLine = this.stopDrawLine.bind(this)
         this.getMajorIncidents = this.getMajorIncidents.bind(this)
         this.autoCorrectTrack = this.autoCorrectTrack.bind(this)
+        this.showElevationPlot = this.showElevationPlot.bind(this)
 
         this.state = {
             locate: false,
@@ -267,7 +271,9 @@ class MyMap extends Component {
         map = new Map('mapid', {
             center: [-33.668759325519204, 150.34924333915114],
             zoom: 15,
-            maxZoom: 16,
+            maxZoom: 16,  // todo - maybe the zoom thing is caused by the esri thing
+            // maxZoom: 21,
+            // maxNativeZoom: 16,
             layers: [baseLayer, topoLayer]
             // layers: [baseLayer]
 
@@ -278,7 +284,7 @@ class MyMap extends Component {
         // define overlay layers for control
         overlayLayers = {
             "Topo": topoLayer,
-            "Image": imageLayer
+            "Satellite": imageLayer
         }
 
         // add control button for layers
@@ -329,6 +335,11 @@ class MyMap extends Component {
         this.setState({modal: 'openTrack'})
     }
 
+    showElevationPlot() {
+        console.log('show elevation')
+        this.props.dispatch(toggleElevation(true))
+    }
+
     // todo -change newTracksLayer -> newTrackLayer
     onOpenTrack(fileText, colour) {
 
@@ -353,6 +364,7 @@ class MyMap extends Component {
 
         // add to map
         newtracksLayer.addTo(map)
+        this.props.dispatch(saveTrack(track))
 
         // add track to overlay layers
         overlayLayers[trackName] = newtracksLayer
@@ -517,6 +529,7 @@ class MyMap extends Component {
     render() {
         // todo - I think the toolbar should be another level up eg within main
         console.log('modal', this.state.modal)
+        const { ui, currentLayer, dispatch } = this.props
         return (
             <div id="mapwrap">
                 {(this.state.modal === 'locate') ? (
@@ -540,9 +553,11 @@ class MyMap extends Component {
                     selectATrack={this.selectATrack}
                     getMajorIncidents={this.getMajorIncidents}
                     autoCorrectTrack={this.autoCorrectTrack}
+                    showElevationPlot={this.showElevationPlot}
 
                 />
                 <div id="mapid"></div>
+                { ui.showElevation ? (<Elevation />) : null }
 
 
             </div>)
@@ -551,13 +566,16 @@ class MyMap extends Component {
 
 MyMap.propTypes = {
     dispatch: PropTypes.func,
-    currentLayer: PropTypes.object
+    currentLayer: PropTypes.object,
+    ui: PropTypes.object
 }
 
 function mapStateToProps(state) {
     return {
-        currentLayer: state.currentLayer
+        currentLayer: state.currentLayer,
+        ui: state.ui
     }
 }
 
 export default connect(mapStateToProps)(MyMap)
+

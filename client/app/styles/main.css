@@ -56,6 +56,17 @@ body {
     height: 100vh;
 }
 
+.elevationPlot {
+    position: fixed;
+    left: 0px;
+    right:0px;
+    bottom: 0px;
+    padding: 1rem;
+    background-color: #ffcccc;
+    z-index: 1001;
+    text-align: center;
+}
+
 #toolbar {
     background: rgba(255, 255, 255, 1);
     opacity: .6;
