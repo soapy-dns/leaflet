@@ -44,7 +44,8 @@ class Toolbar extends Component {
             addWaypoint,
             selectATrack,
             getMajorIncidents,
-            autoCorrectTrack
+            autoCorrectTrack,
+            showElevationPlot
         } = this.props
 
         return (
@@ -74,9 +75,12 @@ class Toolbar extends Component {
                                     </Menu.Item>
 
                                     <Menu.Item onClick={autoCorrectTrack}>
-                                        Add waypoint
+                                        Autocorrect track
                                     </Menu.Item>
 
+                                    <Menu.Item onClick={showElevationPlot}>
+                                        Show elevation plot
+                                    </Menu.Item>
                                 </Menu.Menu>
                             )}
                         </Menu.Item>
@@ -126,7 +130,8 @@ Toolbar.propTypes = {
     drawLine: PropTypes.func,
     stopDrawLine: PropTypes.func,
     getMajorIncidents: PropTypes.func,
-    autoCorrectTrack: PropTypes.func
+    autoCorrectTrack: PropTypes.func,
+    showElevationPlot: PropTypes.func
 }
 
 export default Toolbar
