@@ -15,7 +15,7 @@ import AwaitingFunctionality from './awaiting-functionality-modal'
 import LoadTrackModal from './load-track-modal'
 import Elevation from '../components/stats/elevation'
 
-import { saveTrack } from '../actions/current-layer'
+import { saveTrack } from '../actions/tracks'
 import { toggleElevation } from '../actions/ui'
 
 import Icon from './icon'
@@ -242,6 +242,7 @@ class MyMap extends Component {
         this.getMajorIncidents = this.getMajorIncidents.bind(this)
         this.autoCorrectTrack = this.autoCorrectTrack.bind(this)
         this.showElevationPlot = this.showElevationPlot.bind(this)
+        this.hideElevationPlot = this.hideElevationPlot.bind(this)
 
         this.state = {
             locate: false,
@@ -338,6 +339,11 @@ class MyMap extends Component {
     showElevationPlot() {
         console.log('show elevation')
         this.props.dispatch(toggleElevation(true))
+        // todo think I need to update
+    }
+    hideElevationPlot() {
+        console.log('show elevation')
+        this.props.dispatch(toggleElevation(false))
     }
 
     // todo -change newTracksLayer -> newTrackLayer
@@ -365,6 +371,9 @@ class MyMap extends Component {
         // add to map
         newtracksLayer.addTo(map)
         this.props.dispatch(saveTrack(track))
+
+        // todo - set this to the selected track, and mark all other tracks as not selected.  This could be done in the
+        // saveTrack() method
 
         // add track to overlay layers
         overlayLayers[trackName] = newtracksLayer
@@ -527,6 +536,9 @@ class MyMap extends Component {
     }
 
     render() {
+        // todo - display all the tracks stored in redux state, and set the bounds to the selected Track
+
+
         // todo - I think the toolbar should be another level up eg within main
         console.log('modal', this.state.modal)
         const { ui, currentLayer, dispatch } = this.props
@@ -557,7 +569,8 @@ class MyMap extends Component {
 
                 />
                 <div id="mapid"></div>
-                { ui.showElevation ? (<Elevation />) : null }
+                <div>showElevation { ui.showElevation }</div>
+                { ui.showElevation ? (<Elevation hideElevationPlot={this.hideElevationPlot} />) : null }
 
 
             </div>)

@@ -4,6 +4,10 @@ import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
 import { Line } from 'react-chartjs-2'
 
+import { getLine, getSelectedTrack } from '../../utils/index'
+
+let elevationData = {}
+
 class Elevation extends Component {
     constructor(props) {
         super(props)
@@ -12,18 +16,71 @@ class Elevation extends Component {
     }
 
     componentDidMount() {
-        console.log('search component did mount')
+        console.log('elevation component did mount')
+        // const track = this.props.currentLayer
+        //
+        // if (track) {
+        //     const line = getLine(track)
+        //     console.log('gotLineTrack', !!line)
+        //     elevationData.labels = line.properties.coordTimes  // x axis
+        //     elevationData.yaxis = line.geometry.coordinates.map(it => it[2])
+        //     console.log('x', elevationData.labels)
+        //     console.log('y', elevationData.yaxis)
+        //     console.log('line', line)
+        // }
+        //
+        // const line = getLine(track)
+        // console.log('line', line)
+
     }
 
+    // /*
+    // Check if the track has changed
+    // todo - this should be using the selected track, not the current track
+    //  */
+    // shouldComponentUpdate(nextProps, nextState) {
+    //     console.log('shouldComponentUpdate')
+    //     const currentTrack = this.props.currentLayer
+    //     const currentLine = getLine(currentTrack)
+    //
+    //     const nextTrack = nextProps.currentLayer
+    //     const nextLine = getLine(nextTrack)
+    //
+    //
+    //     if (currentLine.properties.name === nextLine.properties.name) {
+    //         console.log('---------no change in track name - no update----------')
+    //         return false
+    //     }
+    //     console.log('-------update plot------------')
+    //     return true
+    // }
 
     render() {
+        console.log('render Elevation')
+        const { hideElevationPlot, tracks } = this.props
+
+        const track = getSelectedTrack(tracks)
+
+        console.log('---track---', track)
+        if (!track) return null
+
+        const line = getLine(track)
+        // console.log('gotLineTrack', !!line)
+        elevationData.labels = line.properties.coordTimes  // x axis
+        elevationData.yaxis = line.geometry.coordinates.map(it => it[2])
+        // console.log('x', elevationData.labels)
+        // console.log('y', elevationData.yaxis)
+        // console.log('line', line)
+
         const data = {
-            labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
+            // labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
+            labels: elevationData.labels,
+            // labels: ["2011-02-25T21:06:17Z", "2011-02-25T21:06:18Z", "2011-02-25T21:06:20Z", "2011-02-25T21:06:24Z", "2011-02-25T21:06:28Z"],
             datasets: [
                 {
-                    label: 'My First dataset',
+                    label: 'Elevation Plot',
                     fill: false,
-                    lineTension: 0.1,
+                    lineTension: 0,  // straight lines between points - more performant
                     backgroundColor: 'rgba(75,192,192,0.4)',
                     borderColor: 'rgba(75,192,192,1)',
                     borderCapStyle: 'butt',
@@ -39,15 +96,49 @@ class Elevation extends Component {
                     pointHoverBorderWidth: 2,
                     pointRadius: 1,
                     pointHitRadius: 10,
-                    data: [65, 59, 80, 81, 56, 55, 40]
+                    // xAxes: [
+                    //     { scaleLabel: {
+                    //         display: true,
+                    //         labelString: 'Score (%)' },
+                    //         ticks: { max: 100, min: 0, stepSize: 10, } }],
+                    data: elevationData.yaxis
+                    // data: [995.1, 995.58, 996.54, 997.02, 997.02]
+                    // data: [65, 59, 80, 81, 56, 55, 40]
                 }
             ]
-        };
+
+        }
+        const options = {
+            title: {
+                display: false
+            },
+            legend: { display: true },
+            showLines: true, // disable for all datasets
+            scales: {
+                xAxes: [{
+                    type: 'time',
+                    distribution: 'linear',
+
+                    time: {
+                        displayFormats: {
+                            hour: 'MMM D hh:mm'
+                        }
+                    }
+                }],
+                yAxes: [
+                    {
+                        position: 'left',
+                    }
+                ]
+            }
+
+        }
+
         return (
             <div className="elevationPlot" >
-                <Line data={data} />
+                <Button icon='remove' basic className="closeButtonTopRight" onClick={hideElevationPlot} />
+                <Line data={data} options={options} height={50} />
             </div>
-
         )
     }
 }
@@ -59,7 +150,7 @@ Elevation.propTypes = {
 
 function mapStateToProps(state) {
     return {
-        currentLayer: state.currentLayer
+        tracks: state.tracks
     }
 }
 

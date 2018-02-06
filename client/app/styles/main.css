@@ -62,9 +62,17 @@ body {
     right:0px;
     bottom: 0px;
     padding: 1rem;
-    background-color: #ffcccc;
+    background-color: #fcfcfc;
     z-index: 1001;
     text-align: center;
+}
+
+.ui.button.basic.closeButtonTopRight {
+    position: absolute;
+    right:0px;
+    top: 0px;
+    padding: 1rem;
+    z-index: 1002;
 }
 
 #toolbar {
