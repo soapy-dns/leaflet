@@ -15,7 +15,7 @@ import AwaitingFunctionality from './awaiting-functionality-modal'
 import LoadTrackModal from './load-track-modal'
 import Elevation from '../components/stats/elevation'
 
-import { saveTrack } from '../actions/current-layer'
+import { saveTrack, selectTrack } from '../actions/tracks'
 import { toggleElevation } from '../actions/ui'
 
 import Icon from './icon'
@@ -65,6 +65,8 @@ var myIcon = L.icon({
 //         return L.marker(latlng, {icon: myIcon, pane: 'markerPane'})
 //     }
 // })
+
+
 
 
 // marker definition options
@@ -242,6 +244,7 @@ class MyMap extends Component {
         this.getMajorIncidents = this.getMajorIncidents.bind(this)
         this.autoCorrectTrack = this.autoCorrectTrack.bind(this)
         this.showElevationPlot = this.showElevationPlot.bind(this)
+        this.hideElevationPlot = this.hideElevationPlot.bind(this)
 
         this.state = {
             locate: false,
@@ -338,33 +341,57 @@ class MyMap extends Component {
     showElevationPlot() {
         console.log('show elevation')
         this.props.dispatch(toggleElevation(true))
+        // todo think I need to update
+    }
+    hideElevationPlot() {
+        console.log('show elevation')
+        this.props.dispatch(toggleElevation(false))
     }
 
     // todo -change newTracksLayer -> newTrackLayer
     onOpenTrack(fileText, colour) {
+        const { dispatch } = this.props
 
         //parse track
         const track = JSON.parse(fileText)  //.features[0].geometry
         const line = track.features.find(it => it.geometry.type === 'LineString')
         const trackName = line.properties.name
 
-        // get array of all the fixtures, and add to the layer group
-
+        let newtracksLayer
         // create new geojson layer for this track
-        const newtracksLayer = new GeoJSON([track], {
+        newtracksLayer = new GeoJSON([track], {
             style: function (feature) {
-                return {color: line.properties.color || 'red'};
+                return {
+                    color: line.properties.color || 'red',
+                    weight: 3,
+                };
             },
             onEachFeature: function (feature, layer) {
-                if (feature.properties && feature.properties.name) {
-                    layer.bindPopup(feature.properties.name);
-                }
+                layer.on('mouseover', function() {
+                    this.setStyle({
+                        weight: 5
+                    })
+                })
+                layer.on('mouseout', function () {
+                    newtracksLayer.resetStyle(this)
+                })
+                layer.on('click', function() {
+                    console.log('select')
+                    dispatch(selectTrack(track))
+                    this.setStyle({
+                        weight: 5,
+                        dashArray: '5, 10, 7, 10, 10, 10'
+                    })
+                })
             }
         })
 
         // add to map
         newtracksLayer.addTo(map)
         this.props.dispatch(saveTrack(track))
+
+        // todo - set this to the selected track, and mark all other tracks as not selected.  This could be done in the
+        // saveTrack() method
 
         // add track to overlay layers
         overlayLayers[trackName] = newtracksLayer
@@ -527,6 +554,9 @@ class MyMap extends Component {
     }
 
     render() {
+        // todo - display all the tracks stored in redux state, and set the bounds to the selected Track
+
+
         // todo - I think the toolbar should be another level up eg within main
         console.log('modal', this.state.modal)
         const { ui, currentLayer, dispatch } = this.props
@@ -557,7 +587,8 @@ class MyMap extends Component {
 
                 />
                 <div id="mapid"></div>
-                { ui.showElevation ? (<Elevation />) : null }
+                <div>showElevation { ui.showElevation }</div>
+                { ui.showElevation ? (<Elevation hideElevationPlot={this.hideElevationPlot} />) : null }
 
 
             </div>)

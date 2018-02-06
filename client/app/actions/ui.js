@@ -5,8 +5,10 @@ export const drawLineAction = () => ({
 })
 
 
-export const TOGGLE_ELEVATION = 'TOGGLE_ELEVATION'
-export const toggleElevation = (boolean) => ({
-    type: TOGGLE_ELEVATION,
-    boolean
-})
+export const TOGGLE_ELEVATION = 'ui/TOGGLE_ELEVATION'
+export const toggleElevation = (boolean) => {
+    console.log('elevation', boolean); return{
+        type: TOGGLE_ELEVATION,
+        boolean
+    }
+}
