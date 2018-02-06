@@ -15,7 +15,7 @@ import AwaitingFunctionality from './awaiting-functionality-modal'
 import LoadTrackModal from './load-track-modal'
 import Elevation from '../components/stats/elevation'
 
-import { saveTrack } from '../actions/tracks'
+import { saveTrack, selectTrack } from '../actions/tracks'
 import { toggleElevation } from '../actions/ui'
 
 import Icon from './icon'
@@ -65,6 +65,8 @@ var myIcon = L.icon({
 //         return L.marker(latlng, {icon: myIcon, pane: 'markerPane'})
 //     }
 // })
+
+
 
 
 // marker definition options
@@ -348,23 +350,39 @@ class MyMap extends Component {
 
     // todo -change newTracksLayer -> newTrackLayer
     onOpenTrack(fileText, colour) {
+        const { dispatch } = this.props
 
         //parse track
         const track = JSON.parse(fileText)  //.features[0].geometry
         const line = track.features.find(it => it.geometry.type === 'LineString')
         const trackName = line.properties.name
 
-        // get array of all the fixtures, and add to the layer group
-
+        let newtracksLayer
         // create new geojson layer for this track
-        const newtracksLayer = new GeoJSON([track], {
+        newtracksLayer = new GeoJSON([track], {
             style: function (feature) {
-                return {color: line.properties.color || 'red'};
+                return {
+                    color: line.properties.color || 'red',
+                    weight: 3,
+                };
             },
             onEachFeature: function (feature, layer) {
-                if (feature.properties && feature.properties.name) {
-                    layer.bindPopup(feature.properties.name);
-                }
+                layer.on('mouseover', function() {
+                    this.setStyle({
+                        weight: 5
+                    })
+                })
+                layer.on('mouseout', function () {
+                    newtracksLayer.resetStyle(this)
+                })
+                layer.on('click', function() {
+                    console.log('select')
+                    dispatch(selectTrack(track))
+                    this.setStyle({
+                        weight: 5,
+                        dashArray: '5, 10, 7, 10, 10, 10'
+                    })
+                })
             }
         })
 
