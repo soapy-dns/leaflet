@@ -54,6 +54,18 @@ var myIcon = L.icon({
     popupAnchor: [0, -28]
 })
 
+var flameIcon = L.icon({
+    // iconUrl: 'assets/images/flame.png',
+    iconUrl: 'https://assets-cdn.github.com/images/icons/emoji/unicode/1f525.png',
+    // shadowUrl: 'leaf-shadow.png',
+
+    iconSize:     [38, 38], // size of the icon
+    // shadowSize:   [50, 64], // size of the shadow
+    iconAnchor:   [22, 38], // point of the icon which will correspond to marker's location
+    // shadowAnchor: [4, 62],  // the same for the shadow
+    popupAnchor:  [-3, -76] // point from which the popup should open relative to the iconAnchor
+});
+
 // todo - reinstate something similar - this has got functionality for processing points
 
 // THIS COULD BE NEW TRACK LAYER?
@@ -367,6 +379,9 @@ class MyMap extends Component {
                 };
             },
             onEachFeature: function (feature, layer) {
+                function mouseout() {
+                    newtracksLayer.resetStyle(this)
+                }
                 layer.on('mouseover', function() {
                     this.setStyle({
                         weight: 5
@@ -375,8 +390,10 @@ class MyMap extends Component {
                 layer.on('mouseout', function () {
                     newtracksLayer.resetStyle(this)
                 })
+                layer.on('mouseout', mouseout())
                 layer.on('click', function() {
                     console.log('select')
+                    layer.off(mouseout, mouseout())
                     dispatch(selectTrack(track))
                     this.setStyle({
                         weight: 5,
@@ -407,20 +424,28 @@ class MyMap extends Component {
     }
 
     getMajorIncidents() {
-        // flames = https://assets-cdn.github.com/images/icons/emoji/unicode/1f525.png
+        // todo - move to redux
+        https://stackoverflow.com/questions/43871637/no-access-control-allow-origin-header-is-present-on-the-requested-resource-whe
+            // flames = https://assets-cdn.github.com/images/icons/emoji/unicode/1f525.png
         Api.getMajorIncidents().then(data => {
             console.log('MAJOR INCIDENTS - %J', data)
             // create waypoint
-            const majorIncidents = L.geoJSON(data, {
+            const majorIncidents = L.geoJSON(data.data, {
                 // each point will be converted to a marker with the defined options
                 pointToLayer: function (feature, latlng) {
                     // return L.circleMarker(e.latlng, geojsonMarkerOptions);
-                    console.log('initial waypoint', e.latlng)
-                    return L.marker(e.latlng)
+                    return L.marker(latlng, {icon: flameIcon})
+                    // L.marker([51.5, -0.09], {icon: greenIcon}).addTo(map);
+
                 },
-                onEachFeature: function (feature, latlng) {
-                    console.log('open modal')
-                    // todo - allow a popup to be set to add content / change the marker
+                // onEachFeature: function (feature, latlng) {
+                //     console.log('open modal')
+                //     // todo - allow a popup to be set to add content / change the marker
+                // }
+                onEachFeature: function (feature, layer) {
+                    if (feature.properties && feature.properties.title) {
+                        layer.bindPopup(feature.properties.title);
+                    }
                 }
             })
 

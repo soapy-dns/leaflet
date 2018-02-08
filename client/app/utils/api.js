@@ -13,7 +13,7 @@ Axios.interceptors.request.use((conf) => {
 const Api = {
 
     // rural fire service stuff
-    getMajorIncidents: () => Axios.get('https://www.rfs.nsw.gov.au/feeds/majorIncidents.json'),
+    getMajorIncidents: () => Axios.get('https://cors-anywhere.herokuapp.com/https://www.rfs.nsw.gov.au/feeds/majorIncidents.json'),
 
 
 };
