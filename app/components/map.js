@@ -19,6 +19,7 @@ import Elevation from '../components/stats/elevation'
 import { saveTrack, selectTrack } from '../actions/tracks'
 import { saveMapDetails } from '../actions/current'
 import { toggleElevation } from '../actions/ui'
+import { getSelectedTrack, getLine, getDistanceBetween2Points, getMillisecsBetween2Points } from '../utils/index'
 
 import Icon from './icon'
 // import _ from 'lodash'
@@ -105,6 +106,10 @@ let initialTrack = {
             }
         }
     ]
+}
+
+const trackStyle = {
+
 }
 
 let map
@@ -321,19 +326,43 @@ class MyMap extends Component {
         // add tracks to map
         tracks.forEach(it => {
             console.log('it.track', it.track)
+            // get the name from the lineString
+            const line = it.track.features.find(it => it.geometry.type === 'LineString')
+            const trackName = line.properties.name
+            const color = line.properties.color
             const trackLayerGroup = new GeoJSON([it.track], {
+                // todo this is duplicated with open track - need to dry it
                 style: function (feature) {
-                    // return {color: line.properties.color || 'red'}
-                    return {color: 'red'}
-
+                    return {
+                        color: color || 'red',
+                        weight: 3,
+                    };
+                },
+                onEachFeature: function (feature, layer) {
+                    layer.on('mouseover', function() {
+                        this.setStyle({
+                            weight: 5
+                        })
+                    })
+                    layer.on('mouseout', function () {
+                        trackLayerGroup.resetStyle(this)
+                    })
+                    layer.on('click', function() {
+                        console.log('select')
+                        layer.off(mouseout, mouseout())
+                        dispatch(selectTrack(track))
+                        this.setStyle({
+                            weight: 5,
+                            dashArray: '5, 10, 7, 10, 10, 10'
+                        })
+                    })
                 }
             })
             trackLayerGroup.addTo(map)
         })
 
-
-
         // add initial track to the map
+        // todo - I think I need this if no tracks - check
         if (_.isEmpty(tracks)) {
             currentTrackLayerGroup = new GeoJSON([initialTrack], {
                 style: function (feature) {
@@ -433,7 +462,7 @@ class MyMap extends Component {
             }
         })
 
-        console.log('newtracksLayer', newtracksLayer)
+        // console.log('newtracksLayer', newtracksLayer)
 
         // add to map
         newtracksLayer.addTo(map)
@@ -496,8 +525,114 @@ class MyMap extends Component {
     }
 
     autoCorrectTrack() {
+        const { tracks } = this.props
+        // find the selected track
+        const selectedTrack = getSelectedTrack(tracks)
+        // console.log('selectedTrack', selectedTrack)
+        const line = getLine(selectedTrack)
+        // console.log('line', line)
+        const coordinates = _.cloneDeep(line.geometry.coordinates)
+        const coordTimes = _.cloneDeep(line.properties.coordTimes)
+
+        // console.log('coordinates', coordinates)
+        console.log('coordTimes', coordTimes)
+        const distances = []
+        const limit = coordinates.length - 1
+        for (let i = 0; i < limit; i++) {
+            distances.push(getDistanceBetween2Points(coordinates[i], coordinates[i+1]))
+        }
+        console.log('distances', distances)
+
+        const times = []
+        for (let i = 0; i < limit; i++) {
+            times.push(getMillisecsBetween2Points(coordTimes[i], coordTimes[i+1]))
+        }
+
+        const speeds = []
+        console.log('times', times)
+        const numberOfElements = distances.length - 1
+        for (let i = 0; i < numberOfElements; i++) {
+            // time in ms, distance m, convert to km / hour
+            speeds.push(distances[i] * 3600 / times[i])
+        }
+        console.log('speeds', speeds)
+
+        const maxSpeed = 3 // want to make variable
+        const minSpeed = 2
+        const updatedSpeeds = []
+        for (let i = 0; i < numberOfElements; i++) {
+
+            // remove coordinates and times where there was no movement.
+            if (speeds[i] < minSpeed || speeds[i] > 10) {
+                distances.splice(i, 1)
+                times.splice(i, 1)
+                coordinates.splice(i+1, 1)
+                coordTimes.splice(i+1, 1)
+            } else {
+                updatedSpeeds.push(speeds[i])
+            }
+        }
+
+        console.log('new speeds', updatedSpeeds)
+        console.log('new distances', distances)
+        console.log('new times', times)
+
+        // now build a new track
+        const newLine = _.cloneDeep(line)
+        newLine.geometry.coordinates = coordinates
+        newLine.properties.coordTimes = coordTimes
+
+        // todo - copy over other features
+        let newtracksLayer
+        // create new geojson layer for this track
+        newtracksLayer = new GeoJSON([newLine], {
+            style: function (feature) {
+                return {
+                    // color: line.properties.color || 'red',
+                    color: 'green',
+                    weight: 3,
+                };
+            },
+            onEachFeature: function (feature, layer) {
+                layer.on('mouseover', function() {
+                    this.setStyle({
+                        weight: 5
+                    })
+                })
+                layer.on('mouseout', function () {
+                    newtracksLayer.resetStyle(this)
+                })
+                layer.on('click', function() {
+                    console.log('select')
+                    layer.off(mouseout, mouseout())
+                    dispatch(selectTrack(newtracksLayer))
+                    this.setStyle({
+                        weight: 5,
+                        dashArray: '5, 10, 7, 10, 10, 10'
+                    })
+                })
+            }
+        })
+
+        // add track to overlay layers
+        const trackName = 'Corrected Track'
+        overlayLayers[trackName] = newtracksLayer
+
+        // add track layer to layer control
+        layersControl.addOverlay(newtracksLayer, trackName)
+
+
         console.log('autocorrect the current track')
-        const currentGeoJson = currentTrackLayerGroup.toGeoJSON()
+        // const currentGeoJson = currentTrackLayerGroup.toGeoJSON()
+        // https://github.com/hypertrack/time-aware-polyline-js/blob/master/src/polyline.js
+
+        //douglas peuker implemantation
+        // this isn't going to work on a circular route
+        // http://bl.ocks.org/helderdarocha/47fff819307ef8488607007ebb4f8b92
+
+        // https://stackoverflow.com/questions/27250353/circular-approximation-of-polygon-or-its-part/27251997#27251997
+
+        // https://stackoverflow.com/questions/43167417/calculate-distance-between-two-points-in-leaflet
 
         // https://stackoverflow.com/questions/16121236/smoothing-gps-tracked-route-coordinates
         // filters.max_possible_travel = function(data) {
