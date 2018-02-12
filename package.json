@@ -1,6 +1,9 @@
 {
   "name": "leaflet-test",
   "version": "1.0.0",
+  "engines": {
+    "node": "8.9.4"
+  },
   "description": "test leaflet app",
   "main": "app/index.html",
   "author": "Neil",
