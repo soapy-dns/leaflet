@@ -4,6 +4,7 @@ import {BasemapLayer, TiledMapLayer} from 'esri-leaflet'
 import utm from 'utm'
 import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
+import _ from 'lodash'
 
 import Api from '../utils/api'
 
@@ -16,7 +17,9 @@ import LoadTrackModal from './load-track-modal'
 import Elevation from '../components/stats/elevation'
 
 import { saveTrack, selectTrack } from '../actions/tracks'
+import { saveMapDetails } from '../actions/current'
 import { toggleElevation } from '../actions/ui'
+import { getSelectedTrack, getLine, getDistanceBetween2Points, getMillisecsBetween2Points } from '../utils/index'
 
 import Icon from './icon'
 // import _ from 'lodash'
@@ -103,6 +106,10 @@ let initialTrack = {
             }
         }
     ]
+}
+
+const trackStyle = {
+
 }
 
 let map
@@ -257,6 +264,7 @@ class MyMap extends Component {
         this.autoCorrectTrack = this.autoCorrectTrack.bind(this)
         this.showElevationPlot = this.showElevationPlot.bind(this)
         this.hideElevationPlot = this.hideElevationPlot.bind(this)
+        // this.saveLocation = this.saveLocation.bind(this)
 
         this.state = {
             locate: false,
@@ -265,12 +273,15 @@ class MyMap extends Component {
     }
 
     componentDidMount() {
+        const { dispatch, current, tracks } = this.props
 
         const baseLayer = new BasemapLayer('Gray')
 
         // topo layer
         const topoLayer = new TiledMapLayer({
-            url: 'http://maps.six.nsw.gov.au/arcgis/rest/services/public/NSW_Topo_Map/MapServer'
+            url: 'http://maps.six.nsw.gov.au/arcgis/rest/services/public/NSW_Topo_Map/MapServer',
+            maxZoom: 17,
+            maxNativeZoom: 15
         })
 
         // satellite image layer
@@ -282,16 +293,18 @@ class MyMap extends Component {
             "Base": baseLayer,
         }
 
-
+        const center = current.center || [-33.668759325519204, 150.34924333915114]
+        const zoom = current.zoom || 14
         map = new Map('mapid', {
-            center: [-33.668759325519204, 150.34924333915114],
-            zoom: 15,
-            maxZoom: 16,  // todo - maybe the zoom thing is caused by the esri thing
-            // maxZoom: 21,
-            // maxNativeZoom: 16,
+            center: center,
+            zoom: zoom,
+            maxZoom: 17,
+            maxNativeZoom: 14,  // don't request tiles with a zoom > this (cos they don't exist)
             layers: [baseLayer, topoLayer]
-            // layers: [baseLayer]
 
+        })
+        map.on('moveend', function(e) {
+            dispatch(saveMapDetails({center: map.getCenter(), zoom: map.getZoom() }))
         })
         map.zoomControl.setPosition('bottomright')
 
@@ -310,13 +323,55 @@ class MyMap extends Component {
         const scale = new Control.Scale()
         scale.addTo(map)
 
-        //add track layer to map
-        currentTrackLayerGroup = new GeoJSON([initialTrack], {
-            style: function (feature) {
-                return {color: line.properties.color || 'red'};
-            }
+        // add tracks to map
+        tracks.forEach(it => {
+            console.log('it.track', it.track)
+            // get the name from the lineString
+            const line = it.track.features.find(it => it.geometry.type === 'LineString')
+            const trackName = line.properties.name
+            const color = line.properties.color
+            const trackLayerGroup = new GeoJSON([it.track], {
+                // todo this is duplicated with open track - need to dry it
+                style: function (feature) {
+                    return {
+                        color: color || 'red',
+                        weight: 3,
+                    };
+                },
+                onEachFeature: function (feature, layer) {
+                    layer.on('mouseover', function() {
+                        this.setStyle({
+                            weight: 5
+                        })
+                    })
+                    layer.on('mouseout', function () {
+                        trackLayerGroup.resetStyle(this)
+                    })
+                    layer.on('click', function() {
+                        console.log('select')
+                        layer.off(mouseout, mouseout())
+                        dispatch(selectTrack(track))
+                        this.setStyle({
+                            weight: 5,
+                            dashArray: '5, 10, 7, 10, 10, 10'
+                        })
+                    })
+                }
+            })
+            trackLayerGroup.addTo(map)
         })
-        currentTrackLayerGroup.addTo(map)
+
+        // add initial track to the map
+        // todo - I think I need this if no tracks - check
+        if (_.isEmpty(tracks)) {
+            currentTrackLayerGroup = new GeoJSON([initialTrack], {
+                style: function (feature) {
+                    return {color: 'red'};
+                }
+            })
+            currentTrackLayerGroup.addTo(map)
+        }
+
     }
 
     onCancelAction() {
@@ -366,8 +421,12 @@ class MyMap extends Component {
 
         //parse track
         const track = JSON.parse(fileText)  //.features[0].geometry
+        console.log('track', track)
+
+        // get the name from the lineString
         const line = track.features.find(it => it.geometry.type === 'LineString')
         const trackName = line.properties.name
+        console.log('trackname', trackName)
 
         let newtracksLayer
         // create new geojson layer for this track
@@ -379,9 +438,9 @@ class MyMap extends Component {
                 };
             },
             onEachFeature: function (feature, layer) {
-                function mouseout() {
-                    newtracksLayer.resetStyle(this)
-                }
+                // function mouseout() {
+                //     newtracksLayer.resetStyle(this)
+                // }
                 layer.on('mouseover', function() {
                     this.setStyle({
                         weight: 5
@@ -390,7 +449,7 @@ class MyMap extends Component {
                 layer.on('mouseout', function () {
                     newtracksLayer.resetStyle(this)
                 })
-                layer.on('mouseout', mouseout())
+                // layer.on('mouseout', mouseout())
                 layer.on('click', function() {
                     console.log('select')
                     layer.off(mouseout, mouseout())
@@ -402,6 +461,8 @@ class MyMap extends Component {
                 })
             }
         })
+
+        // console.log('newtracksLayer', newtracksLayer)
 
         // add to map
         newtracksLayer.addTo(map)
@@ -425,7 +486,7 @@ class MyMap extends Component {
 
     getMajorIncidents() {
         // todo - move to redux
-        https://stackoverflow.com/questions/43871637/no-access-control-allow-origin-header-is-present-on-the-requested-resource-whe
+        //https://stackoverflow.com/questions/43871637/no-access-control-allow-origin-header-is-present-on-the-requested-resource-whe
             // flames = https://assets-cdn.github.com/images/icons/emoji/unicode/1f525.png
         Api.getMajorIncidents().then(data => {
             console.log('MAJOR INCIDENTS - %J', data)
@@ -464,8 +525,114 @@ class MyMap extends Component {
     }
 
     autoCorrectTrack() {
+        const { tracks } = this.props
+        // find the selected track
+        const selectedTrack = getSelectedTrack(tracks)
+        // console.log('selectedTrack', selectedTrack)
+        const line = getLine(selectedTrack)
+        // console.log('line', line)
+        const coordinates = _.cloneDeep(line.geometry.coordinates)
+        const coordTimes = _.cloneDeep(line.properties.coordTimes)
+
+        // console.log('coordinates', coordinates)
+        console.log('coordTimes', coordTimes)
+        const distances = []
+        const limit = coordinates.length - 1
+        for (let i = 0; i < limit; i++) {
+            distances.push(getDistanceBetween2Points(coordinates[i], coordinates[i+1]))
+        }
+        console.log('distances', distances)
+
+        const times = []
+        for (let i = 0; i < limit; i++) {
+            times.push(getMillisecsBetween2Points(coordTimes[i], coordTimes[i+1]))
+        }
+
+        const speeds = []
+        console.log('times', times)
+        const numberOfElements = distances.length - 1
+        for (let i = 0; i < numberOfElements; i++) {
+            // time in ms, distance m, convert to km / hour
+            speeds.push(distances[i] * 3600 / times[i])
+        }
+        console.log('speeds', speeds)
+
+        const maxSpeed = 3 // want to make variable
+        const minSpeed = 2
+        const updatedSpeeds = []
+        for (let i = 0; i < numberOfElements; i++) {
+
+            // remove coordinates and times where there was no movement.
+            if (speeds[i] < minSpeed || speeds[i] > 10) {
+                distances.splice(i, 1)
+                times.splice(i, 1)
+                coordinates.splice(i+1, 1)
+                coordTimes.splice(i+1, 1)
+            } else {
+                updatedSpeeds.push(speeds[i])
+            }
+        }
+
+        console.log('new speeds', updatedSpeeds)
+        console.log('new distances', distances)
+        console.log('new times', times)
+
+        // now build a new track
+        const newLine = _.cloneDeep(line)
+        newLine.geometry.coordinates = coordinates
+        newLine.properties.coordTimes = coordTimes
+
+        // todo - copy over other features
+        let newtracksLayer
+        // create new geojson layer for this track
+        newtracksLayer = new GeoJSON([newLine], {
+            style: function (feature) {
+                return {
+                    // color: line.properties.color || 'red',
+                    color: 'green',
+                    weight: 3,
+                };
+            },
+            onEachFeature: function (feature, layer) {
+                layer.on('mouseover', function() {
+                    this.setStyle({
+                        weight: 5
+                    })
+                })
+                layer.on('mouseout', function () {
+                    newtracksLayer.resetStyle(this)
+                })
+                layer.on('click', function() {
+                    console.log('select')
+                    layer.off(mouseout, mouseout())
+                    dispatch(selectTrack(newtracksLayer))
+                    this.setStyle({
+                        weight: 5,
+                        dashArray: '5, 10, 7, 10, 10, 10'
+                    })
+                })
+            }
+        })
+
+        // add track to overlay layers
+        const trackName = 'Corrected Track'
+        overlayLayers[trackName] = newtracksLayer
+
+        // add track layer to layer control
+        layersControl.addOverlay(newtracksLayer, trackName)
+
+
         console.log('autocorrect the current track')
-        const currentGeoJson = currentTrackLayerGroup.toGeoJSON()
+        // const currentGeoJson = currentTrackLayerGroup.toGeoJSON()
+        // https://github.com/hypertrack/time-aware-polyline-js/blob/master/src/polyline.js
+
+        //douglas peuker implemantation
+        // this isn't going to work on a circular route
+        // http://bl.ocks.org/helderdarocha/47fff819307ef8488607007ebb4f8b92
+
+        // https://stackoverflow.com/questions/27250353/circular-approximation-of-polygon-or-its-part/27251997#27251997
+
+        // https://stackoverflow.com/questions/43167417/calculate-distance-between-two-points-in-leaflet
 
         // https://stackoverflow.com/questions/16121236/smoothing-gps-tracked-route-coordinates
         // filters.max_possible_travel = function(data) {
@@ -510,11 +677,17 @@ class MyMap extends Component {
         }
 
         function onLocationFound(e) {
-            console.log('onLocation found', e)
-            // var radius = e.accuracy / 2
+            // console.log('onLocation found', e)
+            var radius = e.accuracy / 2
             // console.log(`you are within ${radius} meters from this point`)
 
-            // L.circle(e.latlng, radius).addTo(map).bindPopup("You are located within this circle").openPopup()
+
+            L.circle(e.latlng, {
+                color: '#3ad',
+                fillColor: '#30f',
+                fillOpacity: 0.5,
+                radius
+            }).addTo(map).bindPopup("You are located within this circle").openPopup()
         }
     }
 
@@ -582,6 +755,7 @@ class MyMap extends Component {
         // todo - display all the tracks stored in redux state, and set the bounds to the selected Track
 
 
+        console.log('zoom--', map ? map.getZoom() : 'unknown zoom')
         // todo - I think the toolbar should be another level up eg within main
         console.log('modal', this.state.modal)
         const { ui, currentLayer, dispatch } = this.props
@@ -622,14 +796,16 @@ class MyMap extends Component {
 
 MyMap.propTypes = {
     dispatch: PropTypes.func,
-    currentLayer: PropTypes.object,
-    ui: PropTypes.object
+    current: PropTypes.object,
+    ui: PropTypes.object,
+    tracks: PropTypes.array
 }
 
 function mapStateToProps(state) {
     return {
-        currentLayer: state.currentLayer,
-        ui: state.ui
+        current: state.current,
+        ui: state.ui,
+        tracks: state.tracks
     }
 }
 

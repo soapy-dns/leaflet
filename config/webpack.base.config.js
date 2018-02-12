@@ -41,7 +41,7 @@ module.exports = new Config().merge({
         // copies files to output root
         new CopyWebpackPlugin([
             {from: './app/assets', to: 'assets'},
-            // { from: './server/index.js' }
+            { from: './server.js' }
         ])
         // new FaviconsWebpackPlugin('./app/assets/images/favicon.ico')
     ]
