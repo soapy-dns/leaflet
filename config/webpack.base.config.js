@@ -3,7 +3,7 @@ const Config = require('webpack-config').default;
 const path = require('path');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-// const FaviconsWebpackPlugin = require('favicons-webpack-plugin');
+const FaviconsWebpackPlugin = require('favicons-webpack-plugin');
 
 module.exports = new Config().merge({
     entry: {
@@ -42,7 +42,7 @@ module.exports = new Config().merge({
         new CopyWebpackPlugin([
             {from: './app/assets', to: 'assets'},
             { from: './server.js' }
-        ])
-        // new FaviconsWebpackPlugin('./app/assets/images/favicon.ico')
+        ]),
+        new FaviconsWebpackPlugin('./app/assets/images/map.png')
     ]
 });
