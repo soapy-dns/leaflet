@@ -15,7 +15,8 @@
 
     "clean": "rimraf ./dist && mkdir dist",
 
-    "start": "npm run build && node server",
+    "start": "node server",
+    "postinstall": "NODE_ENV='production' webpack --progress -p"
     "test": "'mocha **/*.spec.js' --recursive --check-leaks --reporter min"
   },
   "dependencies": {
