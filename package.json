@@ -10,7 +10,7 @@
   "license": "ISC",
   "scripts": {
     "dev": "webpack-dev-server --progress --history-api-fallback --hot --inline --port 9001 --open",
-    "build": "npm run clean && webpack --progress -p",
+    "build": "webpack --progress -p",
     "build-prod": "npm run clean && NODE_ENV='production' webpack --progress -p",
 
     "clean": "rimraf ./dist && mkdir dist",
