@@ -42,7 +42,7 @@ class Toolbar extends Component {
             drawLine,
             stopDrawLine,
             addWaypoint,
-            selectATrack,
+            // selectATrack,
             getMajorIncidents,
             autoCorrectTrack,
             showElevationPlot
@@ -63,13 +63,6 @@ class Toolbar extends Component {
                             {this.state.menu.currentTrack === true && (
                                 <Menu.Menu>
 
-                                    <Menu.Item onClick={drawLine}>
-                                        Draw Track
-                                    </Menu.Item>
-                                    <Menu.Item onClick={stopDrawLine}>
-                                        Stop Drawing Track
-                                    </Menu.Item>
-
                                     <Menu.Item onClick={addWaypoint}>
                                         Add waypoint
                                     </Menu.Item>
@@ -86,6 +79,23 @@ class Toolbar extends Component {
                         </Menu.Item>
 
                         <Menu.Item onClick={centreOnCurrentLocation}>
+                            <Menu.Header>
+                                Create a new track
+                                <Icon name="chevron down" onClick={this.toggleCurrentTrackMenu} link />
+                            </Menu.Header>
+
+                            <Menu.Menu>
+                                <Menu.Item onClick={drawLine}>
+                                    Draw Track
+                                </Menu.Item>
+
+                                <Menu.Item onClick={stopDrawLine}>
+                                    Stop Drawing Track
+                                </Menu.Item>
+                            </Menu.Menu>
+                        </Menu.Item>
+
+                        <Menu.Item onClick={centreOnCurrentLocation}>
                             Centre on current location
                         </Menu.Item>
 
@@ -99,10 +109,6 @@ class Toolbar extends Component {
 
                         <Menu.Item onClick={awaitingFunctionality}>
                             Choose map source
-                        </Menu.Item>
-
-                        <Menu.Item onClick={selectATrack}>
-                            Select a Track
                         </Menu.Item>
 
                         <Menu.Item onClick={getMajorIncidents}>
@@ -125,7 +131,7 @@ Toolbar.propTypes = {
     openTrack: PropTypes.func,
     okAction: PropTypes.func,
     cancelAction: PropTypes.func,
-    selectATrack: PropTypes.func,
+    // selectATrack: PropTypes.func,
     addWaypoint: PropTypes.func,
     drawLine: PropTypes.func,
     stopDrawLine: PropTypes.func,

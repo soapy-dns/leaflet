@@ -6,16 +6,21 @@
     "author": "Neil",
     "license": "ISC",
     "scripts": {
-        "dev": "webpack-dev-server --progress --history-api-fallback --hot --inline --port 9001 --open",
+        "dev1": "webpack-dev-server",
+        "dev": "webpack-dev-server --progress --history-api-fallback --hot --port 9001 --open",
+        "dev2": "webpack-dev-server --progress --history-api-fallback --hot --inline --port 9001 --open",
         "build": "npm run clean && webpack --progress -p",
         "build-prod": "npm run clean && NODE_ENV='production' webpack --progress -p",
         "clean": "rimraf ./dist && mkdir dist",
         "start": "npm run build && node server",
-        "test": "'mocha **/*.spec.js' --recursive --check-leaks --reporter min"
+        "test": "'mocha **/*.spec.js' --recursive --check-leaks --reporter min",
+        "heroku-prebuild": "echo This runs before Heroku installs your dependencies.",
+        "heroku-postbuild": "echo This runs afterwards."
     },
     "dependencies": {
         "axios": "^0.17.1",
         "chart.js": "^2.7.1",
+        "es6-promise": "^4.2.4",
         "esri-leaflet": "^2.1.1",
         "jquery": "^3.2.1",
         "leaflet": "^1.2.0",
@@ -23,6 +28,7 @@
         "leaflet.elevation": "0.0.3",
         "leaflet.utm": "0.0.4",
         "lodash": "^4.17.4",
+        "normalize.css": "5.0.0",
         "prop-types": "^15.6.0",
         "react": "^16.2.0",
         "react-chartjs-2": "^2.7.0",
