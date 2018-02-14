@@ -21,10 +21,10 @@ function ensureSecure(req, res, next) {
 // force https for production
 app.use(ensureSecure)
 
-// serve static assets normally
-app.use(express.static(path.join(__dirname, '/')))
+// serve static assets normally - I guess static assets are files
+app.use(express.static(path.join(__dirname, '/dist/')))
 console.log('__dirname', __dirname)
-app.use('/bundle.js', express.static(path.join(__dirname, '/dist/bundle.js')))
+// app.use('/bundle.js', express.static(path.join(__dirname, '/dist/bundle.js')))
 
 
 // Handles all routes so you do not get a not found error

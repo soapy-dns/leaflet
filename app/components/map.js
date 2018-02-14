@@ -257,7 +257,7 @@ class MyMap extends Component {
         this.onOpenTrack = this.onOpenTrack.bind(this)
         this.centreOnCurrentLocation = this.centreOnCurrentLocation.bind(this)
         this.addWaypoint = this.addWaypoint.bind(this)
-        this.selectATrack = this.selectATrack.bind(this)
+        // this.selectATrack = this.selectATrack.bind(this)
         this.drawLine = this.drawLine.bind(this)
         this.stopDrawLine = this.stopDrawLine.bind(this)
         this.getMajorIncidents = this.getMajorIncidents.bind(this)
@@ -728,28 +728,28 @@ class MyMap extends Component {
         map.on('click', addWaypointOnClick)
     }
 
-    selectATrack() {
-        // change cursor to crosshairs
-        L.DomUtil.addClass(map._container, 'leaflet-crosshair')
-
-        // create function for map click after selectATrack has been selected
-        function onSelectTrack(e) {
-            // find nearest track
-            console.log('find nearest track')
-
-
-            // set current track layer
-
-
-            // marker.setLatLng(e.latlng).addTo(tracksLayer)
-
-            // reset cursor
-            L.DomUtil.removeClass(map._container, 'leaflet-crosshair')
-            map.off('click', onSelectTrack)
-        }
-
-        map.on('click', onSelectTrack)
-    }
+    // selectATrack() {
+    //     // change cursor to crosshairs
+    //     L.DomUtil.addClass(map._container, 'leaflet-crosshair')
+    //
+    //     // create function for map click after selectATrack has been selected
+    //     function onSelectTrack(e) {
+    //         // find nearest track
+    //         console.log('find nearest track')
+    //
+    //
+    //         // set current track layer
+    //
+    //
+    //         // marker.setLatLng(e.latlng).addTo(tracksLayer)
+    //
+    //         // reset cursor
+    //         L.DomUtil.removeClass(map._container, 'leaflet-crosshair')
+    //         map.off('click', onSelectTrack)
+    //     }
+    //
+    //     map.on('click', onSelectTrack)
+    // }
 
     render() {
         // todo - display all the tracks stored in redux state, and set the bounds to the selected Track
@@ -779,7 +779,6 @@ class MyMap extends Component {
                     drawLine={this.drawLine}
                     stopDrawLine={this.stopDrawLine}
                     addWaypoint={this.addWaypoint}
-                    selectATrack={this.selectATrack}
                     getMajorIncidents={this.getMajorIncidents}
                     autoCorrectTrack={this.autoCorrectTrack}
                     showElevationPlot={this.showElevationPlot}
