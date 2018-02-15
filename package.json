@@ -6,16 +6,14 @@
     "author": "Neil",
     "license": "ISC",
     "scripts": {
-        "dev1": "webpack-dev-server",
         "dev": "webpack-dev-server --progress --history-api-fallback --hot --port 9001 --open",
-        "dev2": "webpack-dev-server --progress --history-api-fallback --hot --inline --port 9001 --open",
         "build": "webpack --progress -p",
         "build-prod": "npm run clean && NODE_ENV='production' webpack --progress -p",
         "clean": "rimraf ./dist && mkdir dist",
         "start": "npm run build && node server",
         "test": "'mocha **/*.spec.js' --recursive --check-leaks --reporter min",
         "heroku-prebuild": "echo This runs before Heroku installs your dependencies.",
-        "heroku-postbuild": "echo This runs afterwards."
+        "heroku-postbuild": "webpack --progress -p"
     },
     "dependencies": {
         "axios": "^0.17.1",
