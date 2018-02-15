@@ -13,7 +13,7 @@
         "start": "npm run build && node server",
         "test": "'mocha **/*.spec.js' --recursive --check-leaks --reporter min",
         "heroku-prebuild": "echo This runs before Heroku installs your dependencies.",
-        "heroku-postbuild": "webpack --progress -p"
+        "heroku-postbuild": "echo This runs after Heroku installs your dependencies."
     },
     "dependencies": {
         "axios": "^0.17.1",
