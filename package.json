@@ -8,7 +8,7 @@
     "scripts": {
         "dev": "webpack-dev-server --progress --history-api-fallback --hot --port 9001 --open",
         "build": "webpack --progress -p",
-        "build-prod": "./node_modules/webpack/bin/webpack.js --progress -p",
+        "build-prod": "webpack --progress -p",
         "clean": "rimraf ./dist && mkdir dist",
         "start": "npm run build-prod && node server",
         "test": "'mocha **/*.spec.js' --recursive --check-leaks --reporter min",
