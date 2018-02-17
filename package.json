@@ -4,7 +4,7 @@
   "description": "test leaflet app",
   "main": "app/index.html",
   "engines": {
-    "node": ">=7.6"
+    "node": "=7.6"
   },
   "author": "Neil",
   "license": "ISC",
