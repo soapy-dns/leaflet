@@ -23,6 +23,14 @@ module.exports = new Config().extend('config/webpack.base.config.js').merge({
         // }]
     },
     // plugins: [
+    //     new webpack.optimize.UglifyJsPlugin({
+    //         compress: {
+    //             warnings: true
+    //         }
+    //     }),
+    //     // new ExtractTextPlugin('main.css')
+    // ],
+    // plugins: [
     //     new webpack.DefinePlugin({
     //         'process.env.NODE_ENV': '"development"',
     //         'process.env.API_URL': '"http://localhost:8081"',
