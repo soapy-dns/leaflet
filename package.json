@@ -12,8 +12,8 @@
     "clean": "rimraf ./dist && mkdir dist",
     "start": "npm run build-prod && node server",
     "test": "'mocha **/*.spec.js' --recursive --check-leaks --reporter min",
-    "heroku-prebuild": "echo This runs before Heroku installs your dependencies.",
-    "heroku-postbuild": "echo This runs after Heroku installs your dependencies."
+    "heroku-prebuild": "npm i",
+    "heroku-postbuild": "npm run build"
   },
   "dependencies": {
     "axios": "^0.17.1",
