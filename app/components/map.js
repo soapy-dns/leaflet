@@ -67,7 +67,7 @@ var flameIcon = L.icon({
     iconAnchor:   [22, 38], // point of the icon which will correspond to marker's location
     // shadowAnchor: [4, 62],  // the same for the shadow
     popupAnchor:  [-3, -76] // point from which the popup should open relative to the iconAnchor
-});
+})
 
 // todo - reinstate something similar - this has got functionality for processing points
 
@@ -136,12 +136,12 @@ const _getInitialLineFeature = (latlng) => {
 
 
 // create function for map click after addWaypoint selected
-function addWaypointOnClick(e) {
+function _addWaypointOnClick(e) {
     // set up waypoint geojson
     const waypointFeature = {
         "type": "Feature",
         "properties": {
-            "name": "CC THUNDER JT",
+            "name": "CC THUNDER JT",  // todo - allow to be updated
             "time": "2014-04-12T01:40:46Z",
             "sym": "Flag, Blue",
             "type": "user"
@@ -156,30 +156,41 @@ function addWaypointOnClick(e) {
         }
     }
 
+
     // create waypoint
     const waypoint = L.geoJSON(waypointFeature, {
         // each point will be converted to a marker with the defined options
         pointToLayer: function (feature, latlng) {
-            // return L.circleMarker(e.latlng, geojsonMarkerOptions);
             console.log('initial waypoint', e.latlng)
+            // return L.circleMarker(e.latlng, geojsonMarkerOptions);
             return L.marker(e.latlng)
+            // return L.marker(e.latlng, {icon: flameIcon})
+
         },
         // onEachFeature: function (feature, latlng) {
         //     console.log('open modal')
         //     // todo - allow a popup to be set to add content / change the marker
         // }
         onEachFeature: function (feature, layer) {
+            console.log('--onEachFeature--')
             if (feature.properties && feature.properties.name) {
+                console.log('--bindPopup--')
                 layer.bindPopup(feature.properties.name);
             }
         }
     })
 
+    // console.log('add waypoint layer %j', waypoint.toString())
+    // console.log('add waypoint layer', waypoint)
+    // console.log('back to geojson', waypoint.toGeoJSON())
+    // console.log('add waypoint layer', JSON.stringify(waypoint))
+
     // add to group
     currentTrackLayerGroup.addLayer(waypoint)
 
+    // turn off 'waypointing'
     L.DomUtil.removeClass(map._container, 'leaflet-crosshair')
-    map.off('click', addWaypointOnClick)
+    map.off('click', _addWaypointOnClick)
 }
 
 function onDrawLineClick(e) {
@@ -273,6 +284,7 @@ class MyMap extends Component {
     }
 
     componentDidMount() {
+        console.log('COMPONENT DID MOUNT')
         const { dispatch, current, tracks } = this.props
 
         const baseLayer = new BasemapLayer('Gray')
@@ -308,6 +320,8 @@ class MyMap extends Component {
         })
         map.zoomControl.setPosition('bottomright')
 
+        var marker = L.marker([-33.668759325519204, 150.34924333915114]).addTo(map) // testing only
+
 
         // define overlay layers for control
         overlayLayers = {
@@ -325,7 +339,8 @@ class MyMap extends Component {
 
         // add tracks to map
         tracks.forEach(it => {
-            console.log('it.track', it.track)
+
+            console.log('redoing all the tracks from redux it.track', it.track)
             // get the name from the lineString
             const line = it.track.features.find(it => it.geometry.type === 'LineString')
             const trackName = line.properties.name
@@ -339,23 +354,27 @@ class MyMap extends Component {
                     };
                 },
                 onEachFeature: function (feature, layer) {
-                    layer.on('mouseover', function() {
-                        this.setStyle({
-                            weight: 5
+                    if (feature.geometry.type === 'LineString') {
+                        layer.on('mouseover', function() {
+                            this.setStyle({
+                                weight: 5
+                            })
                         })
-                    })
-                    layer.on('mouseout', function () {
-                        trackLayerGroup.resetStyle(this)
-                    })
-                    layer.on('click', function() {
-                        console.log('select')
-                        layer.off(mouseout, mouseout())
-                        dispatch(selectTrack(track))
-                        this.setStyle({
-                            weight: 5,
-                            dashArray: '5, 10, 7, 10, 10, 10'
+                        layer.on('mouseout', function () {
+                            trackLayerGroup.resetStyle(this)
                         })
-                    })
+                        layer.on('click', function() {
+                            console.log('select')
+                            layer.off(mouseout, mouseout())
+                            dispatch(selectTrack(track))
+                            this.setStyle({
+                                weight: 5,
+                                dashArray: '5, 10, 7, 10, 10, 10'
+                            })
+                        })
+                    }
+
+
                 }
             })
             trackLayerGroup.addTo(map)
@@ -417,6 +436,7 @@ class MyMap extends Component {
 
     // todo -change newTracksLayer -> newTrackLayer
     onOpenTrack(fileText, colour) {
+        console.log('--onOpenTrack--')
         const { dispatch } = this.props
 
         //parse track
@@ -437,28 +457,38 @@ class MyMap extends Component {
                     weight: 3,
                 };
             },
+            pointToLayer: function (feature, latlng) {
+                // return L.circleMarker(latlng, geojsonMarkerOptions);
+                console.log('--onOpenTrack-- --pointToLayer-- latlng>>', latlng)
+                // return L.marker(latlng)
+                return L.marker(latlng, {icon: flameIcon})
+
+            },
             onEachFeature: function (feature, layer) {
-                // function mouseout() {
-                //     newtracksLayer.resetStyle(this)
-                // }
-                layer.on('mouseover', function() {
-                    this.setStyle({
-                        weight: 5
+                console.log('--onOpenTrack-- feature>>', feature)
+
+                // add line behaviours
+                if (feature.geometry.type === 'LineString') {
+                    layer.on('mouseover', function() {
+                        this.setStyle({
+                            weight: 5
+                        })
                     })
-                })
-                layer.on('mouseout', function () {
-                    newtracksLayer.resetStyle(this)
-                })
-                // layer.on('mouseout', mouseout())
-                layer.on('click', function() {
-                    console.log('select')
-                    layer.off(mouseout, mouseout())
-                    dispatch(selectTrack(track))
-                    this.setStyle({
-                        weight: 5,
-                        dashArray: '5, 10, 7, 10, 10, 10'
+                    layer.on('mouseout', function () {
+                        newtracksLayer.resetStyle(this)
                     })
-                })
+                    // layer.on('mouseout', mouseout())
+                    layer.on('click', function() {
+                        console.log('select')
+                        layer.off(mouseout, mouseout())
+                        dispatch(selectTrack(track))
+                        this.setStyle({
+                            weight: 5,
+                            dashArray: '5, 10, 7, 10, 10, 10'
+                        })
+                    })
+                }
+
             }
         })
 
@@ -703,6 +733,7 @@ class MyMap extends Component {
     change cursor and add click functionality
      */
     drawLine() {
+        console.log('drawLine')
         L.DomUtil.addClass(map._container, 'leaflet-crosshair')
         map.on('click', onDrawLineClick)
     }
@@ -725,7 +756,7 @@ class MyMap extends Component {
             fillOpacity: 0.8
         };
 
-        map.on('click', addWaypointOnClick)
+        map.on('click', _addWaypointOnClick)
     }
 
     // selectATrack() {
@@ -755,9 +786,7 @@ class MyMap extends Component {
         // todo - display all the tracks stored in redux state, and set the bounds to the selected Track
 
 
-        console.log('zoom--', map ? map.getZoom() : 'unknown zoom')
         // todo - I think the toolbar should be another level up eg within main
-        console.log('modal', this.state.modal)
         const { ui, currentLayer, dispatch } = this.props
         return (
             <div id="mapwrap">

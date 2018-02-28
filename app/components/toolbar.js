@@ -63,28 +63,29 @@ class Toolbar extends Component {
                             {this.state.menu.currentTrack === true && (
                                 <Menu.Menu>
 
-                                    <Menu.Item onClick={addWaypoint}>
-                                        Add waypoint
-                                    </Menu.Item>
+                                <Menu.Item onClick={addWaypoint}>
+                                    Add waypoint
+                                </Menu.Item>
 
-                                    <Menu.Item onClick={autoCorrectTrack}>
-                                        Autocorrect track
-                                    </Menu.Item>
+                                <Menu.Item onClick={autoCorrectTrack}>
+                                    Autocorrect track
+                                </Menu.Item>
 
-                                    <Menu.Item onClick={showElevationPlot}>
-                                        Show elevation plot
-                                    </Menu.Item>
-                                </Menu.Menu>
+                                <Menu.Item onClick={showElevationPlot}>
+                                    Show elevation plot
+                                </Menu.Item>
+                            </Menu.Menu>
                             )}
                         </Menu.Item>
 
-                        <Menu.Item onClick={centreOnCurrentLocation}>
+                        <Menu.Item>
                             <Menu.Header>
                                 Create a new track
                                 <Icon name="chevron down" onClick={this.toggleCurrentTrackMenu} link />
                             </Menu.Header>
 
                             <Menu.Menu>
+
                                 <Menu.Item onClick={drawLine}>
                                     Draw Track
                                 </Menu.Item>
