@@ -69,6 +69,19 @@ var flameIcon = L.icon({
     popupAnchor:  [-3, -76] // point from which the popup should open relative to the iconAnchor
 })
 
+// const markerIcon = new L.Icon({
+//     iconUrl: '../assets/images/marker.png',
+//     iconSize:     [38, 38], // size of the icon
+//     // shadowSize:   [50, 64], // size of the shadow
+//     iconAnchor:   [22, 38], // point of the icon which will correspond to marker's location
+//     // shadowAnchor: [4, 62],  // the same for the shadow
+//     popupAnchor:  [-3, -76] // point from which the popup should open relative to the iconAnchor
+// })
+const markerIcon = new L.Icon.Default()
+markerIcon.options.shadowSize = [0,0]
+
+// var marker = new L.Marker(map.getCenter(), {icon : markerIcon}).addTo(MyMap);
+
 // todo - reinstate something similar - this has got functionality for processing points
 
 // THIS COULD BE NEW TRACK LAYER?
@@ -163,7 +176,7 @@ function _addWaypointOnClick(e) {
         pointToLayer: function (feature, latlng) {
             console.log('initial waypoint', e.latlng)
             // return L.circleMarker(e.latlng, geojsonMarkerOptions);
-            return L.marker(e.latlng)
+            return L.marker(e.latlng, {icon : markerIcon})
             // return L.marker(e.latlng, {icon: flameIcon})
 
         },
@@ -320,7 +333,7 @@ class MyMap extends Component {
         })
         map.zoomControl.setPosition('bottomright')
 
-        var marker = L.marker([-33.668759325519204, 150.34924333915114]).addTo(map) // testing only
+        // const marker = L.marker([-33.668759325519204, 150.34924333915114], {icon : markerIcon} ).addTo(map) // testing only
 
 
         // define overlay layers for control

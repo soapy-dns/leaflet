@@ -6,7 +6,7 @@ require('es6-promise').polyfill()
 import 'normalize.css'  // I added this to get rid of the annoying blue outline around the menu button, but it didn't work
 import './styles/main.css'
 import 'semantic-ui-css/semantic.min.css'
-// import 'leaflet/dist/leaflet.css'  //
+import 'leaflet/dist/leaflet.css'  //
 
 import Routes from './config/routes'
 
