@@ -38,10 +38,6 @@ import { geojsonMarkerOptions, geojsonLineMarkerOptions } from '../common/marker
 // })
 
 
-
-
-
-
 let initialTrack = {
     type: "FeatureCollection",
     features: [
@@ -56,9 +52,6 @@ let initialTrack = {
     ]
 }
 
-const trackStyle = {
-
-}
 
 let map
 let overlayLayers
@@ -145,7 +138,7 @@ function onDrawLineClick(e) {
     const currentGeoJson = currentTrackLayerGroup.toGeoJSON()
 
     const pointFeatures = currentGeoJson.features.filter(it => it.geometry.type === 'Point')
-    console.log('pointFeatures', pointFeatures)
+    // console.log('pointFeatures', pointFeatures)
 
     let lineFeature = currentGeoJson.features.find(it => it.geometry.type === 'LineString')
     if (!lineFeature) lineFeature = _getInitialLineFeature(e.latlng)
@@ -180,7 +173,7 @@ function onDrawLineClick(e) {
             if (feature.properties.type !== "user") {
                 return L.circleMarker(featureLatlng, geojsonLineMarkerOptions);
             } else {
-                return L.marker(featureLatlng)
+                return L.marker(featureLatlng, markerIcon)
             }
         }
     })
@@ -695,40 +688,18 @@ class MyMap extends Component {
         L.DomUtil.addClass(map._container, 'leaflet-crosshair')
 
         // marker definition options
-        var geojsonMarkerOptions = {
-            radius: 8,
-            fillColor: "#ff7800",
-            color: "#000",
-            weight: 1,
-            opacity: 1,
-            fillOpacity: 0.8
-        };
+        // var geojsonMarkerOptions = {
+        //     radius: 8,
+        //     fillColor: "#ff7800",
+        //     color: "#000",
+        //     weight: 1,
+        //     opacity: 1,
+        //     fillOpacity: 0.8
+        // };
 
         map.on('click', _addWaypointOnClick)
     }
 
-    // selectATrack() {
-    //     // change cursor to crosshairs
-    //     L.DomUtil.addClass(map._container, 'leaflet-crosshair')
-    //
-    //     // create function for map click after selectATrack has been selected
-    //     function onSelectTrack(e) {
-    //         // find nearest track
-    //         console.log('find nearest track')
-    //
-    //
-    //         // set current track layer
-    //
-    //
-    //         // marker.setLatLng(e.latlng).addTo(tracksLayer)
-    //
-    //         // reset cursor
-    //         L.DomUtil.removeClass(map._container, 'leaflet-crosshair')
-    //         map.off('click', onSelectTrack)
-    //     }
-    //
-    //     map.on('click', onSelectTrack)
-    // }
 
     render() {
         // todo - display all the tracks stored in redux state, and set the bounds to the selected Track

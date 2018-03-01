@@ -1,7 +1,6 @@
-// import L, {Control, Marker, Map, GeoJSON} from 'leaflet'
 import {Icon} from 'leaflet'  // should probably only import what we need
 
-//https://gis.stackexchange.com/questions/240738/control-custom-panes-for-leaflet-geojson-svg-icons
+// https://gis.stackexchange.com/questions/240738/control-custom-panes-for-leaflet-geojson-svg-icons
 
 
 export const flameIcon = new Icon({
