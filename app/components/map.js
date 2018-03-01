@@ -21,66 +21,9 @@ import { saveMapDetails } from '../actions/current'
 import { toggleElevation } from '../actions/ui'
 import { getSelectedTrack, getLine, getDistanceBetween2Points, getMillisecsBetween2Points } from '../utils/index'
 
-import Icon from './icon'
-// import _ from 'lodash'
+import { flameIcon, startIcon, markerIcon } from '../common/icons'
+import { geojsonMarkerOptions, geojsonLineMarkerOptions } from '../common/marker-options'
 
-var geojsonMarkerOptions = {
-    radius: 8,
-    fillColor: "#ff7800",
-    color: "#000",
-    weight: 1,
-    opacity: 1,
-    fillOpacity: 0.8
-}
-
-//https://gis.stackexchange.com/questions/240738/control-custom-panes-for-leaflet-geojson-svg-icons
-
-/*
- custom icon stuff
- */
-//https://gist.github.com/clhenrick/6791bb9040a174cd93573f85028e97af
-var CustomIcon = L.Icon.extend({
-    options: {
-        iconSize: [40, 40],
-        shadowSize: [50, 64],
-        iconAnchor: [22, 94],
-        shadowAnchor: [4, 62],
-        popupAnchor: [-3, -76]
-    }
-})
-
-var myIcon = L.icon({
-    iconUrl: 'assets/svg/start.svg',
-    // iconUrl: 'assets/svg/rect.svg',
-    iconSize: [32, 32],
-    iconAnchor: [0, 16],
-    popupAnchor: [0, -28]
-})
-
-var flameIcon = L.icon({
-    // iconUrl: 'assets/images/flame.png',
-    iconUrl: 'https://assets-cdn.github.com/images/icons/emoji/unicode/1f525.png',
-    // shadowUrl: 'leaf-shadow.png',
-
-    iconSize:     [38, 38], // size of the icon
-    // shadowSize:   [50, 64], // size of the shadow
-    iconAnchor:   [22, 38], // point of the icon which will correspond to marker's location
-    // shadowAnchor: [4, 62],  // the same for the shadow
-    popupAnchor:  [-3, -76] // point from which the popup should open relative to the iconAnchor
-})
-
-// const markerIcon = new L.Icon({
-//     iconUrl: '../assets/images/marker.png',
-//     iconSize:     [38, 38], // size of the icon
-//     // shadowSize:   [50, 64], // size of the shadow
-//     iconAnchor:   [22, 38], // point of the icon which will correspond to marker's location
-//     // shadowAnchor: [4, 62],  // the same for the shadow
-//     popupAnchor:  [-3, -76] // point from which the popup should open relative to the iconAnchor
-// })
-const markerIcon = new L.Icon.Default()
-markerIcon.options.shadowSize = [0,0]
-
-// var marker = new L.Marker(map.getCenter(), {icon : markerIcon}).addTo(MyMap);
 
 // todo - reinstate something similar - this has got functionality for processing points
 
@@ -97,15 +40,7 @@ markerIcon.options.shadowSize = [0,0]
 
 
 
-// marker definition options
-const geojsonLineMarkerOptions = {
-    radius: 5,
-    fillColor: "#FFF",
-    color: "#F00",
-    weight: 2,
-    opacity: 1,
-    fillOpacity: 0.5
-};
+
 
 let initialTrack = {
     type: "FeatureCollection",
@@ -333,7 +268,7 @@ class MyMap extends Component {
         })
         map.zoomControl.setPosition('bottomright')
 
-        // const marker = L.marker([-33.668759325519204, 150.34924333915114], {icon : markerIcon} ).addTo(map) // testing only
+        const marker = L.marker([-33.668759325519204, 150.34924333915114], {icon: flameIcon}).addTo(map) // testing only
 
 
         // define overlay layers for control
