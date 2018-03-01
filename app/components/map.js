@@ -268,7 +268,7 @@ class MyMap extends Component {
         })
         map.zoomControl.setPosition('bottomright')
 
-        const marker = L.marker([-33.668759325519204, 150.34924333915114], {icon: flameIcon}).addTo(map) // testing only
+        const marker = L.marker([-33.668759325519204, 150.34924333915114], {icon: markerIcon}).addTo(map) // testing only
 
 
         // define overlay layers for control
@@ -409,7 +409,7 @@ class MyMap extends Component {
                 // return L.circleMarker(latlng, geojsonMarkerOptions);
                 console.log('--onOpenTrack-- --pointToLayer-- latlng>>', latlng)
                 // return L.marker(latlng)
-                return L.marker(latlng, {icon: flameIcon})
+                return L.marker(latlng, {icon: markerIcon})
 
             },
             onEachFeature: function (feature, layer) {
