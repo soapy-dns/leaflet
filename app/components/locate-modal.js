@@ -78,11 +78,11 @@ class LocateModal extends Component {
                         </Form.Field>
                         <Form.Field width="3">
                             <label>Zone</label>
-                            <input value={zone} readonly/>
+                            <input value={zone} readOnly/>
                         </Form.Field>
                         <Form.Field width="3">
                             <label>Latitude band</label>
-                            <input value={band} readonly/>
+                            <input value={band} readOnly/>
                         </Form.Field>
 
                         <Modal.Actions>

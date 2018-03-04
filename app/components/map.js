@@ -11,18 +11,22 @@ import Api from '../utils/api'
 import Search from './search'
 import Location from './location'
 import Toolbar from './toolbar'
+import Collections from './collections/collections'
+import MainMenu from './menu/main-menu'
 import Locate from './locate-modal'
 import AwaitingFunctionality from './awaiting-functionality-modal'
 import LoadTrackModal from './load-track-modal'
 import Elevation from '../components/stats/elevation'
 
 import { saveTrack, selectTrack } from '../actions/tracks'
+import { newFeatureCollection } from '../actions/feature-collections'
 import { saveMapDetails } from '../actions/current'
 import { toggleElevation } from '../actions/ui'
 import { getSelectedTrack, getLine, getDistanceBetween2Points, getMillisecsBetween2Points } from '../utils/index'
 
 import { flameIcon, startIcon, markerIcon } from '../common/icons'
 import { geojsonMarkerOptions, geojsonLineMarkerOptions } from '../common/marker-options'
+import { waypointFeature } from '../common/geojson'
 
 
 // todo - reinstate something similar - this has got functionality for processing points
@@ -137,28 +141,12 @@ function _addWaypointOnClick(e) {
 function onDrawLineClick(e) {
     const currentGeoJson = currentTrackLayerGroup.toGeoJSON()
 
+    // get all the Points
     const pointFeatures = currentGeoJson.features.filter(it => it.geometry.type === 'Point')
-    // console.log('pointFeatures', pointFeatures)
 
+    // get the one and only line (do we want to restrict to 1 line?)
     let lineFeature = currentGeoJson.features.find(it => it.geometry.type === 'LineString')
     if (!lineFeature) lineFeature = _getInitialLineFeature(e.latlng)
-
-    // set up waypoint geojson
-    const waypointFeature = {
-        "type": "Feature",
-        "properties": {
-            "name": "",
-            "time": ""
-        },
-        "geometry": {
-            "type": "Point",
-            "coordinates": [
-                e.latlng.lng,
-                e.latlng.lat,
-                null
-            ]
-        }
-    }
 
     pointFeatures.push(waypointFeature)
 
@@ -204,9 +192,9 @@ class MyMap extends Component {
         this.onCancelAction = this.onCancelAction.bind(this)
         this.showAwaitingFunctionalityModal = this.showAwaitingFunctionalityModal.bind(this)
         this.showLocateModal = this.showLocateModal.bind(this)
-        this.showOpenTrackModal = this.showOpenTrackModal.bind(this)
+        this.showOpenFileModal = this.showOpenFileModal.bind(this)
         this.onLocate = this.onLocate.bind(this)
-        this.onOpenTrack = this.onOpenTrack.bind(this)
+        this.onOpenFile = this.onOpenFile.bind(this)
         this.centreOnCurrentLocation = this.centreOnCurrentLocation.bind(this)
         this.addWaypoint = this.addWaypoint.bind(this)
         // this.selectATrack = this.selectATrack.bind(this)
@@ -261,7 +249,7 @@ class MyMap extends Component {
         })
         map.zoomControl.setPosition('bottomright')
 
-        const marker = L.marker([-33.668759325519204, 150.34924333915114], {icon: markerIcon}).addTo(map) // testing only
+        // const marker = L.marker([-33.668759325519204, 150.34924333915114], {icon: markerIcon}).addTo(map) // testing only
 
 
         // define overlay layers for control
@@ -360,8 +348,8 @@ class MyMap extends Component {
     /*
      show open track modal
      */
-    showOpenTrackModal() {
-        console.log('showOpenTrack')
+    showOpenFileModal() {
+        console.log('showOpenFile')
         this.setState({modal: 'openTrack'})
     }
 
@@ -376,12 +364,19 @@ class MyMap extends Component {
     }
 
     // todo -change newTracksLayer -> newTrackLayer
-    onOpenTrack(fileText, colour) {
-        console.log('--onOpenTrack--')
+    /*
+    save the FeatureCollection to redux
+    That will trigger an update.
+     */
+    onOpenFile(fileText, filename, colour) {
+        console.log('--onOpenFile--')
         const { dispatch } = this.props
+        dispatch(newFeatureCollection(fileText, filename))
 
         //parse track
         const track = JSON.parse(fileText)  //.features[0].geometry
+        this.props.dispatch(saveTrack(track))
+
         console.log('track', track)
 
         // get the name from the lineString
@@ -400,13 +395,13 @@ class MyMap extends Component {
             },
             pointToLayer: function (feature, latlng) {
                 // return L.circleMarker(latlng, geojsonMarkerOptions);
-                console.log('--onOpenTrack-- --pointToLayer-- latlng>>', latlng)
+                console.log('--onOpenFile-- --pointToLayer-- latlng>>', latlng)
                 // return L.marker(latlng)
                 return L.marker(latlng, {icon: markerIcon})
 
             },
             onEachFeature: function (feature, layer) {
-                console.log('--onOpenTrack-- feature>>', feature)
+                console.log('--onOpenFile-- feature>>', feature)
 
                 // add line behaviours
                 if (feature.geometry.type === 'LineString') {
@@ -437,7 +432,6 @@ class MyMap extends Component {
 
         // add to map
         newtracksLayer.addTo(map)
-        this.props.dispatch(saveTrack(track))
 
         // todo - set this to the selected track, and mark all other tracks as not selected.  This could be done in the
         // saveTrack() method
@@ -700,13 +694,19 @@ class MyMap extends Component {
         map.on('click', _addWaypointOnClick)
     }
 
+    /*
+
+     */
+    onSelectCollection(collectionName) {
+        console.log('onSelectCollection', collectionName)
+    }
 
     render() {
         // todo - display all the tracks stored in redux state, and set the bounds to the selected Track
 
 
         // todo - I think the toolbar should be another level up eg within main
-        const { ui, currentLayer, dispatch } = this.props
+        const { ui, currentLayer, collections, dispatch } = this.props
         return (
             <div id="mapwrap">
                 {(this.state.modal === 'locate') ? (
@@ -716,13 +716,28 @@ class MyMap extends Component {
                     <AwaitingFunctionality cancelAction={this.onCancelAction}/>
                 ) : null}
                 {(this.state.modal === 'openTrack') ? (
-                    <LoadTrackModal cancelAction={this.onCancelAction} okAction={this.onOpenTrack}/>
+                    <LoadTrackModal cancelAction={this.onCancelAction} okAction={this.onOpenFile}/>
                 ) : null}
+
+                <MainMenu
+                    openFile={this.showOpenFileModal}
+                    locate={this.showLocateModal}
+                    awaitingFunctionality={this.showAwaitingFunctionalityModal}
+                    centreOnCurrentLocation={this.centreOnCurrentLocation}
+                    drawLine={this.drawLine}
+                    stopDrawLine={this.stopDrawLine}
+                    addWaypoint={this.addWaypoint}
+                    getMajorIncidents={this.getMajorIncidents}
+                    autoCorrectTrack={this.autoCorrectTrack}
+                    showElevationPlot={this.showElevationPlot}
+                />
+
+                <Collections collections={collections} selectedCollection={ui.selectedCollection} onSelectCollection={this.onSelectCollection} />
 
                 <Toolbar
                     locate={this.showLocateModal}
                     awaitingFunctionality={this.showAwaitingFunctionalityModal}
-                    openTrack={this.showOpenTrackModal}
+                    openFile={this.showOpenFileModal}
                     centreOnCurrentLocation={this.centreOnCurrentLocation}
                     drawLine={this.drawLine}
                     stopDrawLine={this.stopDrawLine}
@@ -744,6 +759,7 @@ class MyMap extends Component {
 MyMap.propTypes = {
     dispatch: PropTypes.func,
     current: PropTypes.object,
+    collections: PropTypes.object,
     ui: PropTypes.object,
     tracks: PropTypes.array
 }
@@ -752,7 +768,8 @@ function mapStateToProps(state) {
     return {
         current: state.current,
         ui: state.ui,
-        tracks: state.tracks
+        tracks: state.tracks,
+        collections: state.featureCollections
     }
 }
 

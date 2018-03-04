@@ -1,13 +1,13 @@
-import React, { Component } from 'react';
+import React, { Component } from 'react'
 import PropTypes from 'prop-types'
-import { Icon, Button, Progress, Message } from 'semantic-ui-react';
+import { Icon, Button, Progress, Message } from 'semantic-ui-react'
 
-// import Api from '../../helpers/api';
+// import Api from '../../helpers/api'
 
 class Uploader extends Component {
 
     constructor(props) {
-        super(props);
+        super(props)
         console.log('TrackUploader constructor')
         this.state = {
             // uploaded: false,
@@ -17,13 +17,13 @@ class Uploader extends Component {
         //     progressPercent: 0,
             success: null,
             error: null
-        };
-        this.uploadFiles = this.uploadFiles.bind(this);
-        // this.onDocumentUpload = this.onDocumentUpload.bind(this);
-        this.gallery = this.gallery.bind(this);
-        this.getCaption = this.getCaption.bind(this);
-        // this.onProgress = this.onProgress.bind(this);
-        // this.reset = this.reset.bind(this);
+        }
+        this.uploadFiles = this.uploadFiles.bind(this)
+        // this.onDocumentUpload = this.onDocumentUpload.bind(this)
+        this.gallery = this.gallery.bind(this)
+        this.getCaption = this.getCaption.bind(this)
+        // this.onProgress = this.onProgress.bind(this)
+        // this.reset = this.reset.bind(this)
     }
 
     getCaption(caption) {
@@ -31,48 +31,49 @@ class Uploader extends Component {
             <span className="caption">
                 {caption}
             </span>
-        );
+        )
     }
 
     gallery() {
-        if (!this.state.file) return null;
-        const caption = this.getCaption(this.state.file.name);
+        if (!this.state.file) return null
+        const caption = this.getCaption(this.state.file.name)
 
         return (
             <div>
                 <Icon name="file outline" color="blue" size="large" />{caption}
             </div>
-        );
+        )
     }
 
     uploadFiles(event) {
-        const maxFileSize = '1000000';  // max size 1MB - probably make this smaller
-        const maxFileSizeError = 'Each file must be smaller than 1 MB';
-        const maxFiles = 1;
-        const maxFilesError = 'Can only upload one file at a time';
-        const validFileType = 'text/csv';
-        const validFileTypeError = 'Can only upload csv files';
-        const uploadedFiles = event.target.files;
+        const maxFileSize = '1000000'  // max size 1MB - probably make this smaller
+        const maxFileSizeError = 'Each file must be smaller than 1 MB'
+        const maxFiles = 1
+        const maxFilesError = 'Can only upload one file at a time'
+        const validFileType = 'text/csv'
+        const validFileTypeError = 'Can only upload csv files'
+        const uploadedFiles = event.target.files
 
         if (uploadedFiles.length > maxFiles) {
-            this.setState({ error: maxFilesError });
-            return;
+            this.setState({ error: maxFilesError })
+            return
         }
         if (uploadedFiles[0].size > maxFileSize) {
-            this.setState({ error: maxFileSizeError });
-            return;
+            this.setState({ error: maxFileSizeError })
+            return
         }
         // if (uploadedFiles[0].type !== validFileType) {
-        //     this.setState({ error: validFileTypeError });
-        //     return;
+        //     this.setState({ error: validFileTypeError })
+        //     return
         // }
-        this.setState({ file: uploadedFiles[0], expectedBytes: uploadedFiles[0].size, success: null, error: null });
+        this.setState({ file: uploadedFiles[0], expectedBytes: uploadedFiles[0].size, success: null, error: null })
         // track.features[0].geometry
 
         // read file into memory
-        const reader = new FileReader();
+        const reader = new FileReader()
+        const filename = uploadedFiles[0].name
         reader.onload = (subEvent) => {
-            this.props.onUploaded(subEvent.target.result);
+            this.props.onUploaded(subEvent.target.result, filename)
         }
         reader.readAsText(uploadedFiles[0])
     }
@@ -95,12 +96,12 @@ class Uploader extends Component {
 
 Uploader.defaultProps = {
     accept: '*',
-};
+}
 
 Uploader.propTypes = {
     accept: PropTypes.string,
     onUploaded: PropTypes.func
-};
+}
 
 export default Uploader
 

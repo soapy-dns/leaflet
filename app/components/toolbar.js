@@ -37,7 +37,7 @@ class Toolbar extends Component {
         const { activeItem } = this.state
         const { locate,
             awaitingFunctionality,
-            openTrack,
+            openFile,
             centreOnCurrentLocation,
             drawLine,
             stopDrawLine,
@@ -104,8 +104,8 @@ class Toolbar extends Component {
                             Locate
                         </Menu.Item>
 
-                        <Menu.Item onClick={openTrack}>
-                            Open track
+                        <Menu.Item onClick={openFile}>
+                            Open File
                         </Menu.Item>
 
                         <Menu.Item onClick={awaitingFunctionality}>
@@ -129,7 +129,7 @@ class Toolbar extends Component {
 Toolbar.propTypes = {
     locate: PropTypes.func,
     awaitingFunctionality: PropTypes.func,
-    openTrack: PropTypes.func,
+    openFile: PropTypes.func,
     okAction: PropTypes.func,
     cancelAction: PropTypes.func,
     // selectATrack: PropTypes.func,

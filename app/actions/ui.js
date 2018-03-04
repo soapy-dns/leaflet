@@ -7,8 +7,14 @@ export const drawLineAction = () => ({
 
 export const TOGGLE_ELEVATION = 'ui/TOGGLE_ELEVATION'
 export const toggleElevation = (boolean) => {
-    console.log('elevation', boolean); return{
+    return{
         type: TOGGLE_ELEVATION,
         boolean
     }
 }
+
+export const SELECT_COLLECTION = 'ui/SELECT_COLLECTIONS'
+export const selectCollection = collection => ({
+    type: SELECT_COLLECTION,
+    selectedCollectionName: collection.name
+})

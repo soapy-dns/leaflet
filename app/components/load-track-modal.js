@@ -11,17 +11,17 @@ class LoadTrackModal extends Component {
         }
 
         this.onChange = this.onChange.bind(this)
-        this.onSubmit = this.onSubmit.bind(this)
+        // this.onSubmit = this.onSubmit.bind(this)
         this.onUploaded = this.onUploaded.bind(this)
     }
 
     /*
     performs the ok action on file upload.  No need for submit.  todo - remove submit, or allow changes
      */
-    onUploaded(fileText) {
+    onUploaded(fileText, filename) {
         console.log('onUploaded')
         this.setState({uploaded: true})
-        this.props.okAction(fileText)
+        this.props.okAction(fileText, filename)
     }
 
     onChange(event) {
@@ -29,12 +29,14 @@ class LoadTrackModal extends Component {
         this.setState({[name]: event.target.value})
     }
 
-    onSubmit(event) {
-        // event.preventDefault()  // todo - check if still need this
-        console.log('onSubmit', this.state)
-
-        const {okAction} = this.props
-    }
+    // onSubmit(event) {
+    //     // event.preventDefault()  // todo - check if still need this
+    //     console.log('onSubmit', this.state)
+    //
+    //     const {okAction} = this.props
+    //     this.props.okAction(fileText)
+    //
+    // }
 
     render() {
         const {cancelAction} = this.props
@@ -48,9 +50,6 @@ class LoadTrackModal extends Component {
                 </Modal.Content>
                 <Modal.Actions>
                     <Button basic color="blue" onClick={cancelAction}>CANCEL</Button>
-                    {this.state.uploaded ?
-                        (<Button color="blue" onClick={this.onSubmit}>Show on map</Button>) : null
-                    }
                 </Modal.Actions>
             </Modal>
         )
