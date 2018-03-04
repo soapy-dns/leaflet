@@ -14,7 +14,7 @@ export const toggleElevation = (boolean) => {
 }
 
 export const SELECT_COLLECTION = 'ui/SELECT_COLLECTIONS'
-export const selectCollection = collection => ({
+export const selectCollection = collectionName => ({
     type: SELECT_COLLECTION,
-    selectedCollectionName: collection.name
+    selectedCollectionName: collectionName
 })

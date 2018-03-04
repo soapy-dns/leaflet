@@ -9,6 +9,7 @@ export default function (uiState = defaultState, action) {
         case TOGGLE_ELEVATION:
             return merge(uiState, { showElevation: action.boolean })
         case SELECT_COLLECTION:
+            console.log('reducer', action)
             return merge(uiState, { selectedCollectionName: action.selectedCollectionName})
         default:
             return uiState

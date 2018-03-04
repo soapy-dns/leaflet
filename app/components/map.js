@@ -21,7 +21,7 @@ import Elevation from '../components/stats/elevation'
 import { saveTrack, selectTrack } from '../actions/tracks'
 import { newFeatureCollection } from '../actions/feature-collections'
 import { saveMapDetails } from '../actions/current'
-import { toggleElevation } from '../actions/ui'
+import { toggleElevation, selectCollection } from '../actions/ui'
 import { getSelectedTrack, getLine, getDistanceBetween2Points, getMillisecsBetween2Points } from '../utils/index'
 
 import { flameIcon, startIcon, markerIcon } from '../common/icons'
@@ -205,6 +205,7 @@ class MyMap extends Component {
         this.showElevationPlot = this.showElevationPlot.bind(this)
         this.hideElevationPlot = this.hideElevationPlot.bind(this)
         // this.saveLocation = this.saveLocation.bind(this)
+        this.onSelectCollection = this.onSelectCollection.bind(this)
 
         this.state = {
             locate: false,
@@ -293,7 +294,7 @@ class MyMap extends Component {
                             trackLayerGroup.resetStyle(this)
                         })
                         layer.on('click', function() {
-                            console.log('select')
+                            console.log('select1')
                             layer.off(mouseout, mouseout())
                             dispatch(selectTrack(track))
                             this.setStyle({
@@ -371,7 +372,8 @@ class MyMap extends Component {
     onOpenFile(fileText, filename, colour) {
         console.log('--onOpenFile--')
         const { dispatch } = this.props
-        dispatch(newFeatureCollection(fileText, filename))
+        const json = JSON.parse(fileText)
+        dispatch(newFeatureCollection(json, filename))
 
         //parse track
         const track = JSON.parse(fileText)  //.features[0].geometry
@@ -415,7 +417,7 @@ class MyMap extends Component {
                     })
                     // layer.on('mouseout', mouseout())
                     layer.on('click', function() {
-                        console.log('select')
+                        console.log('select2')
                         layer.off(mouseout, mouseout())
                         dispatch(selectTrack(track))
                         this.setStyle({
@@ -568,7 +570,7 @@ class MyMap extends Component {
                     newtracksLayer.resetStyle(this)
                 })
                 layer.on('click', function() {
-                    console.log('select')
+                    console.log('select3')
                     layer.off(mouseout, mouseout())
                     dispatch(selectTrack(newtracksLayer))
                     this.setStyle({
@@ -699,6 +701,13 @@ class MyMap extends Component {
      */
     onSelectCollection(collectionName) {
         console.log('onSelectCollection', collectionName)
+        this.props.dispatch(selectCollection(collectionName))
+    }
+
+    onSelectFeature(id) {
+        console.log('onSelectFeature')
+        // this.props.dispatch(selectCollection(collectionName))
+
     }
 
     render() {
@@ -732,21 +741,8 @@ class MyMap extends Component {
                     showElevationPlot={this.showElevationPlot}
                 />
 
-                <Collections collections={collections} selectedCollection={ui.selectedCollection} onSelectCollection={this.onSelectCollection} />
+                <Collections collections={collections} selectedCollectionName={ui.selectedCollectionName} onSelectCollection={this.onSelectCollection} />
 
-                <Toolbar
-                    locate={this.showLocateModal}
-                    awaitingFunctionality={this.showAwaitingFunctionalityModal}
-                    openFile={this.showOpenFileModal}
-                    centreOnCurrentLocation={this.centreOnCurrentLocation}
-                    drawLine={this.drawLine}
-                    stopDrawLine={this.stopDrawLine}
-                    addWaypoint={this.addWaypoint}
-                    getMajorIncidents={this.getMajorIncidents}
-                    autoCorrectTrack={this.autoCorrectTrack}
-                    showElevationPlot={this.showElevationPlot}
-
-                />
                 <div id="mapid"></div>
                 <div>showElevation { ui.showElevation }</div>
                 { ui.showElevation ? (<Elevation hideElevationPlot={this.hideElevationPlot} />) : null }
