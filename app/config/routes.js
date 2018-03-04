@@ -3,14 +3,13 @@ import {Router, Route, IndexRoute, browserHistory} from 'react-router'
 import { createStore, compose, applyMiddleware } from 'redux'
 import { Provider } from 'react-redux'
 import { persistStore, autoRehydrate } from 'redux-persist'
-import { asyncSessionStorage } from 'redux-persist/storages'
+// import { asyncLocalStorage } from 'redux-persist/storages'
 import thunk from 'redux-thunk'
 import reducer from '../reducers/index'
 
 
 import NotFound from '../views/404'
 import Splash from '../views/splash'
-// import config from './index'
 import Main from '../components/main'
 import Map from '../components/map'
 // import Map from '../components/mapbox'
@@ -32,8 +31,8 @@ class Routes extends Component {
     }
 
     componentWillMount() {
-        console.log('will mount')
-        persistStore(store, { storage: asyncSessionStorage }, () => {
+        // defaults to localStorage
+        persistStore(store, { }, () => {
             this.setState({ rehydrated: true })
         })
     }
@@ -42,7 +41,6 @@ class Routes extends Component {
     render() {
         // todo persistance so that refresh keeps the state, security if any
         if (this.state.rehydrated) {
-
             return (
                 <Provider store={store}>
                     <Router history={browserHistory} onUpdate={() => window.scrollTo(0, 0)}>

@@ -13,6 +13,13 @@ const _getFeatureHtml = (feature) => {
        }
 }
 
+const _getCollectionHtml = (collectionName, selectedCollectionName) => {
+    const icon = (collectionName === selectedCollectionName) ? 'folder open outline' : 'folder outline'
+    return (
+        <span><Icon color="blue" size="large" name={icon} />{collectionName}</span>
+    )
+}
+
 class Collections extends Component {
     constructor(props) {
         super(props)
@@ -77,7 +84,7 @@ class Collections extends Component {
                 <Menu vertical borderless fluid className="collections top">
                     {collections.map((collection, id) => (
                         <Menu.Item key={id} onClick={(e) => this.onSelectCollection(id)} >
-                            {<span><Icon color="blue" size="large" name='folder outline'/>{collection.name}</span>}
+                            {_getCollectionHtml(collection.name, selectedCollectionName)}
                         </Menu.Item>
                     ))}
                 </Menu>

@@ -162,13 +162,6 @@ body {
 
 #collections.open {
     left: 0;
-
-}
-
-
-.left {
-    float: left;
-    background: pink;
 }
 
 .collections.top {
