@@ -1,4 +1,4 @@
-import { NEW_FEATURE_COLLECTION,  } from '../actions/feature-collections'
+import { NEW_FEATURE_COLLECTION, UPDATE_FEATURE_COLLECTION } from '../actions/feature-collections'
 
 export default function (fcState = [], action) {
     switch (action.type) {
@@ -20,6 +20,11 @@ export default function (fcState = [], action) {
                 foundCollection.altered = false
             }
 
+            return fcState
+
+        case UPDATE_FEATURE_COLLECTION:
+            const foundFeatureCollection = fcState.find(it => it.name === action.selectedCollectionName)
+            foundFeatureCollection.featureCollection.features.push(action.feature)
             return fcState
 
         default:

@@ -1,7 +1,9 @@
-import React, {Component} from 'react'
-import L, {Control, Marker, Map, GeoJSON} from 'leaflet'
-import {BasemapLayer, TiledMapLayer} from 'esri-leaflet'
-import utm from 'utm'
+import React, { Component } from 'react'
+import L, { Control, Marker, Map, GeoJSON } from 'leaflet'
+import { BasemapLayer, TiledMapLayer } from 'esri-leaflet'
+// import utm from 'utm'
+import { toLatLng } from 'utm'
+// const utm = require('utm')
 import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
 import _ from 'lodash'
@@ -16,17 +18,19 @@ import MainMenu from './menu/main-menu'
 import Locate from './locate-modal'
 import AwaitingFunctionality from './awaiting-functionality-modal'
 import LoadTrackModal from './load-track-modal'
+import WaypointModal from './waypoint-modal'
 import Elevation from '../components/stats/elevation'
 
 import { saveTrack, selectTrack } from '../actions/tracks'
-import { newFeatureCollection } from '../actions/feature-collections'
+import { newFeatureCollection, updateFeatureCollection } from '../actions/feature-collections'
 import { saveMapDetails } from '../actions/current'
-import { toggleElevation, selectCollection } from '../actions/ui'
+import { toggleElevation, selectCollection, selectLatLng, clearLatLng } from '../actions/ui'
+
 import { getSelectedTrack, getLine, getDistanceBetween2Points, getMillisecsBetween2Points } from '../utils/index'
 
 import { flameIcon, startIcon, markerIcon } from '../common/icons'
 import { geojsonMarkerOptions, geojsonLineMarkerOptions } from '../common/marker-options'
-import { waypointFeature } from '../common/geojson'
+import { getWaypointFeature, getGeoJsonLayer } from '../common/geojson'
 
 
 // todo - reinstate something similar - this has got functionality for processing points
@@ -62,6 +66,7 @@ let overlayLayers
 let layersControl
 let currentTrack
 let currentTrackLayerGroup
+let collectionsLayerGroup  // features from all featureCollections
 
 const _getInitialLineFeature = (latlng) => {
     console.log('_getInitialLineFeature')
@@ -80,63 +85,63 @@ const _getInitialLineFeature = (latlng) => {
 }
 
 
+
+
+
 // create function for map click after addWaypoint selected
-function _addWaypointOnClick(e) {
-    // set up waypoint geojson
-    const waypointFeature = {
-        "type": "Feature",
-        "properties": {
-            "name": "CC THUNDER JT",  // todo - allow to be updated
-            "time": "2014-04-12T01:40:46Z",
-            "sym": "Flag, Blue",
-            "type": "user"
-        },
-        "geometry": {
-            "type": "Point",
-            "coordinates": [
-                e.latlng.lat,
-                e.latlng.lng,
-                null
-            ]
-        }
-    }
-
-
-    // create waypoint
-    const waypoint = L.geoJSON(waypointFeature, {
-        // each point will be converted to a marker with the defined options
-        pointToLayer: function (feature, latlng) {
-            console.log('initial waypoint', e.latlng)
-            // return L.circleMarker(e.latlng, geojsonMarkerOptions);
-            return L.marker(e.latlng, {icon : markerIcon})
-            // return L.marker(e.latlng, {icon: flameIcon})
-
-        },
-        // onEachFeature: function (feature, latlng) {
-        //     console.log('open modal')
-        //     // todo - allow a popup to be set to add content / change the marker
-        // }
-        onEachFeature: function (feature, layer) {
-            console.log('--onEachFeature--')
-            if (feature.properties && feature.properties.name) {
-                console.log('--bindPopup--')
-                layer.bindPopup(feature.properties.name);
-            }
-        }
-    })
-
-    // console.log('add waypoint layer %j', waypoint.toString())
-    // console.log('add waypoint layer', waypoint)
-    // console.log('back to geojson', waypoint.toGeoJSON())
-    // console.log('add waypoint layer', JSON.stringify(waypoint))
-
-    // add to group
-    currentTrackLayerGroup.addLayer(waypoint)
-
-    // turn off 'waypointing'
-    L.DomUtil.removeClass(map._container, 'leaflet-crosshair')
-    map.off('click', _addWaypointOnClick)
-}
+// function _addWaypointOnClick2(e) {
+//     // set up waypoint geojson
+//     const waypointFeature = {
+//         "type": "Feature",
+//         "properties": {
+//             "name": "CC THUNDER JT",  // todo - allow to be updated
+//             "time": "2014-04-12T01:40:46Z",
+//             "sym": "Flag, Blue",
+//             "type": "user"
+//         },
+//         "geometry": {
+//             "type": "Point",
+//             "coordinates": [
+//                 e.latlng.lat,
+//                 e.latlng.lng,
+//                 null
+//             ]
+//         }
+//     }
+//
+//
+//     // create waypoint
+//     const waypoint = L.geoJSON(waypointFeature, {
+//         // each point will be converted to a marker with the defined options
+//         pointToLayer: function (feature, latlng) {
+//             return L.marker(e.latlng, {icon: markerIcon})
+//
+//         },
+//         // onEachFeature: function (feature, latlng) {
+//         //     console.log('open modal')
+//         //     // todo - allow a popup to be set to add content / change the marker
+//         // }
+//         onEachFeature: function (feature, layer) {
+//             console.log('--onEachFeature--')
+//             if (feature.properties && feature.properties.name) {
+//                 console.log('--bindPopup--')
+//                 layer.bindPopup(feature.properties.name);
+//             }
+//         }
+//     })
+//
+//     // console.log('add waypoint layer %j', waypoint.toString())
+//     // console.log('add waypoint layer', waypoint)
+//     // console.log('back to geojson', waypoint.toGeoJSON())
+//     // console.log('add waypoint layer', JSON.stringify(waypoint))
+//
+//     // add to group
+//     currentTrackLayerGroup.addLayer(waypoint)
+//
+//     // turn off 'waypointing'
+//     L.DomUtil.removeClass(map._container, 'leaflet-crosshair')
+//     map.off('click', _addWaypointOnClick)
+// }
 
 function onDrawLineClick(e) {
     const currentGeoJson = currentTrackLayerGroup.toGeoJSON()
@@ -197,6 +202,7 @@ class MyMap extends Component {
         this.onOpenFile = this.onOpenFile.bind(this)
         this.centreOnCurrentLocation = this.centreOnCurrentLocation.bind(this)
         this.addWaypoint = this.addWaypoint.bind(this)
+        this.addWaypointOnClick = this.addWaypointOnClick.bind(this)
         // this.selectATrack = this.selectATrack.bind(this)
         this.drawLine = this.drawLine.bind(this)
         this.stopDrawLine = this.stopDrawLine.bind(this)
@@ -206,30 +212,33 @@ class MyMap extends Component {
         this.hideElevationPlot = this.hideElevationPlot.bind(this)
         // this.saveLocation = this.saveLocation.bind(this)
         this.onSelectCollection = this.onSelectCollection.bind(this)
+        this.waypointModal = this.waypointModal.bind(this)
 
         this.state = {
             locate: false,
+            // waypointModal: false,
             modal: null
         }
     }
 
     componentDidMount() {
-        console.log('COMPONENT DID MOUNT')
-        const { dispatch, current, tracks } = this.props
+        // console.log('map - utm>>', utm)
+        console.log('connect>>', connect)
+        const {dispatch, current, tracks, collections} = this.props
 
         const baseLayer = new BasemapLayer('Gray')
 
         // topo layer
-        const topoLayer = new TiledMapLayer({
-            url: 'http://maps.six.nsw.gov.au/arcgis/rest/services/public/NSW_Topo_Map/MapServer',
-            maxZoom: 17,
-            maxNativeZoom: 15
-        })
-
-        // satellite image layer
-        const imageLayer = new TiledMapLayer({
-            url: 'http://maps.six.nsw.gov.au/arcgis/rest/services/public/NSW_Imagery/MapServer'
-        })
+        // const topoLayer = new TiledMapLayer({
+        //     url: 'http://maps.six.nsw.gov.au/arcgis/rest/services/public/NSW_Topo_Map/MapServer',
+        //     maxZoom: 17,
+        //     maxNativeZoom: 15
+        // })
+        //
+        // // satellite image layer
+        // const imageLayer = new TiledMapLayer({
+        //     url: 'http://maps.six.nsw.gov.au/arcgis/rest/services/public/NSW_Imagery/MapServer'
+        // })
 
         const baseMaps = {
             "Base": baseLayer,
@@ -242,85 +251,45 @@ class MyMap extends Component {
             zoom: zoom,
             maxZoom: 17,
             maxNativeZoom: 14,  // don't request tiles with a zoom > this (cos they don't exist)
-            layers: [baseLayer, topoLayer]
+            // layers: [baseLayer, topoLayer]
+            layers: [baseLayer]
 
         })
-        map.on('moveend', function(e) {
-            dispatch(saveMapDetails({center: map.getCenter(), zoom: map.getZoom() }))
+        map.on('moveend', function (e) {
+            dispatch(saveMapDetails({center: map.getCenter(), zoom: map.getZoom()}))
         })
         map.zoomControl.setPosition('bottomright')
 
-        // const marker = L.marker([-33.668759325519204, 150.34924333915114], {icon: markerIcon}).addTo(map) // testing only
-
-
         // define overlay layers for control
-        overlayLayers = {
-            "Topo": topoLayer,
-            "Satellite": imageLayer
-        }
+        // overlayLayers = {
+        //     "Topo": topoLayer,
+        //     "Satellite": imageLayer
+        // }
 
         // add control button for layers
-        layersControl = new Control.Layers(baseMaps, overlayLayers)
-        layersControl.addTo(map)
+        // layersControl = new Control.Layers(baseMaps, overlayLayers)
+        // layersControl.addTo(map)
 
         //add scale
         const scale = new Control.Scale()
         scale.addTo(map)
 
-        // add tracks to map
-        tracks.forEach(it => {
-
-            console.log('redoing all the tracks from redux it.track', it.track)
-            // get the name from the lineString
-            const line = it.track.features.find(it => it.geometry.type === 'LineString')
-            const trackName = line.properties.name
-            const color = line.properties.color
-            const trackLayerGroup = new GeoJSON([it.track], {
-                // todo this is duplicated with open track - need to dry it
-                style: function (feature) {
-                    return {
-                        color: color || 'red',
-                        weight: 3,
-                    };
-                },
-                onEachFeature: function (feature, layer) {
-                    if (feature.geometry.type === 'LineString') {
-                        layer.on('mouseover', function() {
-                            this.setStyle({
-                                weight: 5
-                            })
-                        })
-                        layer.on('mouseout', function () {
-                            trackLayerGroup.resetStyle(this)
-                        })
-                        layer.on('click', function() {
-                            console.log('select1')
-                            layer.off(mouseout, mouseout())
-                            dispatch(selectTrack(track))
-                            this.setStyle({
-                                weight: 5,
-                                dashArray: '5, 10, 7, 10, 10, 10'
-                            })
-                        })
-                    }
-
-
-                }
-            })
-            trackLayerGroup.addTo(map)
+        // get all the features from all collections and add them as 1 single layer
+        let features = []
+        collections.forEach(it => {
+            features = features.concat(it.featureCollection.features)
         })
-
-        // add initial track to the map
-        // todo - I think I need this if no tracks - check
-        if (_.isEmpty(tracks)) {
-            currentTrackLayerGroup = new GeoJSON([initialTrack], {
-                style: function (feature) {
-                    return {color: 'red'};
-                }
-            })
-            currentTrackLayerGroup.addTo(map)
+        const featureCollection = {
+            features  // don't think I need to put in the type
         }
+        collectionsLayerGroup = getGeoJsonLayer(featureCollection)
+        collectionsLayerGroup.addTo(map)
+    }
 
+    shouldComponentUpdate(nextProps, nextState) {
+    // return a boolean value  - add test
+        console.log('shouldComponentUpdate')
+        return true
     }
 
     onCancelAction() {
@@ -332,7 +301,7 @@ class MyMap extends Component {
      convert form data to lat / long and move the map to that point (and turn off the modal)
      */
     onLocate(locateData) {
-        const {latitude, longitude} = utm.toLatLon(locateData.easting, locateData.northing, locateData.zone, undefined, false)
+        const {latitude, longitude} = toLatLon(locateData.easting, locateData.northing, locateData.zone, undefined, false)
         map.panTo(new L.LatLng(latitude, longitude))
         this.setState({modal: null})
     }
@@ -359,93 +328,42 @@ class MyMap extends Component {
         this.props.dispatch(toggleElevation(true))
         // todo think I need to update
     }
+
     hideElevationPlot() {
         console.log('show elevation')
         this.props.dispatch(toggleElevation(false))
     }
 
-    // todo -change newTracksLayer -> newTrackLayer
+// todo -change newTracksLayer -> newTrackLayer
     /*
-    save the FeatureCollection to redux
-    That will trigger an update.
+     save the FeatureCollection to redux
+     That will trigger an update.
      */
     onOpenFile(fileText, filename, colour) {
         console.log('--onOpenFile--')
-        const { dispatch } = this.props
+        const {dispatch} = this.props
         const json = JSON.parse(fileText)
         dispatch(newFeatureCollection(json, filename))
 
         //parse track
-        const track = JSON.parse(fileText)  //.features[0].geometry
-        this.props.dispatch(saveTrack(track))
+        const featureCollection = JSON.parse(fileText)  //.features[0].geometry
+        this.props.dispatch(saveTrack(featureCollection))
 
-        console.log('track', track)
+        console.log('featureCollection', featureCollection)
 
         // get the name from the lineString
-        const line = track.features.find(it => it.geometry.type === 'LineString')
-        const trackName = line.properties.name
-        console.log('trackname', trackName)
+        const line = featureCollection.features.find(it => it.geometry.type === 'LineString')
+        const featureCollectionName = line.properties.name
+        console.log('featureCollectionname', featureCollectionName)
 
-        let newtracksLayer
-        // create new geojson layer for this track
-        newtracksLayer = new GeoJSON([track], {
-            style: function (feature) {
-                return {
-                    color: line.properties.color || 'red',
-                    weight: 3,
-                };
-            },
-            pointToLayer: function (feature, latlng) {
-                // return L.circleMarker(latlng, geojsonMarkerOptions);
-                console.log('--onOpenFile-- --pointToLayer-- latlng>>', latlng)
-                // return L.marker(latlng)
-                return L.marker(latlng, {icon: markerIcon})
+        // create new geojson layer for this featureCollection, and add to map
+        const newfeatureCollectionsLayer = getGeoJsonLayer(featureCollection)
+        newfeatureCollectionsLayer.addTo(map)
 
-            },
-            onEachFeature: function (feature, layer) {
-                console.log('--onOpenFile-- feature>>', feature)
-
-                // add line behaviours
-                if (feature.geometry.type === 'LineString') {
-                    layer.on('mouseover', function() {
-                        this.setStyle({
-                            weight: 5
-                        })
-                    })
-                    layer.on('mouseout', function () {
-                        newtracksLayer.resetStyle(this)
-                    })
-                    // layer.on('mouseout', mouseout())
-                    layer.on('click', function() {
-                        console.log('select2')
-                        layer.off(mouseout, mouseout())
-                        dispatch(selectTrack(track))
-                        this.setStyle({
-                            weight: 5,
-                            dashArray: '5, 10, 7, 10, 10, 10'
-                        })
-                    })
-                }
-
-            }
-        })
-
-        // console.log('newtracksLayer', newtracksLayer)
-
-        // add to map
-        newtracksLayer.addTo(map)
-
-        // todo - set this to the selected track, and mark all other tracks as not selected.  This could be done in the
-        // saveTrack() method
-
-        // add track to overlay layers
-        overlayLayers[trackName] = newtracksLayer
-
-        // add track layer to layer control
-        layersControl.addOverlay(newtracksLayer, trackName)
+        // todo - set this to the selected featureCollection, and mark all other featureCollections as not selected.  This could be done in the
 
         // set bounds to fit this new layer
-        map.fitBounds(newtracksLayer.getBounds())
+        map.fitBounds(newfeatureCollectionsLayer.getBounds())
 
         // turn modal off
         this.setState({modal: null})
@@ -454,7 +372,7 @@ class MyMap extends Component {
     getMajorIncidents() {
         // todo - move to redux
         //https://stackoverflow.com/questions/43871637/no-access-control-allow-origin-header-is-present-on-the-requested-resource-whe
-            // flames = https://assets-cdn.github.com/images/icons/emoji/unicode/1f525.png
+        // flames = https://assets-cdn.github.com/images/icons/emoji/unicode/1f525.png
         Api.getMajorIncidents().then(data => {
             console.log('MAJOR INCIDENTS - %J', data)
             // create waypoint
@@ -492,7 +410,7 @@ class MyMap extends Component {
     }
 
     autoCorrectTrack() {
-        const { tracks } = this.props
+        const {tracks} = this.props
         // find the selected track
         const selectedTrack = getSelectedTrack(tracks)
         // console.log('selectedTrack', selectedTrack)
@@ -506,13 +424,13 @@ class MyMap extends Component {
         const distances = []
         const limit = coordinates.length - 1
         for (let i = 0; i < limit; i++) {
-            distances.push(getDistanceBetween2Points(coordinates[i], coordinates[i+1]))
+            distances.push(getDistanceBetween2Points(coordinates[i], coordinates[i + 1]))
         }
         console.log('distances', distances)
 
         const times = []
         for (let i = 0; i < limit; i++) {
-            times.push(getMillisecsBetween2Points(coordTimes[i], coordTimes[i+1]))
+            times.push(getMillisecsBetween2Points(coordTimes[i], coordTimes[i + 1]))
         }
 
         const speeds = []
@@ -533,8 +451,8 @@ class MyMap extends Component {
             if (speeds[i] < minSpeed || speeds[i] > 10) {
                 distances.splice(i, 1)
                 times.splice(i, 1)
-                coordinates.splice(i+1, 1)
-                coordTimes.splice(i+1, 1)
+                coordinates.splice(i + 1, 1)
+                coordTimes.splice(i + 1, 1)
             } else {
                 updatedSpeeds.push(speeds[i])
             }
@@ -561,7 +479,7 @@ class MyMap extends Component {
                 };
             },
             onEachFeature: function (feature, layer) {
-                layer.on('mouseover', function() {
+                layer.on('mouseover', function () {
                     this.setStyle({
                         weight: 5
                     })
@@ -569,7 +487,7 @@ class MyMap extends Component {
                 layer.on('mouseout', function () {
                     newtracksLayer.resetStyle(this)
                 })
-                layer.on('click', function() {
+                layer.on('click', function () {
                     console.log('select3')
                     layer.off(mouseout, mouseout())
                     dispatch(selectTrack(newtracksLayer))
@@ -659,15 +577,15 @@ class MyMap extends Component {
     }
 
     /*
-    remove crosshairs cursor and click functionality
+     remove crosshairs cursor and click functionality
      */
     stopDrawLine() {
-        L.DomUtil.removeClass(map._container,'leaflet-crosshair')
+        L.DomUtil.removeClass(map._container, 'leaflet-crosshair')
         map.off('click', onDrawLineClick)
     }
 
     /*
-    change cursor and add click functionality
+     change cursor and add click functionality
      */
     drawLine() {
         console.log('drawLine')
@@ -678,22 +596,68 @@ class MyMap extends Component {
     /*
      GeoJson extends FeatureGroup, which extends LayerGroup, so
      we can add extra GeoJson Layers to the layer group
+
+     open the modal for adding / modifying details of the waypoint
      */
-    addWaypoint() {
+    waypointModal() {
         // change cursor to crosshairs
         L.DomUtil.addClass(map._container, 'leaflet-crosshair')
 
-        // marker definition options
-        // var geojsonMarkerOptions = {
-        //     radius: 8,
-        //     fillColor: "#ff7800",
-        //     color: "#000",
-        //     weight: 1,
-        //     opacity: 1,
-        //     fillOpacity: 0.8
-        // };
+        map.on('click', this.addWaypointOnClick)
+    }
 
-        map.on('click', _addWaypointOnClick)
+    addWaypointOnClick(e) {
+        const { dispatch } = this.props
+
+        // save latlng
+        dispatch(selectLatLng(e.latlng.lat, e.latlng.lng))
+
+        //open waypont modal
+        this.setState({ modal: 'waypoint' })
+
+        // turn off waypoint select
+        L.DomUtil.removeClass(map._container, 'leaflet-crosshair')
+
+        console.log('this.addWaypointOnClick', this.addWaypointOnClick)
+        map.off('click', this.addWaypointOnClick)
+    }
+
+    /*
+    actually add the waypoint
+    add to the selected collections feature list.
+    if no selected collection create a new collection, select it and add to it.
+    it will always be possible to move the waypoint afterwards
+     */
+    addWaypoint(featureData) {
+        const { dispatch, ui, collections } = this.props
+
+        if (!ui.selectedCollection) {
+            if (collections.length === 0) {
+                // add new collection - but then want to return here - how to do this?
+            } else {
+                // add to selected collection
+                const waypointFeature = getWaypointFeature(featureData.pointName, ui.selectedLatitude, ui.selectedLongitude)
+                dispatch(updateFeatureCollection(waypointFeature, ui.selectedCollectionName))
+                // remove selectedLatlng  - maybe want to do the 2 dispatches together
+                dispatch(clearLatLng())
+                this.setState({modal: null})
+
+                // update the map
+                // get all the features from all collections and add them as 1 single layer
+                map.removeLayer(collectionsLayerGroup)
+                let features = []
+                collections.forEach(it => {
+                    features = features.concat(it.featureCollection.features)
+                })
+                const featureCollection = {
+                    features  // don't think I need to put in the type
+                }
+                collectionsLayerGroup = getGeoJsonLayer(featureCollection)
+                collectionsLayerGroup.addTo(map)
+            }
+        } else {
+            // need to select collection
+        }
     }
 
     /*
@@ -713,9 +677,7 @@ class MyMap extends Component {
     render() {
         // todo - display all the tracks stored in redux state, and set the bounds to the selected Track
 
-
-        // todo - I think the toolbar should be another level up eg within main
-        const { ui, currentLayer, collections, dispatch } = this.props
+        const {ui, currentLayer, collections, dispatch} = this.props
         return (
             <div id="mapwrap">
                 {(this.state.modal === 'locate') ? (
@@ -727,6 +689,9 @@ class MyMap extends Component {
                 {(this.state.modal === 'openTrack') ? (
                     <LoadTrackModal cancelAction={this.onCancelAction} okAction={this.onOpenFile}/>
                 ) : null}
+                {(this.state.modal === 'waypoint') ? (
+                    <WaypointModal cancelAction={this.onCancelAction} okAction={this.addWaypoint} selectedLatitude={ui.selectedLatitude} selectedLongitude={ui.selectedLongitude} />
+                ) : null}
 
                 <MainMenu
                     openFile={this.showOpenFileModal}
@@ -735,19 +700,18 @@ class MyMap extends Component {
                     centreOnCurrentLocation={this.centreOnCurrentLocation}
                     drawLine={this.drawLine}
                     stopDrawLine={this.stopDrawLine}
-                    addWaypoint={this.addWaypoint}
+                    addWaypoint={this.waypointModal}
                     getMajorIncidents={this.getMajorIncidents}
                     autoCorrectTrack={this.autoCorrectTrack}
                     showElevationPlot={this.showElevationPlot}
                 />
 
-                <Collections collections={collections} selectedCollectionName={ui.selectedCollectionName} onSelectCollection={this.onSelectCollection} />
+                <Collections collections={collections} selectedCollectionName={ui.selectedCollectionName}
+                             onSelectCollection={this.onSelectCollection}/>
 
                 <div id="mapid"></div>
                 <div>showElevation { ui.showElevation }</div>
-                { ui.showElevation ? (<Elevation hideElevationPlot={this.hideElevationPlot} />) : null }
-
-
+                { ui.showElevation ? (<Elevation hideElevationPlot={this.hideElevationPlot}/>) : null }
             </div>)
     }
 }
@@ -770,4 +734,3 @@ function mapStateToProps(state) {
 }
 
 export default connect(mapStateToProps)(MyMap)
-

@@ -18,3 +18,17 @@ export const selectCollection = collectionName => ({
     type: SELECT_COLLECTION,
     selectedCollectionName: collectionName
 })
+
+export const SELECT_LATLNG = 'ui/SELECT_LATLNG'
+export const selectLatLng = (lat, lng) => ({
+    type: SELECT_LATLNG,
+    selectedLatitude: lat,
+    selectedLongitude: lng
+})
+
+export const CLEAR_LATLNG = 'ui/CLEAR_LATLNG'
+export const clearLatLng = () => ({
+    type: CLEAR_LATLNG,
+    selectedLatitude: undefined,
+    selectedLongitude: undefined
+})

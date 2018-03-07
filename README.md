@@ -24,6 +24,10 @@ togeojson file.kml > file.geojson
 togeojson file.GPX > file.geojson
 
 
+## Redux store structure
+ui - user interface stuff included selected lines and waypoints
+feature-collections - lists all the 'files' or collections of features
+
 ##handy links
 http://geojson.io/
 https://github.com/mapbox/geojson.io

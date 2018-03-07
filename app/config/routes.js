@@ -39,7 +39,6 @@ class Routes extends Component {
 
 
     render() {
-        // todo persistance so that refresh keeps the state, security if any
         if (this.state.rehydrated) {
             return (
                 <Provider store={store}>
