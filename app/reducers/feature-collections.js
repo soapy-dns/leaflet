@@ -23,8 +23,13 @@ export default function (fcState = [], action) {
             return fcState
 
         case UPDATE_FEATURE_COLLECTION:
+            // find the relevant feature collection
             const foundFeatureCollection = fcState.find(it => it.name === action.selectedCollectionName)
+
+            // add the new feature to it
             foundFeatureCollection.featureCollection.features.push(action.feature)
+
+            // return the state (which has been updated by the push)
             return fcState
 
         default:

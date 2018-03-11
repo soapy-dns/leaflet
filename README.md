@@ -24,6 +24,7 @@ togeojson file.kml > file.geojson
 togeojson file.GPX > file.geojson
 
 
+
 ## Redux store structure
 ui - user interface stuff included selected lines and waypoints
 feature-collections - lists all the 'files' or collections of features
@@ -33,3 +34,10 @@ http://geojson.io/
 https://github.com/mapbox/geojson.io
 https://github.com/mapbox/geojsonhint
 https://gis.stackexchange.com/questions/240738/control-custom-panes-for-leaflet-geojson-svg-icons
+
+### redux-persist
+https://blog.reactnativecoach.com/the-definitive-guide-to-redux-persist-84738167975
+
+### react dnd
+http://react-dnd.github.io/react-dnd/
+https://react-dnd.github.io/react-dnd/docs-tutorial.html

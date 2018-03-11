@@ -18,7 +18,7 @@ class WaypointModal extends Component {
         this.validate = this.validate.bind(this)
 
         this.state = {
-            pointName: null,
+            pointName: 'Unknown',
             northing: null,
             easting: null,
             zone: 56,
@@ -83,7 +83,7 @@ class WaypointModal extends Component {
 
     render() {
         const { cancelAction } = this.props
-        const { easting, northing, errors, zone, band } = this.state
+        const { easting, northing, errors, zone, band, pointName } = this.state
         console.log(easting, northing, errors, zone, band )
         return (
             <Modal size='mini' open>
@@ -91,7 +91,7 @@ class WaypointModal extends Component {
                 <Modal.Content>
                     <Form size="tiny" onSubmit={this.onSubmit} error>
                         <Form.Field>
-                            <Form.Input label="Name" name="pointName" placeholder='blah blah' onChange={this.onChange} error={!!errors.pointName} />
+                            <Form.Input label="Name" name="pointName" placeholder='blah blah' onChange={this.onChange} error={!!errors.pointName} value={pointName} />
                             {!!errors.pointName ? (
                                 <div className="error">Waypoint name</div>
                             ) : null}

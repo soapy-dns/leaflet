@@ -16,3 +16,10 @@ export const updateFeatureCollection = (feature, selectedCollectionName) => ({
         feature,
         selectedCollectionName
 })
+
+export const MOVE_FEATURE_AND_OPEN = 'fc/MOVE_FEATURE_AND_OPEN'
+export const moveFeatureAndOpen = (feature, selectedCollectionName) => {
+    // do stuff
+
+
+}

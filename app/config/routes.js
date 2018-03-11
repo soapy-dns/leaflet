@@ -6,7 +6,7 @@ import { persistStore, autoRehydrate } from 'redux-persist'
 // import { asyncLocalStorage } from 'redux-persist/storages'
 import thunk from 'redux-thunk'
 import reducer from '../reducers/index'
-
+import TestContainer from '../components/test-container'
 
 import NotFound from '../views/404'
 import Splash from '../views/splash'
@@ -37,7 +37,22 @@ class Routes extends Component {
         })
     }
 
-
+    // render() {
+    //     if (this.state.rehydrated) {
+    //         return (
+    //             <Provider store={store}>
+    //                 <Router history={browserHistory} onUpdate={() => window.scrollTo(0, 0)}>
+    //                     <Route path="/" component={Main}>
+    //                         <IndexRoute component={TestContainer}/>
+    //                     </Route>
+    //                     <Route path="splash" component={Splash}/>
+    //                     <Route path="*" component={NotFound}/>
+    //                 </Router>
+    //             </Provider>
+    //         )
+    //     }
+    //     return <div />
+    // }
     render() {
         if (this.state.rehydrated) {
             return (

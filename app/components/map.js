@@ -1,18 +1,18 @@
 import React, { Component } from 'react'
 import L, { Control, Marker, Map, GeoJSON } from 'leaflet'
 import { BasemapLayer, TiledMapLayer } from 'esri-leaflet'
-// import utm from 'utm'
 import { toLatLng } from 'utm'
-// const utm = require('utm')
 import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
 import _ from 'lodash'
 
+import { DragDropContext } from 'react-dnd'
+import HTML5Backend from 'react-dnd-html5-backend'
+
 import Api from '../utils/api'
 
-import Search from './search'
-import Location from './location'
-import Toolbar from './toolbar'
+// import Location from './location'
+
 import Collections from './collections/collections'
 import MainMenu from './menu/main-menu'
 import Locate from './locate-modal'
@@ -85,64 +85,6 @@ const _getInitialLineFeature = (latlng) => {
 }
 
 
-
-
-
-// create function for map click after addWaypoint selected
-// function _addWaypointOnClick2(e) {
-//     // set up waypoint geojson
-//     const waypointFeature = {
-//         "type": "Feature",
-//         "properties": {
-//             "name": "CC THUNDER JT",  // todo - allow to be updated
-//             "time": "2014-04-12T01:40:46Z",
-//             "sym": "Flag, Blue",
-//             "type": "user"
-//         },
-//         "geometry": {
-//             "type": "Point",
-//             "coordinates": [
-//                 e.latlng.lat,
-//                 e.latlng.lng,
-//                 null
-//             ]
-//         }
-//     }
-//
-//
-//     // create waypoint
-//     const waypoint = L.geoJSON(waypointFeature, {
-//         // each point will be converted to a marker with the defined options
-//         pointToLayer: function (feature, latlng) {
-//             return L.marker(e.latlng, {icon: markerIcon})
-//
-//         },
-//         // onEachFeature: function (feature, latlng) {
-//         //     console.log('open modal')
-//         //     // todo - allow a popup to be set to add content / change the marker
-//         // }
-//         onEachFeature: function (feature, layer) {
-//             console.log('--onEachFeature--')
-//             if (feature.properties && feature.properties.name) {
-//                 console.log('--bindPopup--')
-//                 layer.bindPopup(feature.properties.name);
-//             }
-//         }
-//     })
-//
-//     // console.log('add waypoint layer %j', waypoint.toString())
-//     // console.log('add waypoint layer', waypoint)
-//     // console.log('back to geojson', waypoint.toGeoJSON())
-//     // console.log('add waypoint layer', JSON.stringify(waypoint))
-//
-//     // add to group
-//     currentTrackLayerGroup.addLayer(waypoint)
-//
-//     // turn off 'waypointing'
-//     L.DomUtil.removeClass(map._container, 'leaflet-crosshair')
-//     map.off('click', _addWaypointOnClick)
-// }
-
 function onDrawLineClick(e) {
     const currentGeoJson = currentTrackLayerGroup.toGeoJSON()
 
@@ -212,6 +154,8 @@ class MyMap extends Component {
         this.hideElevationPlot = this.hideElevationPlot.bind(this)
         // this.saveLocation = this.saveLocation.bind(this)
         this.onSelectCollection = this.onSelectCollection.bind(this)
+        this.onSelectFeature = this.onSelectFeature.bind(this)
+
         this.waypointModal = this.waypointModal.bind(this)
 
         this.state = {
@@ -286,11 +230,11 @@ class MyMap extends Component {
         collectionsLayerGroup.addTo(map)
     }
 
-    shouldComponentUpdate(nextProps, nextState) {
-    // return a boolean value  - add test
-        console.log('shouldComponentUpdate')
-        return true
-    }
+    // shouldComponentUpdate(nextProps, nextState) {
+    // // return a boolean value  - add test
+    //     console.log('shouldComponentUpdate')
+    //     return true
+    // }
 
     onCancelAction() {
         console.log('cancelAction')
@@ -349,12 +293,12 @@ class MyMap extends Component {
         const featureCollection = JSON.parse(fileText)  //.features[0].geometry
         this.props.dispatch(saveTrack(featureCollection))
 
-        console.log('featureCollection', featureCollection)
+        // console.log('featureCollection', featureCollection)
 
         // get the name from the lineString
         const line = featureCollection.features.find(it => it.geometry.type === 'LineString')
         const featureCollectionName = line.properties.name
-        console.log('featureCollectionname', featureCollectionName)
+        // console.log('featureCollectionname', featureCollectionName)
 
         // create new geojson layer for this featureCollection, and add to map
         const newfeatureCollectionsLayer = getGeoJsonLayer(featureCollection)
@@ -637,21 +581,23 @@ class MyMap extends Component {
             } else {
                 // add to selected collection
                 const waypointFeature = getWaypointFeature(featureData.pointName, ui.selectedLatitude, ui.selectedLongitude)
+                console.log('updateFeatureCollection')
                 dispatch(updateFeatureCollection(waypointFeature, ui.selectedCollectionName))
                 // remove selectedLatlng  - maybe want to do the 2 dispatches together
                 dispatch(clearLatLng())
                 this.setState({modal: null})
 
                 // update the map
-                // get all the features from all collections and add them as 1 single layer
-                map.removeLayer(collectionsLayerGroup)
+                // get all the features from all collections and add them as 1 single layer - this is so we can simply remove the lot before re-adding.
                 let features = []
                 collections.forEach(it => {
                     features = features.concat(it.featureCollection.features)
                 })
+                features.push(waypointFeature)  // add the new feature
                 const featureCollection = {
                     features  // don't think I need to put in the type
                 }
+                map.removeLayer(collectionsLayerGroup)
                 collectionsLayerGroup = getGeoJsonLayer(featureCollection)
                 collectionsLayerGroup.addTo(map)
             }
@@ -707,7 +653,7 @@ class MyMap extends Component {
                 />
 
                 <Collections collections={collections} selectedCollectionName={ui.selectedCollectionName}
-                             onSelectCollection={this.onSelectCollection}/>
+                             onSelectCollection={this.onSelectCollection} onSelectFeature={this.onSelectFeature} />
 
                 <div id="mapid"></div>
                 <div>showElevation { ui.showElevation }</div>
@@ -734,3 +680,6 @@ function mapStateToProps(state) {
 }
 
 export default connect(mapStateToProps)(MyMap)
+// export default connect(mapStateToProps)(DragDropContext(HTML5Backend)(MyMap))  // this should work, altho I put the DragDropContext in the 'main' eleement
+
+
