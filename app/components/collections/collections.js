@@ -5,7 +5,6 @@ import { has } from 'lodash'
 
 import Feature from './feature'
 import Collection from './collection'
-import Knight from './Knight'
 
 class Collections extends Component {
     constructor(props) {
