@@ -59,7 +59,6 @@ class Collections extends Component {
                     <span>Collections</span>
                 </button>
                 <h1>Collections</h1>
-                <Knight />
 
                 <Menu vertical borderless fluid className="collections top">
                     {collections.map((collection, id) => (
