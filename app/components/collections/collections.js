@@ -34,8 +34,32 @@ class Collections extends Component {
         this.props.onSelectCollection(collections[id].name)
     }
 
-    onMoveFeature() {
-        console.log('onMoveFeature')
+    onMoveFeature(featureName, newCollectionName) {
+        const { collections, selectedCollectionName } = this.props
+        console.log('onMoveFeature', featureName)
+
+        // todo - put change in here on reducer
+        // - here I think as reducer is just for adding into store.
+        //Here we have access to data in reducer we'd have to pass data to it.
+        //get feature from selectedCollectionName
+        let selectedCollection = collections.find(it => it.name === selectedCollectionName)
+        const newCollection = collections.find(it => it.name === newCollectionName)
+
+        console.log('selectedCollection', selectedCollection)
+        console.log('newCollection', newCollection)
+        const feature = selectedCollection.featureCollection.features.find(it => it.properties.name === featureName)
+        console.log('feature', feature)
+
+        //add feature its new collection
+        newCollection.featureCollection.features.push(feature)
+
+        //remove feature from selectedCollection
+        selectedCollection = selectedCollection.featureCollection.features.filter(it => it.properties.name !== featureName)
+
+        //change selectedCollectionName to new collection
+
+        // dispatch something
+
     }
 
     render() {
@@ -58,28 +82,36 @@ class Collections extends Component {
                 <button className="hamburger" onClick={this.toggleVisibility}>
                     <span>Collections</span>
                 </button>
-                <h1>Collections</h1>
-
-                <Menu vertical borderless fluid className="collections top">
-                    {collections.map((collection, id) => (
-                        <Menu.Item key={id} onClick={(e) => this.onSelectCollection(id)} >
-                            <Collection collectionName={collection.name} selectedCollectionName={selectedCollectionName} onMoveFeature={this.onMoveFeature} />
-                        </Menu.Item>
-                    ))}
-                </Menu>
 
                 {selectedCollectionName ? (
                     <div>
                         <h1>{selectedCollectionName}</h1>
-                        <Menu vertical borderless fluid className="collections bottom">
-                            {features.map((feature, id) => (
-                                <Menu.Item key={id} onClick={(e) => onSelectFeature(id)}>
-                                    <Feature featureType={feature.type} featureName={feature.name} />
-                                </Menu.Item>
-                            ))}
-                        </Menu>
+                        <div className="scrolling-panel">
+                            <Menu vertical borderless fluid className="collections bottom">
+                                {features.map((feature, id) => (
+                                    <Menu.Item key={id} onClick={(e) => onSelectFeature(id)}>
+                                        <Feature featureType={feature.type} featureName={feature.name} />
+                                    </Menu.Item>
+                                ))}
+                            </Menu>
+                        </div>
                     </div>
                 ) : null}
+
+
+                <h1>Collections</h1>
+                <div className="scrolling-panel">
+
+                    <Menu vertical borderless fluid className="collections top">
+                        {collections.map((collection, id) => (
+                            <Menu.Item key={id} onClick={(e) => this.onSelectCollection(id)} >
+                                <Collection collectionName={collection.name} selectedCollectionName={selectedCollectionName} onMoveFeature={this.onMoveFeature} />
+                            </Menu.Item>
+                        ))}
+                    </Menu>
+                </div>
+
+
 
             </div>
         )
@@ -92,7 +124,6 @@ Collections.propTypes = {
     selectedCollectionName: PropTypes.string,
     onSelectCollection: PropTypes.func,
     onSelectFeature: PropTypes.func
-
 }
 
 export default Collections

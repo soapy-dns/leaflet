@@ -22,4 +22,6 @@ export const moveFeatureAndOpen = (feature, selectedCollectionName) => {
     // do stuff
 
 
+
+
 }

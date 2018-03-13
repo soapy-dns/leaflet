@@ -173,16 +173,16 @@ class MyMap extends Component {
         const baseLayer = new BasemapLayer('Gray')
 
         // topo layer
-        // const topoLayer = new TiledMapLayer({
-        //     url: 'http://maps.six.nsw.gov.au/arcgis/rest/services/public/NSW_Topo_Map/MapServer',
-        //     maxZoom: 17,
-        //     maxNativeZoom: 15
-        // })
-        //
-        // // satellite image layer
-        // const imageLayer = new TiledMapLayer({
-        //     url: 'http://maps.six.nsw.gov.au/arcgis/rest/services/public/NSW_Imagery/MapServer'
-        // })
+        const topoLayer = new TiledMapLayer({
+            url: 'http://maps.six.nsw.gov.au/arcgis/rest/services/public/NSW_Topo_Map/MapServer',
+            maxZoom: 17,
+            maxNativeZoom: 15
+        })
+
+        // satellite image layer
+        const imageLayer = new TiledMapLayer({
+            url: 'http://maps.six.nsw.gov.au/arcgis/rest/services/public/NSW_Imagery/MapServer'
+        })
 
         const baseMaps = {
             "Base": baseLayer,
@@ -195,8 +195,8 @@ class MyMap extends Component {
             zoom: zoom,
             maxZoom: 17,
             maxNativeZoom: 14,  // don't request tiles with a zoom > this (cos they don't exist)
-            // layers: [baseLayer, topoLayer]
-            layers: [baseLayer]
+            layers: [baseLayer, topoLayer]
+            // layers: [baseLayer]
 
         })
         map.on('moveend', function (e) {
@@ -205,14 +205,14 @@ class MyMap extends Component {
         map.zoomControl.setPosition('bottomright')
 
         // define overlay layers for control
-        // overlayLayers = {
-        //     "Topo": topoLayer,
-        //     "Satellite": imageLayer
-        // }
+        overlayLayers = {
+            "Topo": topoLayer,
+            "Satellite": imageLayer
+        }
 
         // add control button for layers
-        // layersControl = new Control.Layers(baseMaps, overlayLayers)
-        // layersControl.addTo(map)
+        layersControl = new Control.Layers(baseMaps, overlayLayers)
+        layersControl.addTo(map)
 
         //add scale
         const scale = new Control.Scale()

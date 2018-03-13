@@ -2,14 +2,12 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import {Icon} from 'semantic-ui-react'
 import { DropTarget } from 'react-dnd'
+import Constants from '../../common/constants'
 
 const collectionTarget = {
     drop(props, monitor) {
-        // might use monitor.getItem to retrieve the dragged item, but only have the one draggable thing
-        // todo - do whatever you want on drop
-        console.log('dropped')
-        console.log('item', monitor.getItem())
-        props.onMoveFeature()
+        const featureName = monitor.getItem().featureName
+        props.onMoveFeature(featureName, props.collectionName)
     }
 }
 
@@ -31,12 +29,6 @@ const Collection = (props) => {
             {props.collectionName}
         </span>
     )
-    // return (
-    //     <span>
-    //         <Icon color="blue" size="large" name={icon} />
-    //         {props.collectionName}
-    //     </span>
-    // )
 }
 
 Collection.propTypes = {
@@ -46,16 +38,8 @@ Collection.propTypes = {
 
     // injected by dnd
     connectDropTarget: PropTypes.func.isRequired,
-    isOver: PropTypes.bool.isRequired
+    isOver: PropTypes.bool.isRequired,
 }
 
-// function mapStateToProps(state) {
-//     return {
-//
-//     }
-// }
-
-// export default Collection
-// todo - move FEATURE to a constante
-export default DropTarget('FEATURE', collectionTarget, collect)(Collection)
+export default DropTarget(Constants.dragndrop.FEATURE, collectionTarget, collect)(Collection)
 

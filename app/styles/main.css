@@ -114,7 +114,7 @@ body {
 
 #menu {
     overflow-y: scroll;
-    max-height: 95vh;
+    max-height: 25vh;
 }
 
 #collections ul {
@@ -166,8 +166,10 @@ body {
 
 .collections.top {
     height: 50vh;
+    overflow-y: scroll;
 }
 .collection.bottom {
+    overflow-y: scroll;
     height: 50vh;
 }
 
@@ -175,5 +177,11 @@ body {
     position: absolute;
     left: 300px;
     z-index: 1000;
+}
+
+.scrolling-panel {
+    overflow-y: scroll;
+    max-height: 40vh;
+
 }
 

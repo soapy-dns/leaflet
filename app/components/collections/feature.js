@@ -1,9 +1,10 @@
-import React,  { Component } from 'react'
+import React, {Component} from 'react'
 import PropTypes from 'prop-types'
-import { DragSource } from 'react-dnd'
+import {DragSource} from 'react-dnd'
 
 import Point from './point-feature'
 import LineString from './line-string-feature'
+import Constants from '../../common/constants'
 
 class Feature extends Component {
     constructor(props) {
@@ -11,17 +12,15 @@ class Feature extends Component {
     }
 
     render() {
-        const { featureType, featureName, isDragging, connectDragSource } = this.props
+        const {featureType, featureName, isDragging, connectDragSource} = this.props
 
-        // console.log('isDragging', isDragging)
-        // console.log('connectDragSource>>', props.connectDragSource)
         let html
         if (featureType === 'Point') {
             html = (
-                    <Point featureName={featureName} />
+                <Point featureName={featureName}/>
             )
         } else if (featureType == 'LineString') {
-            html = (<LineString featureName={featureName} />)  // todo - change styling on draggin object
+            html = (<LineString featureName={featureName}/>)  // todo - change styling on draggin object
         }
 
         return connectDragSource(
@@ -32,7 +31,7 @@ class Feature extends Component {
             >
                 {html}
             </div>
-        );
+        )
     }
 }
 
@@ -43,8 +42,8 @@ class Feature extends Component {
 const featureSource = {
     beginDrag(props) {
         return {
-            featureName: 'x',
-            collectionName: 'y'
+            featureName: props.featureName,
+            // collectionName: props.collectionName
         }
     }
 }
@@ -62,13 +61,11 @@ function collect(connect, monitor) {
 Feature.propTypes = {
     featureType: PropTypes.string,
     featureName: PropTypes.string,
+    // collectionName: PropTypes.string,
 
     // Injected by React DnD:
     isDragging: PropTypes.bool.isRequired,
     connectDragSource: PropTypes.func.isRequired
-    // isDragging: PropTypes.bool,
-    // connectDragSource: PropTypes.func
 }
-// console.log('ds>>', DragSource('FEATURE', featureSource, collect))
-// Export the wrapped component:
-export default DragSource('FEATURE', featureSource, collect)(Feature)
+
+export default DragSource(Constants.dragndrop.FEATURE, featureSource, collect)(Feature)
