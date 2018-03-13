@@ -83,10 +83,21 @@ class Collections extends Component {
                     <span>Collections</span>
                 </button>
 
+                <div className="side-panel-top">
+                    <h1>Collections</h1>
+                    <Menu vertical borderless fluid className="collections top">
+                        {collections.map((collection, id) => (
+                            <Menu.Item key={id} onClick={(e) => this.onSelectCollection(id)} >
+                                <Collection collectionName={collection.name} selectedCollectionName={selectedCollectionName} onMoveFeature={this.onMoveFeature} />
+                            </Menu.Item>
+                        ))}
+                    </Menu>
+                </div>
+
                 {selectedCollectionName ? (
                     <div>
-                        <h1>{selectedCollectionName}</h1>
-                        <div className="scrolling-panel">
+                        <div className="side-panel-bottom">
+                            <h1>{selectedCollectionName}</h1>
                             <Menu vertical borderless fluid className="collections bottom">
                                 {features.map((feature, id) => (
                                     <Menu.Item key={id} onClick={(e) => onSelectFeature(id)}>
@@ -97,21 +108,6 @@ class Collections extends Component {
                         </div>
                     </div>
                 ) : null}
-
-
-                <h1>Collections</h1>
-                <div className="scrolling-panel">
-
-                    <Menu vertical borderless fluid className="collections top">
-                        {collections.map((collection, id) => (
-                            <Menu.Item key={id} onClick={(e) => this.onSelectCollection(id)} >
-                                <Collection collectionName={collection.name} selectedCollectionName={selectedCollectionName} onMoveFeature={this.onMoveFeature} />
-                            </Menu.Item>
-                        ))}
-                    </Menu>
-                </div>
-
-
 
             </div>
         )

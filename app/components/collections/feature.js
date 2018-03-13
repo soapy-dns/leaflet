@@ -27,6 +27,7 @@ class Feature extends Component {
             <div
                 style={{
                     opacity: isDragging ? 0.5 : 1,
+                    color: isDragging? "red": null
                 }}
             >
                 {html}
