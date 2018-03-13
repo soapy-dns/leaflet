@@ -2,9 +2,11 @@ import React, {Component} from 'react'
 import {Button, Menu, Label, Input} from 'semantic-ui-react'
 import PropTypes from 'prop-types'
 import { has } from 'lodash'
+import { connect } from 'react-redux'
 
 import Feature from './feature'
 import Collection from './collection'
+import { selectCollection } from '../../actions/ui'
 
 class Collections extends Component {
     constructor(props) {
@@ -35,14 +37,14 @@ class Collections extends Component {
     }
 
     onMoveFeature(featureName, newCollectionName) {
-        const { collections, selectedCollectionName } = this.props
+        const { collections, ui, dispatch } = this.props
         console.log('onMoveFeature', featureName)
 
         // todo - put change in here on reducer
         // - here I think as reducer is just for adding into store.
         //Here we have access to data in reducer we'd have to pass data to it.
         //get feature from selectedCollectionName
-        let selectedCollection = collections.find(it => it.name === selectedCollectionName)
+        let selectedCollection = collections.find(it => it.name === ui.selectedCollectionName)
         const newCollection = collections.find(it => it.name === newCollectionName)
 
         console.log('selectedCollection', selectedCollection)
@@ -57,15 +59,16 @@ class Collections extends Component {
         selectedCollection = selectedCollection.featureCollection.features.filter(it => it.properties.name !== featureName)
 
         //change selectedCollectionName to new collection
+        dispatch(selectCollection(newCollectionName))
 
         // dispatch something
 
     }
 
     render() {
-        const {collections, selectedCollectionName, onSelectFeature} = this.props
+        const {collections, ui, onSelectFeature} = this.props
 
-        const selectedCollection = collections.find(it => it.name === selectedCollectionName)
+        const selectedCollection = collections.find(it => it.name === ui.selectedCollectionName)
 
         const features = []
         if (has(selectedCollection, 'featureCollection')) {
@@ -88,16 +91,16 @@ class Collections extends Component {
                     <Menu vertical borderless fluid className="collections top">
                         {collections.map((collection, id) => (
                             <Menu.Item key={id} onClick={(e) => this.onSelectCollection(id)} >
-                                <Collection collectionName={collection.name} selectedCollectionName={selectedCollectionName} onMoveFeature={this.onMoveFeature} />
+                                <Collection collectionName={collection.name} selectedCollectionName={ui.selectedCollectionName} onMoveFeature={this.onMoveFeature} />
                             </Menu.Item>
                         ))}
                     </Menu>
                 </div>
 
-                {selectedCollectionName ? (
+                {ui.selectedCollectionName ? (
                     <div>
                         <div className="side-panel-bottom">
-                            <h1>{selectedCollectionName}</h1>
+                            <h1>{ui.selectedCollectionName}</h1>
                             <Menu vertical borderless fluid className="collections bottom">
                                 {features.map((feature, id) => (
                                     <Menu.Item key={id} onClick={(e) => onSelectFeature(id)}>
@@ -114,12 +117,20 @@ class Collections extends Component {
     }
 }
 
-
 Collections.propTypes = {
-    collections: PropTypes.object,
-    selectedCollectionName: PropTypes.string,
+    dispatch: PropTypes.func,
+    // collections: PropTypes.object,
+    // selectedCollectionName: PropTypes.string,
     onSelectCollection: PropTypes.func,
     onSelectFeature: PropTypes.func
 }
 
-export default Collections
+function mapStateToProps(state) {
+    return {
+        ui: state.ui,
+        collections: state.featureCollections
+    }
+}
+
+export default connect(mapStateToProps)(Collections)
+

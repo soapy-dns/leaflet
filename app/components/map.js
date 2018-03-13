@@ -652,8 +652,7 @@ class MyMap extends Component {
                     showElevationPlot={this.showElevationPlot}
                 />
 
-                <Collections collections={collections} selectedCollectionName={ui.selectedCollectionName}
-                             onSelectCollection={this.onSelectCollection} onSelectFeature={this.onSelectFeature} />
+                <Collections onSelectCollection={this.onSelectCollection} onSelectFeature={this.onSelectFeature} />
 
                 <div id="mapid"></div>
                 <div>showElevation { ui.showElevation }</div>
