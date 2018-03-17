@@ -1,4 +1,4 @@
-import { NEW_FEATURE_COLLECTION, UPDATE_FEATURE_COLLECTION } from '../actions/feature-collections'
+import { NEW_FEATURE_COLLECTION, ADD_FEATURE_TO_COLLECTION, UPDATE_COLLECTIONS } from '../actions/feature-collections'
 
 export default function (fcState = [], action) {
     switch (action.type) {
@@ -22,7 +22,7 @@ export default function (fcState = [], action) {
 
             return fcState
 
-        case UPDATE_FEATURE_COLLECTION:
+        case ADD_FEATURE_TO_COLLECTION:
             // find the relevant feature collection
             const foundFeatureCollection = fcState.find(it => it.name === action.selectedCollectionName)
 
@@ -31,6 +31,10 @@ export default function (fcState = [], action) {
 
             // return the state (which has been updated by the push)
             return fcState
+
+        case UPDATE_COLLECTIONS:
+            console.log('reducer', action.collections)
+            return action.collections
 
         default:
             return fcState

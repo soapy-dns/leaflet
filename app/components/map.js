@@ -22,7 +22,7 @@ import WaypointModal from './waypoint-modal'
 import Elevation from '../components/stats/elevation'
 
 import { saveTrack, selectTrack } from '../actions/tracks'
-import { newFeatureCollection, updateFeatureCollection } from '../actions/feature-collections'
+import { newFeatureCollection, addFeatureToCollection } from '../actions/feature-collections'
 import { saveMapDetails } from '../actions/current'
 import { toggleElevation, selectCollection, selectLatLng, clearLatLng } from '../actions/ui'
 
@@ -173,16 +173,18 @@ class MyMap extends Component {
         const baseLayer = new BasemapLayer('Gray')
 
         // topo layer
-        // const topoLayer = new TiledMapLayer({
-        //     url: 'http://maps.six.nsw.gov.au/arcgis/rest/services/public/NSW_Topo_Map/MapServer',
-        //     maxZoom: 17,
-        //     maxNativeZoom: 15
-        // })
+        const topoLayer = new TiledMapLayer({
+            // url: 'http://maps.six.nsw.gov.au/arcgis/rest/services/public/NSW_Topo_Map/MapServer',
+            url: 'http://maps4.six.nsw.gov.au/arcgis/rest/services/sixmaps/LPIMap/MapServer',
+            maxZoom: 17,
+            maxNativeZoom: 15
+        })
 
         // satellite image layer
-        // const imageLayer = new TiledMapLayer({
-        //     url: 'http://maps.six.nsw.gov.au/arcgis/rest/services/public/NSW_Imagery/MapServer'
-        // })
+        const imageLayer = new TiledMapLayer({
+            // url: 'http://maps.six.nsw.gov.au/arcgis/rest/services/public/NSW_Imagery/MapServer'
+            url: 'http://maps2.six.nsw.gov.au/arcgis/rest/services/sixmaps/LPI_Imagery_Best/MapServer'
+        })
 
         const baseMaps = {
             "Base": baseLayer,
@@ -195,8 +197,8 @@ class MyMap extends Component {
             zoom: zoom,
             maxZoom: 17,
             maxNativeZoom: 14,  // don't request tiles with a zoom > this (cos they don't exist)
-            // layers: [baseLayer, topoLayer]
-            layers: [baseLayer]
+            layers: [baseLayer, topoLayer]
+            // layers: [baseLayer]
 
         })
         map.on('moveend', function (e) {
@@ -205,14 +207,14 @@ class MyMap extends Component {
         map.zoomControl.setPosition('bottomright')
 
         // define overlay layers for control
-        // overlayLayers = {
-        //     "Topo": topoLayer,
-            // "Satellite": imageLayer
-        // }
+        overlayLayers = {
+            "Topo": topoLayer,
+            "Satellite": imageLayer
+        }
 
         // add control button for layers
-        // layersControl = new Control.Layers(baseMaps, overlayLayers)
-        // layersControl.addTo(map)
+        layersControl = new Control.Layers(baseMaps, overlayLayers)
+        layersControl.addTo(map)
 
         //add scale
         const scale = new Control.Scale()
@@ -581,8 +583,8 @@ class MyMap extends Component {
             } else {
                 // add to selected collection
                 const waypointFeature = getWaypointFeature(featureData.pointName, ui.selectedLatitude, ui.selectedLongitude)
-                console.log('updateFeatureCollection')
-                dispatch(updateFeatureCollection(waypointFeature, ui.selectedCollectionName))
+                console.log('addFeatureToCollection')
+                dispatch(addFeatureToCollection(waypointFeature, ui.selectedCollectionName))
                 // remove selectedLatlng  - maybe want to do the 2 dispatches together
                 dispatch(clearLatLng())
                 this.setState({modal: null})

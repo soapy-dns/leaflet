@@ -3,10 +3,12 @@ import {Button, Menu, Label, Input} from 'semantic-ui-react'
 import PropTypes from 'prop-types'
 import { has } from 'lodash'
 import { connect } from 'react-redux'
+import { cloneDeep } from 'lodash'
 
 import Feature from './feature'
 import Collection from './collection'
 import { selectCollection } from '../../actions/ui'
+import { updateCollections } from '../../actions/feature-collections'
 
 class Collections extends Component {
     constructor(props) {
@@ -36,33 +38,25 @@ class Collections extends Component {
         this.props.onSelectCollection(collections[id].name)
     }
 
-    onMoveFeature(featureName, newCollectionName) {
+    onMoveFeature(draggedFeatureName, targetCollectionName) {
         const { collections, ui, dispatch } = this.props
-        console.log('onMoveFeature', featureName)
+        const clonedConnections = cloneDeep(collections)
 
-        // todo - put change in here on reducer
-        // - here I think as reducer is just for adding into store.
-        //Here we have access to data in reducer we'd have to pass data to it.
-        //get feature from selectedCollectionName
-        let selectedCollection = collections.find(it => it.name === ui.selectedCollectionName)
-        const newCollection = collections.find(it => it.name === newCollectionName)
+        let sourceCollection = clonedConnections.find(it => it.name === ui.selectedCollectionName)
+        const targetCollection = clonedConnections.find(it => it.name === targetCollectionName)
 
-        console.log('selectedCollection', selectedCollection)
-        console.log('newCollection', newCollection)
-        const feature = selectedCollection.featureCollection.features.find(it => it.properties.name === featureName)
-        console.log('feature', feature)
+        const draggedFeature = sourceCollection.featureCollection.features.find(it => it.properties.name === draggedFeatureName)
 
         //add feature its new collection
-        newCollection.featureCollection.features.push(feature)
+        targetCollection.featureCollection.features.push(draggedFeature)
 
         //remove feature from selectedCollection
-        selectedCollection = selectedCollection.featureCollection.features.filter(it => it.properties.name !== featureName)
+        const sourceFeatures = sourceCollection.featureCollection.features
+        sourceCollection.featureCollection.features = sourceFeatures.filter(it => it.properties.name !== draggedFeatureName)
 
-        //change selectedCollectionName to new collection
-        dispatch(selectCollection(newCollectionName))
-
-        // dispatch something
-
+        // update redux
+        dispatch(selectCollection(targetCollectionName))
+        dispatch(updateCollections(clonedConnections))
     }
 
     render() {
