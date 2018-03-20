@@ -1,31 +1,51 @@
 import React, {Component} from 'react'
 import {Button, Menu, Label, Input} from 'semantic-ui-react'
 import PropTypes from 'prop-types'
-import { has } from 'lodash'
 import { connect } from 'react-redux'
-import { cloneDeep } from 'lodash'
+import { cloneDeep, has } from 'lodash'
 
 import Feature from './feature'
 import Collection from './collection'
-import { selectCollection } from '../../actions/ui'
-import { updateCollections } from '../../actions/feature-collections'
+import { selectCollection, toggleCollectionSlider } from '../../actions/ui'
+import { updateCollections, markCollectionAsSaved } from '../../actions/feature-collections'
+import { getCollectionByName } from '../../common/utils'
 
 class Collections extends Component {
     constructor(props) {
         super(props)
 
         this.toggleVisibility = this.toggleVisibility.bind(this)
+        this.saveCollection = this.saveCollection.bind(this)
         this.state = {
-            visible: false,
+            // visible: false,
             activeItem: null,
         }
         this.onSelectCollection = this.onSelectCollection.bind(this)
         this.onMoveFeature = this.onMoveFeature.bind(this)
     }
 
+    saveCollection(collectionName) {
+        const { collections } = this.props
+        var element = document.createElement("a")
+        const collection = getCollectionByName(collections, collectionName)
+
+        const blob = new Blob([JSON.stringify(collection.featureCollection)], {type: 'application/json'})
+
+        element.href = URL.createObjectURL(blob)
+        element.download = `${collectionName}`
+
+        element.click()
+
+        collection.altered = false  // possibly shouldn't be updating this.  saving it via dispatch anyway
+        dispatch(markCollectionAsSaved(collection))
+
+    }
     toggleVisibility() {
-        console.log('toggle visibility')
-        this.setState({visible: !this.state.visible})
+        const { dispatch, ui } = this.props
+        console.log('toggle visibility', ui.showCollectionSlider)
+
+        dispatch(toggleCollectionSlider(!ui.showCollectionSlider))
+        // this.setState({visible: !this.state.visible})
     }
 
     componentDidMount() {
@@ -49,10 +69,12 @@ class Collections extends Component {
 
         //add feature its new collection
         targetCollection.featureCollection.features.push(draggedFeature)
+        targetCollection.altered = true
 
         //remove feature from selectedCollection
         const sourceFeatures = sourceCollection.featureCollection.features
         sourceCollection.featureCollection.features = sourceFeatures.filter(it => it.properties.name !== draggedFeatureName)
+        sourceCollection.altered = true
 
         // update redux
         dispatch(selectCollection(targetCollectionName))
@@ -75,7 +97,7 @@ class Collections extends Component {
         }
 
         return (
-            <div id="collections" className={this.state.visible ? "open" : null}>
+            <div id="collections" className={ui.showCollectionSlider ? "open" : null}>
                 <button className="hamburger" onClick={this.toggleVisibility}>
                     <span>Collections</span>
                 </button>
@@ -85,7 +107,13 @@ class Collections extends Component {
                     <Menu vertical borderless fluid className="collections top">
                         {collections.map((collection, id) => (
                             <Menu.Item key={id} onClick={(e) => this.onSelectCollection(id)} >
-                                <Collection collectionName={collection.name} selectedCollectionName={ui.selectedCollectionName} onMoveFeature={this.onMoveFeature} />
+                                <Collection
+                                    collectionName={collection.name}
+                                    altered={collection.altered}
+                                    selectedCollectionName={ui.selectedCollectionName}
+                                    onMoveFeature={this.onMoveFeature}
+                                    saveCollection={this.saveCollection}
+                                />
                             </Menu.Item>
                         ))}
                     </Menu>
@@ -113,13 +141,14 @@ class Collections extends Component {
 
 Collections.propTypes = {
     dispatch: PropTypes.func,
-    // collections: PropTypes.object,
-    // selectedCollectionName: PropTypes.string,
+    ui: PropTypes.object,
+    collections: PropTypes.object,
     onSelectCollection: PropTypes.func,
     onSelectFeature: PropTypes.func
 }
 
 function mapStateToProps(state) {
+    console.log('state.ui', state.ui)
     return {
         ui: state.ui,
         collections: state.featureCollections

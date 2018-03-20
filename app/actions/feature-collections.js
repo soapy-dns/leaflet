@@ -29,3 +29,9 @@ export const updateCollections = (collections) => ({
     type: UPDATE_COLLECTIONS,
     collections: collections,
 })
+
+export const MARK_COLLECTION_AS_SAVED = 'fc/MARK_COLLECTION_AS_SAVED'
+export const markCollectionAsSaved = collection => ({
+    type: MARK_COLLECTION_AS_SAVED,
+    collection: collection
+})

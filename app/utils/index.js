@@ -47,3 +47,5 @@ const _toRadian = (degree) => {
 export const getMillisecsBetween2Points = (origin, destination) => {
     return moment(destination).diff(moment(origin))
 }
+
+

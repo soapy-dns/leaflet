@@ -32,3 +32,10 @@ export const clearLatLng = () => ({
     selectedLatitude: undefined,
     selectedLongitude: undefined
 })
+
+// toggle collection slider
+export const TOGGLE_COLLECTION_SLIDER = 'ui/TOGGLE_COLLECTION_SLIDER'
+export const toggleCollectionSlider = (boolean) => ({
+    type: TOGGLE_COLLECTION_SLIDER,
+    showCollectionSlider: boolean
+})
