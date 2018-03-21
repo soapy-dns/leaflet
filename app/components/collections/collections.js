@@ -17,7 +17,6 @@ class Collections extends Component {
         this.toggleVisibility = this.toggleVisibility.bind(this)
         this.saveCollection = this.saveCollection.bind(this)
         this.state = {
-            // visible: false,
             activeItem: null,
         }
         this.onSelectCollection = this.onSelectCollection.bind(this)
@@ -45,7 +44,6 @@ class Collections extends Component {
         console.log('toggle visibility', ui.showCollectionSlider)
 
         dispatch(toggleCollectionSlider(!ui.showCollectionSlider))
-        // this.setState({visible: !this.state.visible})
     }
 
     componentDidMount() {
@@ -122,7 +120,7 @@ class Collections extends Component {
                 {ui.selectedCollectionName ? (
                     <div>
                         <div className="side-panel-bottom">
-                            <h1>{ui.selectedCollectionName}</h1>
+                            <h1>Features</h1>
                             <Menu vertical borderless fluid className="collections bottom">
                                 {features.map((feature, id) => (
                                     <Menu.Item key={id} onClick={(e) => onSelectFeature(id)}>

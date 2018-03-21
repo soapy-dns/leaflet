@@ -24,7 +24,8 @@ class MainMenu extends Component {
             addWaypoint,
             getMajorIncidents,
             autoCorrectTrack,
-            showElevationPlot
+            showElevationPlot,
+            onEdit
         } = this.props
 
         return (

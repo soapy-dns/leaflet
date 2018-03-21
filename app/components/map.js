@@ -30,7 +30,7 @@ import { getSelectedTrack, getLine, getDistanceBetween2Points, getMillisecsBetwe
 
 import { flameIcon, startIcon, markerIcon } from '../common/icons'
 import { geojsonMarkerOptions, geojsonLineMarkerOptions } from '../common/marker-options'
-import { getWaypointFeature, getGeoJsonLayer } from '../common/geojson'
+import { getWaypointFeature, getGeoJsonLayer, getGeoJson } from '../common/geojson'
 
 
 // todo - reinstate something similar - this has got functionality for processing points
@@ -155,6 +155,7 @@ class MyMap extends Component {
         // this.saveLocation = this.saveLocation.bind(this)
         this.onSelectCollection = this.onSelectCollection.bind(this)
         this.onSelectFeature = this.onSelectFeature.bind(this)
+        this.onEdit = this.onEdit.bind(this)
 
         this.waypointModal = this.waypointModal.bind(this)
 
@@ -252,6 +253,10 @@ class MyMap extends Component {
         this.setState({modal: null})
     }
 
+    onEdit() {
+        console.log('onEdit')
+    }
+
     showLocateModal(e) {
         console.log('showLocateModal', e)
         this.setState({modal: 'locate'})
@@ -286,14 +291,17 @@ class MyMap extends Component {
      That will trigger an update.
      */
     onOpenFile(fileText, filename, colour) {
-        console.log('--onOpenFile--')
+        console.log('--onOpenFile--,', filename)
         const {dispatch} = this.props
-        const json = JSON.parse(fileText)
-        dispatch(newFeatureCollection(json, filename))
 
+        const featureCollection = getGeoJson(fileText, filename)
+        console.log('json', featureCollection)
+        dispatch(newFeatureCollection(featureCollection, filename))
+
+        // todo - why am I doing this twice?
         //parse track
-        const featureCollection = JSON.parse(fileText)  //.features[0].geometry
-        this.props.dispatch(saveTrack(featureCollection))
+        // const featureCollection = json  //.features[0].geometry
+        // this.props.dispatch(saveTrack(featureCollection))
 
         // console.log('featureCollection', featureCollection)
 
@@ -652,6 +660,7 @@ class MyMap extends Component {
                     getMajorIncidents={this.getMajorIncidents}
                     autoCorrectTrack={this.autoCorrectTrack}
                     showElevationPlot={this.showElevationPlot}
+                    onEdit={this.onEdit}
                 />
 
                 <Collections onSelectCollection={this.onSelectCollection} onSelectFeature={this.onSelectFeature} />

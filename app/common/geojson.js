@@ -1,6 +1,10 @@
 'use strict'
-import { markerIcon } from '../common/icons'
-import { GeoJSON } from 'leaflet'
+import {markerIcon} from '../common/icons'
+import {GeoJSON} from 'leaflet'
+import toGeoJSON from '@mapbox/togeojson'
+import xmldom from 'xmldom'
+
+const DOMParser = xmldom.DOMParser
 
 export const getWaypointFeature = (name, lat, lng) => {
     const waypointFeature = {
@@ -22,11 +26,15 @@ export const getWaypointFeature = (name, lat, lng) => {
 }
 
 /*
-get a geoJSON object from a feature collection
+ get a geoJSON object from a feature collection
  */
 export const getGeoJsonLayer = (featureCollection) => {
     const line = featureCollection.features.find(feature => feature.geometry.type === 'LineString')
-    console.log('line', line)
+
+    const mouseOut = (e) => {
+        console.log('layerGroup', e.target)
+        trackLayerGroup.resetStyle(e.target)
+    }
 
     const trackLayerGroup = new GeoJSON([featureCollection], {
         style: function (feature) {
@@ -45,13 +53,14 @@ export const getGeoJsonLayer = (featureCollection) => {
                         weight: 5
                     })
                 })
-                layer.on('mouseout', function () {
-                    trackLayerGroup.resetStyle(this)
-                })
+                layer.on('mouseout', mouseOut)
+                // layer.on('mouseout', function () {
+                //     console.log('this', this)
+                //     trackLayerGroup.resetStyle(layer)
+                // })
                 layer.on('click', function () {
-                    console.log('select1')
-                    layer.off(mouseout, mouseout())
-                    dispatch(selectTrack(track))
+                    layer.off('mouseout', mouseOut)
+                    // dispatch(selectTrack(track))  // will need to implement somethin glike this, only dispatch isn't known here
                     this.setStyle({
                         weight: 5,
                         dashArray: '5, 10, 7, 10, 10, 10'
@@ -62,4 +71,44 @@ export const getGeoJsonLayer = (featureCollection) => {
     })
 
     return trackLayerGroup
+}
+
+
+const _ext = (filename) => {
+    return (extension) => {
+        return filename.indexOf(extension) !== -1
+    }
+}
+
+const _getFileType = (fileName) => {
+    const lowerCaseFileName = fileName ? fileName.toLowerCase() : ''
+
+    const ext = _ext(lowerCaseFileName)
+
+    if (ext('.kml')) return 'kml'
+
+    if (ext('.gpx')) return 'gpx'
+
+    if (ext('.geojson') || ext('.json') || ext('.topojson')) return 'geojson'
+
+    return null
+}
+
+export const getGeoJson = (fileText, fileName) => {
+    const fileType = _getFileType(fileName)
+
+    if (!fileType) return null
+
+    if (fileType === 'geojson') return JSON.parse(fileText)
+
+    if (fileType === 'gpx') {
+        const gpx = new DOMParser().parseFromString(fileText)
+
+        return toGeoJSON.gpx(gpx)
+    }
+
+    if (fileType === 'kml') {
+        const kml = new DOMParser().parseFromString(fileText)
+        return toGeoJSON.kml(kml)
+    }
 }
