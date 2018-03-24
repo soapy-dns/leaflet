@@ -1,6 +1,8 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types'
-import { Icon, Button, Progress, Input, Message } from 'semantic-ui-react';
+
+import { Icon } from 'semantic-ui-react'
+
 
 // import Api from '../../helpers/api';
 

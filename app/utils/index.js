@@ -1,11 +1,11 @@
-import _ from 'lodash'
+import { isEmpty } from 'lodash'
 import moment from 'moment'
 /*
  return the line part of a geojson object
  */
 export const getLine = (geoJson) => {
     console.log('geoJson', geoJson)
-    if (_.isEmpty(geoJson)) return null
+    if (isEmpty(geoJson)) return null
 
     return geoJson.features.find(it => it.geometry.type === 'LineString')
 }

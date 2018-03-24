@@ -1,6 +1,7 @@
 import React, {Component} from 'react'
 import PropTypes from 'prop-types'
-import {Header, Modal, Button, Form, Message} from 'semantic-ui-react'
+import { Button, Modal } from 'semantic-ui-react'
+
 import Uploader from './uploader'
 
 class LoadTrackModal extends Component {

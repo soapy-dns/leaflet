@@ -1,9 +1,9 @@
 import Axios from 'axios';
-import _ from 'lodash';
+// import _ from 'lodash';
 // import config from '../config';
 
 Axios.interceptors.request.use((conf) => {
-    const updatedConfig = _.assign({}, conf);
+    const updatedConfig = Object.assign({}, conf);
 
     // updatedConfig.headers.Authorization = token;
 

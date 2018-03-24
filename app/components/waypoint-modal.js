@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import PropTypes from 'prop-types'
-import {Header, Modal, Button, Form, Message } from 'semantic-ui-react'
+import { Button, Modal, Form } from 'semantic-ui-react'
 import { fromLatLon } from 'utm'
 // const utm = require('utm')
 

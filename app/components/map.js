@@ -4,7 +4,7 @@ import { BasemapLayer, TiledMapLayer } from 'esri-leaflet'
 import { toLatLng } from 'utm'
 import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
-import _ from 'lodash'
+import { cloneDeep } from 'lodash'
 
 import { DragDropContext } from 'react-dnd'
 import HTML5Backend from 'react-dnd-html5-backend'
@@ -291,27 +291,17 @@ class MyMap extends Component {
      That will trigger an update.
      */
     onOpenFile(fileText, filename, colour) {
-        console.log('--onOpenFile--,', filename)
         const {dispatch} = this.props
 
         const featureCollection = getGeoJson(fileText, filename)
-        console.log('json', featureCollection)
         dispatch(newFeatureCollection(featureCollection, filename))
-
-        // todo - why am I doing this twice?
-        //parse track
-        // const featureCollection = json  //.features[0].geometry
-        // this.props.dispatch(saveTrack(featureCollection))
-
-        // console.log('featureCollection', featureCollection)
 
         // get the name from the lineString
         const line = featureCollection.features.find(it => it.geometry.type === 'LineString')
         const featureCollectionName = line.properties.name
-        // console.log('featureCollectionname', featureCollectionName)
 
         // create new geojson layer for this featureCollection, and add to map
-        const newfeatureCollectionsLayer = getGeoJsonLayer(featureCollection)
+        const newfeatureCollectionsLayer = getGeoJsonLayer(featureCollection, map)
         newfeatureCollectionsLayer.addTo(map)
 
         // todo - set this to the selected featureCollection, and mark all other featureCollections as not selected.  This could be done in the
@@ -370,8 +360,8 @@ class MyMap extends Component {
         // console.log('selectedTrack', selectedTrack)
         const line = getLine(selectedTrack)
         // console.log('line', line)
-        const coordinates = _.cloneDeep(line.geometry.coordinates)
-        const coordTimes = _.cloneDeep(line.properties.coordTimes)
+        const coordinates = cloneDeep(line.geometry.coordinates)
+        const coordTimes = cloneDeep(line.properties.coordTimes)
 
         // console.log('coordinates', coordinates)
         console.log('coordTimes', coordTimes)
@@ -417,7 +407,7 @@ class MyMap extends Component {
         console.log('new times', times)
 
         // now build a new track
-        const newLine = _.cloneDeep(line)
+        const newLine = cloneDeep(line)
         newLine.geometry.coordinates = coordinates
         newLine.properties.coordTimes = coordTimes
 

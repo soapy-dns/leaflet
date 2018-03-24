@@ -1,5 +1,6 @@
 import React, {Component} from 'react'
-import {Button, Menu, Label, Input} from 'semantic-ui-react'
+import { Menu } from 'semantic-ui-react'
+
 import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
 import { cloneDeep, has } from 'lodash'

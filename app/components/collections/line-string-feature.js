@@ -1,6 +1,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import {Icon} from 'semantic-ui-react'
+
+import { Icon } from 'semantic-ui-react'
 
 const LineString = (props) => (
     <span>

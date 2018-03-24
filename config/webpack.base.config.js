@@ -4,6 +4,9 @@ const path = require('path');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const FaviconsWebpackPlugin = require('favicons-webpack-plugin');
+const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
+const webpack = require('webpack')
+
 
 module.exports = new Config().merge({
 
@@ -25,12 +28,15 @@ module.exports = new Config().merge({
             {
                 test: /\.(js|jsx)$/,
                 exclude: /node_modules/,
-                loader: 'babel-loader',
+                // loader: 'babel-loader',
+                loader: 'babel-loader?cacheDirectory=true',  // this is supposed to cache files and make the build faster - i didn't notice a difference
+                // loader: 'babel',
                 options: {
-                    // plugins: ['lodash'],
+                    plugins: ['lodash'],  // this is supposed to pull out only the functionality required - I can't get it to work.
                     presets: ['react', 'es2015']
                 }
             },
+
             {
                 // test: /\.(png|jpg|jpeg|gif)$/,
                 test: /\.(png|jpg|jpeg|gif|svg)$/,
@@ -60,6 +66,15 @@ module.exports = new Config().merge({
             // {from: './app/styles', to: 'styles'},
             {from: './server.js'}
         ]),
-        new FaviconsWebpackPlugin('./app/assets/images/map.png')
+        new FaviconsWebpackPlugin('./app/assets/images/map.png'),
+        new BundleAnalyzerPlugin(),
+        new webpack.DefinePlugin({
+            'process.env.NODE_ENV': '"production"'
+        }),
+        new webpack.IgnorePlugin(/^\.\/locale$/, /moment$/)  //ignore webpack locals - not interested here
+
+
+
+
     ]
 });

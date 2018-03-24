@@ -1,10 +1,10 @@
-import React, { Component } from 'react';
-import PropTypes from 'prop-types';
-import {Modal, Button } from 'semantic-ui-react';
+import React, { Component } from 'react'
+import PropTypes from 'prop-types'
+import { Modal, Button } from 'semantic-ui-react'
 
 class AwaitingFunctionality extends Component {
     constructor(props) {
-        super(props);
+        super(props)
     }
 
     render() {
@@ -26,7 +26,7 @@ class AwaitingFunctionality extends Component {
 
 AwaitingFunctionality.propTypes = {
     cancelAction: PropTypes.func
-};
+}
 
-export default AwaitingFunctionality;
+export default AwaitingFunctionality
 

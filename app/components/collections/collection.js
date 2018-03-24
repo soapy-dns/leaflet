@@ -1,6 +1,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import { Icon, Button } from 'semantic-ui-react'
+import { Icon } from 'semantic-ui-react'
+
 import { DropTarget } from 'react-dnd'
 import Constants from '../../common/constants'
 

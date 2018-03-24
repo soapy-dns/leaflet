@@ -28,7 +28,7 @@ export const getWaypointFeature = (name, lat, lng) => {
 /*
  get a geoJSON object from a feature collection
  */
-export const getGeoJsonLayer = (featureCollection) => {
+export const getGeoJsonLayer = (featureCollection, map) => {
     const line = featureCollection.features.find(feature => feature.geometry.type === 'LineString')
 
     const mouseOut = (e) => {
@@ -60,7 +60,19 @@ export const getGeoJsonLayer = (featureCollection) => {
                 // })
                 layer.on('click', function () {
                     layer.off('mouseout', mouseOut)
-                    // dispatch(selectTrack(track))  // will need to implement somethin glike this, only dispatch isn't known here
+                    // dispatch(selectTrack(track))  // will need to implement something like this, only dispatch isn't known here
+
+                    // need to change everything to waypoint
+                    feature.geometry.coordinates.forEach(coord => {
+                        // const marker = L.marker([coord[1], coord[0]]).addTo(map)
+                        // add a Point feature
+                        const feature = getWaypointFeature('TEMP', coord[1], coord[0])
+                        featureCollection.features.push(feature)
+
+                        //save them?
+
+                    })
+
                     this.setStyle({
                         weight: 5,
                         dashArray: '5, 10, 7, 10, 10, 10'

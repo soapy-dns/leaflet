@@ -38,4 +38,5 @@ module.exports = new Config().extend('config/webpack.base.config.js').merge({
     //     })
     // ],
     devtool: 'eval'  // controls the way the source could is bundled somehow.
+    // devtool: 'eval-source-map'
 });

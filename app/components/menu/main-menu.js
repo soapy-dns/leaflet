@@ -1,5 +1,6 @@
 import React, {Component} from 'react'
-import {Menu, Dropdown} from 'semantic-ui-react'
+import { Menu, Dropdown } from 'semantic-ui-react'
+
 import PropTypes from 'prop-types'
 
 class MainMenu extends Component {

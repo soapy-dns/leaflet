@@ -35,6 +35,14 @@ https://github.com/mapbox/geojson.io
 https://github.com/mapbox/geojsonhint
 https://gis.stackexchange.com/questions/240738/control-custom-panes-for-leaflet-geojson-svg-icons
 
+
+## compression
+https://hackernoon.com/optimising-your-application-bundle-size-with-webpack-e85b00bab579
+
+Using https://testmysite.thinkwithgoogle.com/ the load time is 22s!
+
+The webpack bundle is > 8MB
+
 ### redux-persist
 https://blog.reactnativecoach.com/the-definitive-guide-to-redux-persist-84738167975
 
