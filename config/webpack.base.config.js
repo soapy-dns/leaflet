@@ -67,7 +67,7 @@ module.exports = new Config().merge({
             {from: './server.js'}
         ]),
         new FaviconsWebpackPlugin('./app/assets/images/map.png'),
-        new BundleAnalyzerPlugin(),
+        // new BundleAnalyzerPlugin(),  // uncomment this to analyse the bundle
         new webpack.DefinePlugin({
             'process.env.NODE_ENV': '"production"'
         }),

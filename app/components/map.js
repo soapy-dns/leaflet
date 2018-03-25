@@ -1,17 +1,15 @@
-import React, { Component } from 'react'
-import L, { Control, Marker, Map, GeoJSON } from 'leaflet'
-import { BasemapLayer, TiledMapLayer } from 'esri-leaflet'
-import { toLatLng } from 'utm'
+import React, {Component} from 'react'
+import L, {Control, Marker, Map, GeoJSON} from 'leaflet'
+import {BasemapLayer, TiledMapLayer} from 'esri-leaflet'
+import {toLatLng} from 'utm'
 import PropTypes from 'prop-types'
-import { connect } from 'react-redux'
-import { cloneDeep } from 'lodash'
+import {connect} from 'react-redux'
+import {cloneDeep} from 'lodash'
 
-import { DragDropContext } from 'react-dnd'
+import {DragDropContext} from 'react-dnd'
 import HTML5Backend from 'react-dnd-html5-backend'
 
 import Api from '../utils/api'
-
-// import Location from './location'
 
 import Collections from './collections/collections'
 import MainMenu from './menu/main-menu'
@@ -21,16 +19,16 @@ import LoadTrackModal from './load-track-modal'
 import WaypointModal from './waypoint-modal'
 import Elevation from '../components/stats/elevation'
 
-import { saveTrack, selectTrack } from '../actions/tracks'
-import { newFeatureCollection, addFeatureToCollection } from '../actions/feature-collections'
-import { saveMapDetails } from '../actions/current'
-import { toggleElevation, selectCollection, selectLatLng, clearLatLng } from '../actions/ui'
+import {saveTrack, selectTrack} from '../actions/tracks'
+import {newFeatureCollection, addFeatureToCollection} from '../actions/feature-collections'
+import {saveMapDetails} from '../actions/current'
+import {toggleElevation, selectCollection, selectLatLng, clearLatLng} from '../actions/ui'
 
-import { getSelectedTrack, getLine, getDistanceBetween2Points, getMillisecsBetween2Points } from '../utils/index'
+import {getSelectedTrack, getLine, getDistanceBetween2Points, getMillisecsBetween2Points} from '../utils/index'
 
-import { flameIcon, startIcon, markerIcon } from '../common/icons'
-import { geojsonMarkerOptions, geojsonLineMarkerOptions } from '../common/marker-options'
-import { getWaypointFeature, getGeoJsonLayer, getGeoJson } from '../common/geojson'
+import {flameIcon, startIcon, markerIcon} from '../common/icons'
+import {geojsonMarkerOptions, geojsonLineMarkerOptions} from '../common/marker-options'
+import {getWaypointFeature, getGeoJsonLayer, getGeoJsonObject} from '../common/geojson'
 
 
 // todo - reinstate something similar - this has got functionality for processing points
@@ -84,6 +82,19 @@ const _getInitialLineFeature = (latlng) => {
     }
 }
 
+/*
+ Add all the file collections to the map
+ */
+const _getCollectionsLayerGroup = (collections) => {
+    let features = []
+    collections.forEach(it => {
+        features = features.concat(it.featureCollection.features)
+    })
+    const featureCollection = {
+        features  // don't think I need to put in the type
+    }
+    return getGeoJsonLayer(featureCollection)
+}
 
 function onDrawLineClick(e) {
     const currentGeoJson = currentTrackLayerGroup.toGeoJSON()
@@ -145,14 +156,12 @@ class MyMap extends Component {
         this.centreOnCurrentLocation = this.centreOnCurrentLocation.bind(this)
         this.addWaypoint = this.addWaypoint.bind(this)
         this.addWaypointOnClick = this.addWaypointOnClick.bind(this)
-        // this.selectATrack = this.selectATrack.bind(this)
         this.drawLine = this.drawLine.bind(this)
         this.stopDrawLine = this.stopDrawLine.bind(this)
         this.getMajorIncidents = this.getMajorIncidents.bind(this)
         this.autoCorrectTrack = this.autoCorrectTrack.bind(this)
         this.showElevationPlot = this.showElevationPlot.bind(this)
         this.hideElevationPlot = this.hideElevationPlot.bind(this)
-        // this.saveLocation = this.saveLocation.bind(this)
         this.onSelectCollection = this.onSelectCollection.bind(this)
         this.onSelectFeature = this.onSelectFeature.bind(this)
         this.onEdit = this.onEdit.bind(this)
@@ -174,18 +183,18 @@ class MyMap extends Component {
         const baseLayer = new BasemapLayer('Gray')
 
         // topo layer
-        const topoLayer = new TiledMapLayer({
-            // url: 'http://maps.six.nsw.gov.au/arcgis/rest/services/public/NSW_Topo_Map/MapServer',
-            url: 'http://maps4.six.nsw.gov.au/arcgis/rest/services/sixmaps/LPIMap/MapServer',
-            maxZoom: 17,
-            maxNativeZoom: 15
-        })
+        // const topoLayer = new TiledMapLayer({
+        //     // url: 'http://maps.six.nsw.gov.au/arcgis/rest/services/public/NSW_Topo_Map/MapServer',
+        //     url: 'http://maps4.six.nsw.gov.au/arcgis/rest/services/sixmaps/LPIMap/MapServer',
+        //     maxZoom: 17,
+        //     maxNativeZoom: 15
+        // })
 
         // satellite image layer
-        const imageLayer = new TiledMapLayer({
-            // url: 'http://maps.six.nsw.gov.au/arcgis/rest/services/public/NSW_Imagery/MapServer'
-            url: 'http://maps2.six.nsw.gov.au/arcgis/rest/services/sixmaps/LPI_Imagery_Best/MapServer'
-        })
+        // const imageLayer = new TiledMapLayer({
+        //     // url: 'http://maps.six.nsw.gov.au/arcgis/rest/services/public/NSW_Imagery/MapServer'
+        //     url: 'http://maps2.six.nsw.gov.au/arcgis/rest/services/sixmaps/LPI_Imagery_Best/MapServer'
+        // })
 
         const baseMaps = {
             "Base": baseLayer,
@@ -198,8 +207,8 @@ class MyMap extends Component {
             zoom: zoom,
             maxZoom: 17,
             maxNativeZoom: 14,  // don't request tiles with a zoom > this (cos they don't exist)
-            layers: [baseLayer, topoLayer]
-            // layers: [baseLayer]
+            // layers: [baseLayer, topoLayer]
+            layers: [baseLayer]
 
         })
         map.on('moveend', function (e) {
@@ -208,36 +217,33 @@ class MyMap extends Component {
         map.zoomControl.setPosition('bottomright')
 
         // define overlay layers for control
-        overlayLayers = {
-            "Topo": topoLayer,
-            "Satellite": imageLayer
-        }
+        // overlayLayers = {
+        //     "Topo": topoLayer,
+        //     "Satellite": imageLayer
+        // }
 
         // add control button for layers
-        layersControl = new Control.Layers(baseMaps, overlayLayers)
-        layersControl.addTo(map)
+        // layersControl = new Control.Layers(baseMaps, overlayLayers)
+        // layersControl.addTo(map)
 
         //add scale
         const scale = new Control.Scale()
         scale.addTo(map)
 
-        // get all the features from all collections and add them as 1 single layer
-        let features = []
-        collections.forEach(it => {
-            features = features.concat(it.featureCollection.features)
-        })
-        const featureCollection = {
-            features  // don't think I need to put in the type
-        }
-        collectionsLayerGroup = getGeoJsonLayer(featureCollection)
+        collectionsLayerGroup = _getCollectionsLayerGroup(collections)
+
         collectionsLayerGroup.addTo(map)
     }
 
-    // shouldComponentUpdate(nextProps, nextState) {
-    // // return a boolean value  - add test
-    //     console.log('shouldComponentUpdate')
-    //     return true
-    // }
+    /*
+     The source of truth is the redux state.
+     If this changes, we may need to re-render.  However this is expensive, so only re-render when necessary.
+     */
+    shouldComponentUpdate(nextProps, nextState) {
+        // return a boolean value  - add test
+        console.log('shouldComponentUpdate')
+        return true
+    }
 
     onCancelAction() {
         console.log('cancelAction')
@@ -293,7 +299,7 @@ class MyMap extends Component {
     onOpenFile(fileText, filename, colour) {
         const {dispatch} = this.props
 
-        const featureCollection = getGeoJson(fileText, filename)
+        const featureCollection = getGeoJsonObject(fileText, filename)
         dispatch(newFeatureCollection(featureCollection, filename))
 
         // get the name from the lineString
@@ -550,56 +556,75 @@ class MyMap extends Component {
         map.on('click', this.addWaypointOnClick)
     }
 
+    /*
+     waypoint has been selected.  Store its details in state, update the cursor, and remove the listener
+     */
     addWaypointOnClick(e) {
-        const { dispatch } = this.props
+        const {dispatch} = this.props
 
         // save latlng
         dispatch(selectLatLng(e.latlng.lat, e.latlng.lng))
 
         //open waypont modal
-        this.setState({ modal: 'waypoint' })
+        this.setState({modal: 'waypoint'})
 
         // turn off waypoint select
         L.DomUtil.removeClass(map._container, 'leaflet-crosshair')
 
-        console.log('this.addWaypointOnClick', this.addWaypointOnClick)
         map.off('click', this.addWaypointOnClick)
     }
 
     /*
-    actually add the waypoint
-    add to the selected collections feature list.
-    if no selected collection create a new collection, select it and add to it.
-    it will always be possible to move the waypoint afterwards
+     actually add the waypoint
+     add to the selected collections feature list.
+     if no selected collection create a new collection, select it and add to it.
+     it will always be possible to move the waypoint afterwards
+     */
+    /*
+     The problem
+     add to the state, and add to the map
+     also fiddling with properties here
+
+     solution
+     we never update the map directly - it always comes from the state
      */
     addWaypoint(featureData) {
-        const { dispatch, ui, collections } = this.props
+        const {dispatch, ui, collections} = this.props
 
         if (!ui.selectedCollection) {
             if (collections.length === 0) {
                 // add new collection - but then want to return here - how to do this?
+                // todo - create new collection and add waypoint
             } else {
                 // add to selected collection
                 const waypointFeature = getWaypointFeature(featureData.pointName, ui.selectedLatitude, ui.selectedLongitude)
-                console.log('addFeatureToCollection')
-                dispatch(addFeatureToCollection(waypointFeature, ui.selectedCollectionName))
-                // remove selectedLatlng  - maybe want to do the 2 dispatches together
-                dispatch(clearLatLng())
                 this.setState({modal: null})
 
                 // update the map
-                // get all the features from all collections and add them as 1 single layer - this is so we can simply remove the lot before re-adding.
+                // get all the features from all collections and add them as 1 single layer
+                // - this is so we can simply remove the lot before re-adding.
                 let features = []
                 collections.forEach(it => {
                     features = features.concat(it.featureCollection.features)
                 })
+
                 features.push(waypointFeature)  // add the new feature
                 const featureCollection = {
                     features  // don't think I need to put in the type
                 }
+
+
+                // todo - here we are using redux as the source of truth. change?
+                // todo - do we want to have a different layer group for each file
+                // clicking on a collection could then centre on it.
+                //update the map - removes everything, and re-adds
                 map.removeLayer(collectionsLayerGroup)
+                // //todo update the collection here rather than the
                 collectionsLayerGroup = getGeoJsonLayer(featureCollection)
                 collectionsLayerGroup.addTo(map)
+
+                dispatch(addFeatureToCollection(waypointFeature, ui.selectedCollectionName))
+                dispatch(clearLatLng())  // clear the selected lat lng whatever that is
             }
         } else {
             // need to select collection
@@ -636,7 +661,8 @@ class MyMap extends Component {
                     <LoadTrackModal cancelAction={this.onCancelAction} okAction={this.onOpenFile}/>
                 ) : null}
                 {(this.state.modal === 'waypoint') ? (
-                    <WaypointModal cancelAction={this.onCancelAction} okAction={this.addWaypoint} selectedLatitude={ui.selectedLatitude} selectedLongitude={ui.selectedLongitude} />
+                    <WaypointModal cancelAction={this.onCancelAction} okAction={this.addWaypoint}
+                                   selectedLatitude={ui.selectedLatitude} selectedLongitude={ui.selectedLongitude}/>
                 ) : null}
 
                 <MainMenu
@@ -653,7 +679,7 @@ class MyMap extends Component {
                     onEdit={this.onEdit}
                 />
 
-                <Collections onSelectCollection={this.onSelectCollection} onSelectFeature={this.onSelectFeature} />
+                <Collections onSelectCollection={this.onSelectCollection} onSelectFeature={this.onSelectFeature}/>
 
                 <div id="mapid"></div>
                 <div>showElevation { ui.showElevation }</div>

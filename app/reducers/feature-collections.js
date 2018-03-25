@@ -23,14 +23,17 @@ export default function (fcState = [], action) {
             return fcState
 
         case ADD_FEATURE_TO_COLLECTION:
+            const newState = Object.assign([], fcState)
+
             // find the relevant feature collection
-            const foundFeatureCollection = fcState.find(it => it.name === action.selectedCollectionName)
+            const foundFeatureCollection = newState.find(it => it.name === action.selectedCollectionName)
 
             // add the new feature to it
             foundFeatureCollection.featureCollection.features.push(action.feature)
+            foundFeatureCollection.altered = true
 
             // return the state (which has been updated by the push)
-            return fcState
+            return newState
 
         case UPDATE_COLLECTIONS:
             console.log('reducer', action.collections)

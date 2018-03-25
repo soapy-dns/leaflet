@@ -26,6 +26,8 @@ export const selectLatLng = (lat, lng) => ({
     selectedLongitude: lng
 })
 
+// todo - change name
+// clear the selected lat long
 export const CLEAR_LATLNG = 'ui/CLEAR_LATLNG'
 export const clearLatLng = () => ({
     type: CLEAR_LATLNG,

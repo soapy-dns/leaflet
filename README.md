@@ -49,3 +49,9 @@ https://blog.reactnativecoach.com/the-definitive-guide-to-redux-persist-84738167
 ### react dnd
 http://react-dnd.github.io/react-dnd/
 https://react-dnd.github.io/react-dnd/docs-tutorial.html
+
+### data stores
+There are 2 types of data store here.  The map and the redux store.
+The map is the source of truth.  Redux is only used for refreshes / restarts, and for manipulating
+collections / features etc.  The reason for having it this way round, and not having
+redux as the source of truth is because we can make use of leaflets methods eg setBounds etc

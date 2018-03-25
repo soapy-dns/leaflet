@@ -44,7 +44,18 @@ export const getGeoJsonLayer = (featureCollection, map) => {
             }
         },
         pointToLayer: function (feature, latlng) {
-            return L.marker(latlng, {icon: markerIcon})
+            console.log('add marker', latlng.lat, latlng.lng)
+            const marker = L.marker(latlng, { icon: markerIcon, draggable: true })
+            marker.on('dragend', function(event){
+                var marker = event.target
+                var latlng = marker.getLatLng()
+                marker.setLatLng(latlng,{draggable:'true'});
+
+                // marker.setLatLng(new L.LatLng(latlng.lat, latlng.lng),{draggable:'true'});
+                // map.panTo(new L.LatLng(position.lat, position.lng))
+                // dispatch(updateWaypointPosition(position))
+            })
+            return marker
         },
         onEachFeature: function (feature, layer) {
             if (feature.geometry.type === 'LineString') {
@@ -54,10 +65,7 @@ export const getGeoJsonLayer = (featureCollection, map) => {
                     })
                 })
                 layer.on('mouseout', mouseOut)
-                // layer.on('mouseout', function () {
-                //     console.log('this', this)
-                //     trackLayerGroup.resetStyle(layer)
-                // })
+
                 layer.on('click', function () {
                     layer.off('mouseout', mouseOut)
                     // dispatch(selectTrack(track))  // will need to implement something like this, only dispatch isn't known here
@@ -106,7 +114,10 @@ const _getFileType = (fileName) => {
     return null
 }
 
-export const getGeoJson = (fileText, fileName) => {
+/*
+turn file into a geojson object for jpx, kml and geojson type files
+ */
+export const getGeoJsonObject = (fileText, fileName) => {
     const fileType = _getFileType(fileName)
 
     if (!fileType) return null
