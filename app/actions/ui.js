@@ -13,10 +13,10 @@ export const toggleElevation = (boolean) => {
     }
 }
 
-export const SELECT_COLLECTION = 'ui/SELECT_COLLECTIONS'
-export const selectCollection = collectionName => ({
-    type: SELECT_COLLECTION,
-    selectedCollectionName: collectionName
+export const SELECT_FILE = 'ui/SELECT_FILES'
+export const selectFile = fileName => ({
+    type: SELECT_FILE,
+    selectedFileName: fileName
 })
 
 export const SELECT_LATLNG = 'ui/SELECT_LATLNG'
@@ -36,8 +36,8 @@ export const clearLatLng = () => ({
 })
 
 // toggle collection slider
-export const TOGGLE_COLLECTION_SLIDER = 'ui/TOGGLE_COLLECTION_SLIDER'
-export const toggleCollectionSlider = (boolean) => ({
-    type: TOGGLE_COLLECTION_SLIDER,
-    showCollectionSlider: boolean
+export const TOGGLE_FILE_SLIDER = 'ui/TOGGLE_FILE_SLIDER'
+export const toggleFileSlider = (boolean) => ({
+    type: TOGGLE_FILE_SLIDER,
+    showFileSlider: boolean
 })

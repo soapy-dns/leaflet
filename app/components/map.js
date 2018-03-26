@@ -20,9 +20,9 @@ import WaypointModal from './waypoint-modal'
 import Elevation from '../components/stats/elevation'
 
 import {saveTrack, selectTrack} from '../actions/tracks'
-import {newFeatureCollection, addFeatureToCollection} from '../actions/feature-collections'
+import {newFile, addFeatureToFile} from '../actions/files'
 import {saveMapDetails} from '../actions/current'
-import {toggleElevation, selectCollection, selectLatLng, clearLatLng} from '../actions/ui'
+import {toggleElevation, selectFile, selectLatLng, clearLatLng} from '../actions/ui'
 
 import {getSelectedTrack, getLine, getDistanceBetween2Points, getMillisecsBetween2Points} from '../utils/index'
 
@@ -80,20 +80,6 @@ const _getInitialLineFeature = (latlng) => {
             coordinates: []
         }
     }
-}
-
-/*
- Add all the file collections to the map
- */
-const _getCollectionsLayerGroup = (collections, dispatch) => {
-    let features = []
-    collections.forEach(it => {
-        features = features.concat(it.featureCollection.features)
-    })
-    const featureCollection = {
-        features  // don't think I need to put in the type
-    }
-    return getGeoJsonLayer(featureCollection, dispatch)
 }
 
 function onDrawLineClick(e) {
@@ -162,7 +148,7 @@ class MyMap extends Component {
         this.autoCorrectTrack = this.autoCorrectTrack.bind(this)
         this.showElevationPlot = this.showElevationPlot.bind(this)
         this.hideElevationPlot = this.hideElevationPlot.bind(this)
-        this.onSelectCollection = this.onSelectCollection.bind(this)
+        this.onSelectFile = this.onSelectFile.bind(this)
         this.onSelectFeature = this.onSelectFeature.bind(this)
         this.onEdit = this.onEdit.bind(this)
 
@@ -178,7 +164,7 @@ class MyMap extends Component {
     componentDidMount() {
         // console.log('map - utm>>', utm)
         console.log('connect>>', connect)
-        const {dispatch, current, tracks, collections} = this.props
+        const {dispatch, current, tracks, files} = this.props
 
         const baseLayer = new BasemapLayer('Gray')
 
@@ -230,9 +216,11 @@ class MyMap extends Component {
         const scale = new Control.Scale()
         scale.addTo(map)
 
-        collectionsLayerGroup = _getCollectionsLayerGroup(collections, dispatch)
+        files.forEach(file => {
+            const layerGroup = getGeoJsonLayer(file.name, file.featureCollection, dispatch)
 
-        collectionsLayerGroup.addTo(map)
+            layerGroup.addTo(map)
+        })
     }
 
     /*
@@ -296,24 +284,24 @@ class MyMap extends Component {
      save the FeatureCollection to redux
      That will trigger an update.
      */
-    onOpenFile(fileText, filename, colour) {
+    onOpenFile(fileText, fileName, colour) {
         const { dispatch } = this.props
 
-        const featureCollection = getGeoJsonObject(fileText, filename)
-        dispatch(newFeatureCollection(featureCollection, filename))
+        const featureCollection = getGeoJsonObject(fileText, fileName)
+        dispatch(newFile(featureCollection, fileName))
 
         // get the name from the lineString
         const line = featureCollection.features.find(it => it.geometry.type === 'LineString')
         const featureCollectionName = line.properties.name
 
         // create new geojson layer for this featureCollection, and add to map
-        const newfeatureCollectionsLayer = getGeoJsonLayer(featureCollection, dispatch)
-        newfeatureCollectionsLayer.addTo(map)
+        const newFilesLayer = getGeoJsonLayer(fileName, featureCollection, dispatch)
+        newFilesLayer.addTo(map)
 
         // todo - set this to the selected featureCollection, and mark all other featureCollections as not selected.  This could be done in the
 
         // set bounds to fit this new layer
-        map.fitBounds(newfeatureCollectionsLayer.getBounds())
+        map.fitBounds(newFilesLayer.getBounds())
 
         // turn modal off
         this.setState({modal: null})
@@ -589,10 +577,10 @@ class MyMap extends Component {
      we never update the map directly - it always comes from the state
      */
     addWaypoint(featureData) {
-        const {dispatch, ui, collections} = this.props
+        const {dispatch, ui, files} = this.props
 
-        if (!ui.selectedCollection) {
-            if (collections.length === 0) {
+        if (!ui.selectedFileName) {
+            if (files.length === 0) {
                 // add new collection - but then want to return here - how to do this?
                 // todo - create new collection and add waypoint
             } else {
@@ -604,7 +592,7 @@ class MyMap extends Component {
                 // get all the features from all collections and add them as 1 single layer
                 // - this is so we can simply remove the lot before re-adding.
                 let features = []
-                collections.forEach(it => {
+                files.forEach(it => {
                     features = features.concat(it.featureCollection.features)
                 })
 
@@ -619,10 +607,10 @@ class MyMap extends Component {
                 //update the map - removes everything, and re-adds
                 map.removeLayer(collectionsLayerGroup)
                 // //todo update the collection here rather than the
-                collectionsLayerGroup = getGeoJsonLayer(featureCollection, dispatch)
+                collectionsLayerGroup = getGeoJsonLayer(ui.selectedFileName, featureCollection, dispatch)
                 collectionsLayerGroup.addTo(map)
 
-                dispatch(addFeatureToCollection(waypointFeature, ui.selectedCollectionName))
+                dispatch(addFeatureToFile(waypointFeature, ui.selectedFileName))
                 dispatch(clearLatLng())  // clear the selected lat lng whatever that is
             }
         } else {
@@ -633,21 +621,21 @@ class MyMap extends Component {
     /*
 
      */
-    onSelectCollection(collectionName) {
-        console.log('onSelectCollection', collectionName)
-        this.props.dispatch(selectCollection(collectionName))
+    onSelectFile(fileName) {
+        console.log('onSelectFile', fileName)
+        this.props.dispatch(selectFile(fileName))
     }
 
     onSelectFeature(id) {
         console.log('onSelectFeature')
-        // this.props.dispatch(selectCollection(collectionName))
+        // this.props.dispatch(selectFile(collectionName))
 
     }
 
     render() {
         // todo - display all the tracks stored in redux state, and set the bounds to the selected Track
 
-        const {ui, currentLayer, collections, dispatch} = this.props
+        const {ui, currentLayer, files, dispatch} = this.props
         return (
             <div id="mapwrap">
                 {(this.state.modal === 'locate') ? (
@@ -678,7 +666,7 @@ class MyMap extends Component {
                     onEdit={this.onEdit}
                 />
 
-                <Collections onSelectCollection={this.onSelectCollection} onSelectFeature={this.onSelectFeature}/>
+                <Collections onSelectFile={this.onSelectFile} onSelectFeature={this.onSelectFeature}/>
 
                 <div id="mapid"></div>
                 <div>showElevation { ui.showElevation }</div>
@@ -700,7 +688,7 @@ function mapStateToProps(state) {
         current: state.current,
         ui: state.ui,
         tracks: state.tracks,
-        collections: state.featureCollections
+        files: state.files
     }
 }
 

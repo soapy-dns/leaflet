@@ -1,4 +1,4 @@
-import { NEW_FEATURE_COLLECTION, ADD_FEATURE_TO_COLLECTION, UPDATE_COLLECTIONS, UPDATE_WAYPOINT_POSITION } from '../actions/feature-collections'
+import { NEW_FILE, ADD_FEATURE_TO_FILE, UPDATE_FILES, UPDATE_WAYPOINT_POSITION } from '../actions/files'
 
 
 const _getMatchingCollection = (stateObj, collectionName) => {
@@ -10,34 +10,34 @@ const _getMatchingFeatureById = (featureCollection, featureId) => {
 
 }
 
-export default function (fcState = [], action) {
+export default function (fileState = [], action) {
     let newState
     let foundCollection, foundFeature
     switch (action.type) {
-        case NEW_FEATURE_COLLECTION:
+        case NEW_FILE:
             // todo - need to check for existing matching feature collection
             // coordinates.splice(i+1, 1)
 
-            foundCollection = fcState.find(it => (it.name === action.filename))
+            foundCollection = fileState.find(it => (it.name === action.filename))
             if (!foundCollection) {
                 // add new collection
-                fcState.push({
+                fileState.push({
                     name: action.filename,
                     altered: false,
-                    featureCollection: action.fcText
+                    featureCollection: action.fileText
                 })
             } else {
                 // todo - should alert if collections has been change
-                foundCollection.featureCollection = action.fcText
+                foundCollection.featureCollection = action.fileText
                 foundCollection.altered = false
             }
 
-            return fcState
+            return fileState
 
-        case ADD_FEATURE_TO_COLLECTION:
-            newState = Object.assign([], fcState)
+        case ADD_FEATURE_TO_FILE:
+            newState = Object.assign([], fileState)
 
-            const foundFeatureCollection = _getMatchingCollection(newState, action.selectedCollectionName)
+            const foundFeatureCollection = _getMatchingCollection(newState, action.selectedFileName)
 
             // add the new feature to it
             foundFeatureCollection.featureCollection.features.push(action.feature)
@@ -46,24 +46,27 @@ export default function (fcState = [], action) {
             // return the state (which has been updated by the push)
             return newState
 
-        case UPDATE_COLLECTIONS:
+        case UPDATE_FILES:
             // console.log('reducer', action.collections)
             return action.collections
 
         case UPDATE_WAYPOINT_POSITION: {}
             console.log('UPDATE_WAYPOINT_POSITION action', action)
-            // const newState = { ...fcState }  // todo - think I need to add something into babel
-            newState = Object.assign([], fcState)
+            // const newState = { ...fileState }  // todo - think I need to add something into babel
+            newState = Object.assign([], fileState)
             //
-            foundCollection = _getMatchingCollection(newState, action.collectionName)
+            // foundCollection = _getMatchingCollection(newState, action.collectionName)
             //
+            newState.featureCollections.forEach(it => {
+
+            })
             foundFeature = _getMatchingFeatureById(foundFeatureCollection, action.waypointId)
 
             // foundFeature.
 
-            return fcState
+            return fileState
 
         default:
-            return fcState
+            return fileState
     }
 }

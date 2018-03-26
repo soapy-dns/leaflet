@@ -7,62 +7,62 @@ import { cloneDeep, has } from 'lodash'
 
 import Feature from './feature'
 import Collection from './collection'
-import { selectCollection, toggleCollectionSlider } from '../../actions/ui'
-import { updateCollections, markCollectionAsSaved } from '../../actions/feature-collections'
-import { getCollectionByName } from '../../common/utils'
+import { selectFile, toggleFileSlider } from '../../actions/ui'
+import { updateFiles, markFileAsSaved } from '../../actions/files'
+import { getFileByName } from '../../common/utils'
 
 class Collections extends Component {
     constructor(props) {
         super(props)
 
         this.toggleVisibility = this.toggleVisibility.bind(this)
-        this.saveCollection = this.saveCollection.bind(this)
+        this.saveFile = this.saveFile.bind(this)
         this.state = {
             activeItem: null,
         }
-        this.onSelectCollection = this.onSelectCollection.bind(this)
+        this.onSelectFile = this.onSelectFile.bind(this)
         this.onMoveFeature = this.onMoveFeature.bind(this)
     }
 
-    saveCollection(collectionName) {
-        const { collections } = this.props
+    saveFile(fileName) {
+        const { files } = this.props
         var element = document.createElement("a")
-        const collection = getCollectionByName(collections, collectionName)
+        const file = getFileByName(files, fileName)
 
-        const blob = new Blob([JSON.stringify(collection.featureCollection)], {type: 'application/json'})
+        const blob = new Blob([JSON.stringify(file.featureCollection)], {type: 'application/json'})
 
         element.href = URL.createObjectURL(blob)
-        element.download = `${collectionName}`
+        element.download = `${fileName}`
 
         element.click()
 
-        collection.altered = false  // possibly shouldn't be updating this.  saving it via dispatch anyway
-        dispatch(markCollectionAsSaved(collection))
+        file.altered = false  // possibly shouldn't be updating this.  saving it via dispatch anyway
+        dispatch(markFileAsSaved(file))
 
     }
     toggleVisibility() {
         const { dispatch, ui } = this.props
-        console.log('toggle visibility', ui.showCollectionSlider)
+        console.log('toggle visibility', ui.showFileSlider)
 
-        dispatch(toggleCollectionSlider(!ui.showCollectionSlider))
+        dispatch(toggleFileSlider(!ui.showFileSlider))
     }
 
     componentDidMount() {
         console.log('collections component did mount')
     }
 
-    onSelectCollection(id) {
-        const { collections } = this.props
+    onSelectFile(id) {
+        const { files } = this.props
 
-        this.props.onSelectCollection(collections[id].name)
+        this.props.onSelectFile(files[id].name)
     }
 
-    onMoveFeature(draggedFeatureName, targetCollectionName) {
+    onMoveFeature(draggedFeatureName, targetFileName) {
         const { collections, ui, dispatch } = this.props
         const clonedConnections = cloneDeep(collections)
 
-        let sourceCollection = clonedConnections.find(it => it.name === ui.selectedCollectionName)
-        const targetCollection = clonedConnections.find(it => it.name === targetCollectionName)
+        let sourceCollection = clonedConnections.find(it => it.name === ui.selectedFileName)
+        const targetCollection = clonedConnections.find(it => it.name === targetFileName)
 
         const draggedFeature = sourceCollection.featureCollection.features.find(it => it.properties.name === draggedFeatureName)
 
@@ -76,14 +76,14 @@ class Collections extends Component {
         sourceCollection.altered = true
 
         // update redux
-        dispatch(selectCollection(targetCollectionName))
-        dispatch(updateCollections(clonedConnections))
+        dispatch(selectFile(targetFileName))
+        dispatch(updateFiles(clonedConnections))
     }
 
     render() {
-        const {collections, ui, onSelectFeature} = this.props
+        const {files, ui, onSelectFeature} = this.props
 
-        const selectedCollection = collections.find(it => it.name === ui.selectedCollectionName)
+        const selectedCollection = files.find(it => it.name === ui.selectedFileName)
 
         const features = []
         if (has(selectedCollection, 'featureCollection')) {
@@ -96,7 +96,7 @@ class Collections extends Component {
         }
 
         return (
-            <div id="collections" className={ui.showCollectionSlider ? "open" : null}>
+            <div id="collections" className={ui.showFileSlider ? "open" : null}>
                 <button className="hamburger" onClick={this.toggleVisibility}>
                     <span>Collections</span>
                 </button>
@@ -104,21 +104,21 @@ class Collections extends Component {
                 <div className="side-panel-top">
                     <h1>Files</h1>
                     <Menu vertical borderless fluid className="collections top">
-                        {collections.map((collection, id) => (
-                            <Menu.Item key={id} onClick={(e) => this.onSelectCollection(id)} >
+                        {files.map((collection, id) => (
+                            <Menu.Item key={id} onClick={(e) => this.onSelectFile(id)} >
                                 <Collection
                                     collectionName={collection.name}
                                     altered={collection.altered}
-                                    selectedCollectionName={ui.selectedCollectionName}
+                                    selectedFileName={ui.selectedFileName}
                                     onMoveFeature={this.onMoveFeature}
-                                    saveCollection={this.saveCollection}
+                                    saveCollection={this.saveFile}
                                 />
                             </Menu.Item>
                         ))}
                     </Menu>
                 </div>
 
-                {ui.selectedCollectionName ? (
+                {ui.selectedFileName ? (
                     <div>
                         <div className="side-panel-bottom">
                             <h1>Features</h1>
@@ -141,8 +141,8 @@ class Collections extends Component {
 Collections.propTypes = {
     dispatch: PropTypes.func,
     ui: PropTypes.object,
-    collections: PropTypes.object,
-    onSelectCollection: PropTypes.func,
+    files: PropTypes.object,
+    onSelectFile: PropTypes.func,
     onSelectFeature: PropTypes.func
 }
 
@@ -150,7 +150,7 @@ function mapStateToProps(state) {
     console.log('state.ui', state.ui)
     return {
         ui: state.ui,
-        collections: state.featureCollections
+        files: state.files
     }
 }
 

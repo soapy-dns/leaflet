@@ -4,7 +4,7 @@ import {GeoJSON} from 'leaflet'
 import toGeoJSON from '@mapbox/togeojson'
 import xmldom from 'xmldom'
 const uuidv4 = require('uuid/v4')
-import { updateWaypointPosition } from '../actions/feature-collections'
+import { updateWaypointPosition } from '../actions/files'
 
 const DOMParser = xmldom.DOMParser
 
@@ -35,7 +35,7 @@ export const getWaypointFeature = (name, lat, lng) => {
 /*
  get a geoJSON object from a feature collection
  */
-export const getGeoJsonLayer = (featureCollection, dispatch) => {
+export const getGeoJsonLayer = (fileName, featureCollection, dispatch) => {
     console.log('dispatch>>', dispatch)
 
     // todo - this is only getting the first line
@@ -55,18 +55,19 @@ export const getGeoJsonLayer = (featureCollection, dispatch) => {
             }
         },
         pointToLayer: (feature, latlng) => {
-            console.log('dispatch', dispatch)
-            console.log('add marker', latlng.lat, latlng.lng)
+            // console.log('dispatch', dispatch)
+            // console.log('add marker', latlng.lat, latlng.lng)
             const marker = L.marker(latlng, {icon: markerIcon, draggable: true})
             marker.on('dragend', function (event) {
                 const marker = event.target
                 const latlng = marker.getLatLng()
                 marker.setLatLng(latlng, {draggable: 'true'})
-                // console.log()
+                console.log('featureCollection', featureCollection)
 
                 // marker.setLatLng(new L.LatLng(latlng.lat, latlng.lng),{draggable:'true'});
                 // map.panTo(new L.LatLng(position.lat, position.lng))
-                dispatch(updateWaypointPosition(featureCollection.name, feature.properties.id, latlng))
+                // todo
+                // dispatch(updateWaypointPosition(featureCollection.name, feature.properties.id, latlng))
             })
             return marker
         },

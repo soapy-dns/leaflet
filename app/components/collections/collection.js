@@ -25,7 +25,7 @@ function collect(connect, monitor) {
 
 
 const Collection = (props) => {
-    const icon = (props.collectionName === props.selectedCollectionName) ? 'folder open outline' : 'folder outline'
+    const icon = (props.collectionName === props.selectedFileName) ? 'folder open outline' : 'folder outline'
 
     return props.connectDropTarget(
             <span>
@@ -45,7 +45,7 @@ const Collection = (props) => {
 Collection.propTypes = {
     collectionName: PropTypes.string,
     altered: PropTypes.boolean,
-    selectedCollectionName: PropTypes.string,
+    selectedFileName: PropTypes.string,
     onMoveFeature: PropTypes.func,
     saveCollection: PropTypes.func,
 

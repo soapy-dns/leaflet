@@ -2,14 +2,14 @@ import { combineReducers } from 'redux'
 import current from './current'
 import ui from './ui'
 import tracks from './tracks'
-import featureCollections from './feature-collections'
+import files from './files'
 
 
 const reducers = combineReducers({
     current,
     ui,
     tracks,
-    featureCollections
+    files
 });
 
 export default reducers
