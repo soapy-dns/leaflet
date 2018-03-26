@@ -85,7 +85,7 @@ const _getInitialLineFeature = (latlng) => {
 /*
  Add all the file collections to the map
  */
-const _getCollectionsLayerGroup = (collections) => {
+const _getCollectionsLayerGroup = (collections, dispatch) => {
     let features = []
     collections.forEach(it => {
         features = features.concat(it.featureCollection.features)
@@ -93,7 +93,7 @@ const _getCollectionsLayerGroup = (collections) => {
     const featureCollection = {
         features  // don't think I need to put in the type
     }
-    return getGeoJsonLayer(featureCollection)
+    return getGeoJsonLayer(featureCollection, dispatch)
 }
 
 function onDrawLineClick(e) {
@@ -230,7 +230,7 @@ class MyMap extends Component {
         const scale = new Control.Scale()
         scale.addTo(map)
 
-        collectionsLayerGroup = _getCollectionsLayerGroup(collections)
+        collectionsLayerGroup = _getCollectionsLayerGroup(collections, dispatch)
 
         collectionsLayerGroup.addTo(map)
     }
@@ -297,7 +297,7 @@ class MyMap extends Component {
      That will trigger an update.
      */
     onOpenFile(fileText, filename, colour) {
-        const {dispatch} = this.props
+        const { dispatch } = this.props
 
         const featureCollection = getGeoJsonObject(fileText, filename)
         dispatch(newFeatureCollection(featureCollection, filename))
@@ -307,7 +307,7 @@ class MyMap extends Component {
         const featureCollectionName = line.properties.name
 
         // create new geojson layer for this featureCollection, and add to map
-        const newfeatureCollectionsLayer = getGeoJsonLayer(featureCollection, map)
+        const newfeatureCollectionsLayer = getGeoJsonLayer(featureCollection, dispatch)
         newfeatureCollectionsLayer.addTo(map)
 
         // todo - set this to the selected featureCollection, and mark all other featureCollections as not selected.  This could be done in the
@@ -613,14 +613,13 @@ class MyMap extends Component {
                     features  // don't think I need to put in the type
                 }
 
-
                 // todo - here we are using redux as the source of truth. change?
                 // todo - do we want to have a different layer group for each file
                 // clicking on a collection could then centre on it.
                 //update the map - removes everything, and re-adds
                 map.removeLayer(collectionsLayerGroup)
                 // //todo update the collection here rather than the
-                collectionsLayerGroup = getGeoJsonLayer(featureCollection)
+                collectionsLayerGroup = getGeoJsonLayer(featureCollection, dispatch)
                 collectionsLayerGroup.addTo(map)
 
                 dispatch(addFeatureToCollection(waypointFeature, ui.selectedCollectionName))

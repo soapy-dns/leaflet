@@ -3,6 +3,8 @@ import {markerIcon} from '../common/icons'
 import {GeoJSON} from 'leaflet'
 import toGeoJSON from '@mapbox/togeojson'
 import xmldom from 'xmldom'
+const uuidv4 = require('uuid/v4')
+import { updateWaypointPosition } from '../actions/feature-collections'
 
 const DOMParser = xmldom.DOMParser
 
@@ -10,6 +12,7 @@ export const getWaypointFeature = (name, lat, lng) => {
     const waypointFeature = {
         "type": "Feature",
         "properties": {
+            id: uuidv4(),
             "name": name,
         },
         "geometry": {
@@ -25,16 +28,24 @@ export const getWaypointFeature = (name, lat, lng) => {
     return waypointFeature
 }
 
+// const _getLayerGroupObject = (dispatch, line) => (
+//     {
+//
+// })
 /*
  get a geoJSON object from a feature collection
  */
-export const getGeoJsonLayer = (featureCollection, map) => {
+export const getGeoJsonLayer = (featureCollection, dispatch) => {
+    console.log('dispatch>>', dispatch)
+
+    // todo - this is only getting the first line
     const line = featureCollection.features.find(feature => feature.geometry.type === 'LineString')
 
     const mouseOut = (e) => {
         console.log('layerGroup', e.target)
         trackLayerGroup.resetStyle(e.target)
     }
+
 
     const trackLayerGroup = new GeoJSON([featureCollection], {
         style: function (feature) {
@@ -43,17 +54,19 @@ export const getGeoJsonLayer = (featureCollection, map) => {
                 weight: 3,
             }
         },
-        pointToLayer: function (feature, latlng) {
+        pointToLayer: (feature, latlng) => {
+            console.log('dispatch', dispatch)
             console.log('add marker', latlng.lat, latlng.lng)
-            const marker = L.marker(latlng, { icon: markerIcon, draggable: true })
-            marker.on('dragend', function(event){
-                var marker = event.target
-                var latlng = marker.getLatLng()
-                marker.setLatLng(latlng,{draggable:'true'});
+            const marker = L.marker(latlng, {icon: markerIcon, draggable: true})
+            marker.on('dragend', function (event) {
+                const marker = event.target
+                const latlng = marker.getLatLng()
+                marker.setLatLng(latlng, {draggable: 'true'})
+                // console.log()
 
                 // marker.setLatLng(new L.LatLng(latlng.lat, latlng.lng),{draggable:'true'});
                 // map.panTo(new L.LatLng(position.lat, position.lng))
-                // dispatch(updateWaypointPosition(position))
+                dispatch(updateWaypointPosition(featureCollection.name, feature.properties.id, latlng))
             })
             return marker
         },
@@ -90,6 +103,7 @@ export const getGeoJsonLayer = (featureCollection, map) => {
         }
     })
 
+
     return trackLayerGroup
 }
 
@@ -115,7 +129,7 @@ const _getFileType = (fileName) => {
 }
 
 /*
-turn file into a geojson object for jpx, kml and geojson type files
+ turn file into a geojson object for jpx, kml and geojson type files
  */
 export const getGeoJsonObject = (fileText, fileName) => {
     const fileType = _getFileType(fileName)

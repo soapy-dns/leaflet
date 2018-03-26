@@ -35,3 +35,11 @@ export const markCollectionAsSaved = collection => ({
     type: MARK_COLLECTION_AS_SAVED,
     collection: collection
 })
+
+export const UPDATE_WAYPOINT_POSITION = 'fc/UPDATE_WAYPOINT_POSITION'
+export const updateWaypointPosition = (collectionName, waypointId, latlng) => ({
+    type: UPDATE_WAYPOINT_POSITION,
+    waypointId,
+    collectionName,
+    latlng
+})
