@@ -54,7 +54,7 @@ export const getGeoJsonLayer = (fileName, featureCollection, dispatch) => {
                 weight: 3,
             }
         },
-        pointToLayer: (feature, latlng) => {
+        pointToLayer: (pointFeature, latlng) => {
             // console.log('dispatch', dispatch)
             // console.log('add marker', latlng.lat, latlng.lng)
             const marker = L.marker(latlng, {icon: markerIcon, draggable: true})
@@ -66,8 +66,7 @@ export const getGeoJsonLayer = (fileName, featureCollection, dispatch) => {
 
                 // marker.setLatLng(new L.LatLng(latlng.lat, latlng.lng),{draggable:'true'});
                 // map.panTo(new L.LatLng(position.lat, position.lng))
-                // todo
-                // dispatch(updateWaypointPosition(featureCollection.name, feature.properties.id, latlng))
+                dispatch(updateWaypointPosition(fileName, pointFeature.properties.id, latlng))
             })
             return marker
         },

@@ -1,25 +1,26 @@
 import { NEW_FILE, ADD_FEATURE_TO_FILE, UPDATE_FILES, UPDATE_WAYPOINT_POSITION } from '../actions/files'
 
 
-const _getMatchingCollection = (stateObj, collectionName) => {
-    return stateObj.find(it => it.name === collectionName)
+const _getMatchingFile = (stateObj, fileName) => {
+    return stateObj.find(it => it.name === fileName)
 }
 
 const _getMatchingFeatureById = (featureCollection, featureId) => {
-    return featureCollection.features.find(it => it.properties.name === action.featureId)
+    console.log('featureCollection %j', featureCollection.features, featureId)
+    return featureCollection.features.find(feature => feature.properties.id === featureId)
 
 }
 
 export default function (fileState = [], action) {
     let newState
-    let foundCollection, foundFeature
+    let foundFile, foundFeature
     switch (action.type) {
         case NEW_FILE:
             // todo - need to check for existing matching feature collection
             // coordinates.splice(i+1, 1)
 
-            foundCollection = fileState.find(it => (it.name === action.filename))
-            if (!foundCollection) {
+            foundFile = fileState.find(it => (it.name === action.filename))
+            if (!foundFile) {
                 // add new collection
                 fileState.push({
                     name: action.filename,
@@ -28,8 +29,8 @@ export default function (fileState = [], action) {
                 })
             } else {
                 // todo - should alert if collections has been change
-                foundCollection.featureCollection = action.fileText
-                foundCollection.altered = false
+                foundFile.featureCollection = action.fileText
+                foundFile.altered = false
             }
 
             return fileState
@@ -37,11 +38,11 @@ export default function (fileState = [], action) {
         case ADD_FEATURE_TO_FILE:
             newState = Object.assign([], fileState)
 
-            const foundFeatureCollection = _getMatchingCollection(newState, action.selectedFileName)
+            foundFile = _getMatchingFile(newState, action.selectedFileName)
 
             // add the new feature to it
-            foundFeatureCollection.featureCollection.features.push(action.feature)
-            foundFeatureCollection.altered = true
+            foundFile.featureCollection.features.push(action.feature)
+            foundFile.altered = true
 
             // return the state (which has been updated by the push)
             return newState
@@ -55,14 +56,12 @@ export default function (fileState = [], action) {
             // const newState = { ...fileState }  // todo - think I need to add something into babel
             newState = Object.assign([], fileState)
             //
-            // foundCollection = _getMatchingCollection(newState, action.collectionName)
-            //
-            newState.featureCollections.forEach(it => {
+            foundFile = _getMatchingFile(newState, action.fileName)
 
-            })
-            foundFeature = _getMatchingFeatureById(foundFeatureCollection, action.waypointId)
+            foundFeature = _getMatchingFeatureById(foundFile.featureCollection, action.pointId)
 
-            // foundFeature.
+            console.log('foundFeature', foundFeature)
+            foundFeature.geometry.coordinates = [action.latlng.lat, action.latlng.lng]
 
             return fileState
 
