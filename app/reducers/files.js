@@ -52,18 +52,22 @@ export default function (fileState = [], action) {
             return action.collections
 
         case UPDATE_WAYPOINT_POSITION: {}
-            console.log('UPDATE_WAYPOINT_POSITION action', action)
+            // console.log('UPDATE_WAYPOINT_POSITION action', action)
             // const newState = { ...fileState }  // todo - think I need to add something into babel
             newState = Object.assign([], fileState)
             //
             foundFile = _getMatchingFile(newState, action.fileName)
+            foundFile.altered = true
 
             foundFeature = _getMatchingFeatureById(foundFile.featureCollection, action.pointId)
 
-            console.log('foundFeature', foundFeature)
-            foundFeature.geometry.coordinates = [action.latlng.lat, action.latlng.lng]
+            // console.log('foundFeature', foundFeature)
+            // console.log('latlng', action.latlng)
+            // const coords = [action.latlng.lng, action.latlng.lat]
+            // console.log('coords', coords)
+            foundFeature.geometry.coordinates = [action.latlng.lng, action.latlng.lat]
 
-            return fileState
+            return newState
 
         default:
             return fileState

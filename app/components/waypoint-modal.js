@@ -29,18 +29,10 @@ class WaypointModal extends Component {
 
     componentDidMount() {
         const { selectedLatitude, selectedLongitude } = this.props
-        console.log('selectedLatitude', selectedLatitude)
-        console.log('selectedLongitude', selectedLongitude)
-        // get latlng from selected position.
-        console.log('fromLatLon', fromLatLon)
-        // const x = fromLatLon(selectedLatitude, selectedLongitude)
-        // console.log('x', x)
+
         const { easting, northing, zoneNum, zoneLetter } = fromLatLon(selectedLatitude, selectedLongitude)
-        //
+
         this.setState({ easting: Math.round(easting), northing: Math.round(northing), zone: zoneNum, band: zoneLetter})
-        console.log('easting', easting)
-
-
     }
 
     onChange(event) {
@@ -61,9 +53,10 @@ class WaypointModal extends Component {
     }
 
     onSubmit(event) {
+        console.log('onSubmit')
         event.preventDefault()  // todo - check if still need this
         const errors = this.validate()
-        console.log('onSubmit', this.state)
+        console.log('validation errors', errors)
 
         const { okAction } = this.props
 

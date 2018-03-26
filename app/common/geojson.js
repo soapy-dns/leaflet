@@ -36,8 +36,6 @@ export const getWaypointFeature = (name, lat, lng) => {
  get a geoJSON object from a feature collection
  */
 export const getGeoJsonLayer = (fileName, featureCollection, dispatch) => {
-    console.log('dispatch>>', dispatch)
-
     // todo - this is only getting the first line
     const line = featureCollection.features.find(feature => feature.geometry.type === 'LineString')
 
@@ -45,7 +43,6 @@ export const getGeoJsonLayer = (fileName, featureCollection, dispatch) => {
         console.log('layerGroup', e.target)
         trackLayerGroup.resetStyle(e.target)
     }
-
 
     const trackLayerGroup = new GeoJSON([featureCollection], {
         style: function (feature) {
@@ -56,17 +53,19 @@ export const getGeoJsonLayer = (fileName, featureCollection, dispatch) => {
         },
         pointToLayer: (pointFeature, latlng) => {
             // console.log('dispatch', dispatch)
-            // console.log('add marker', latlng.lat, latlng.lng)
+            if (!latlng) return
+            console.log('add marker', latlng.lat, latlng.lng)
             const marker = L.marker(latlng, {icon: markerIcon, draggable: true})
             marker.on('dragend', function (event) {
                 const marker = event.target
-                const latlng = marker.getLatLng()
-                marker.setLatLng(latlng, {draggable: 'true'})
+                const position = marker.getLatLng()
+                console.log('position', position)
+                marker.setLatLng(position, {draggable: 'true'})
                 console.log('featureCollection', featureCollection)
 
                 // marker.setLatLng(new L.LatLng(latlng.lat, latlng.lng),{draggable:'true'});
                 // map.panTo(new L.LatLng(position.lat, position.lng))
-                dispatch(updateWaypointPosition(fileName, pointFeature.properties.id, latlng))
+                dispatch(updateWaypointPosition(fileName, pointFeature.properties.id, position))
             })
             return marker
         },
@@ -132,20 +131,30 @@ const _getFileType = (fileName) => {
  turn file into a geojson object for jpx, kml and geojson type files
  */
 export const getGeoJsonObject = (fileText, fileName) => {
+    let geojson
     const fileType = _getFileType(fileName)
 
     if (!fileType) return null
 
-    if (fileType === 'geojson') return JSON.parse(fileText)
+    if (fileType === 'geojson') geojson = JSON.parse(fileText)
 
     if (fileType === 'gpx') {
         const gpx = new DOMParser().parseFromString(fileText)
 
-        return toGeoJSON.gpx(gpx)
+        geojson = toGeoJSON.gpx(gpx)
     }
 
     if (fileType === 'kml') {
         const kml = new DOMParser().parseFromString(fileText)
-        return toGeoJSON.kml(kml)
+        geojson = toGeoJSON.kml(kml)
     }
+
+    // now stick an id on each feature (for internal use eg moving features)
+    geojson.features.forEach(feature => {
+        if (!feature.properties.id) {
+            feature.properties.id = uuidv4()
+        }
+    })
+
+    return geojson
 }
