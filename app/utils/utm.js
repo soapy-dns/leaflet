@@ -38,8 +38,9 @@ function RadToDeg(rad) {
  longitude 174 to 180 East.
  Note - this calculation doesn't work for Svalbard and some parts of Norway!
  */
-const getUTMZone = (lat, lon) => {
-    zone = Math.floor((lon + 180.0) / 6) + 1;
+const getUTMZone = (lat, lng) => {
+    console.log('getUTMZone')
+    zone = Math.floor((lng + 180.0) / 6) + 1;
 }
 /*
  * ArcLengthOfMeridian
@@ -564,4 +565,8 @@ function btnToGeographic_OnClick() {
 
 
 // These are all I need at the moment
-export { getUTMZone, LatLonToUTMXY, UTMXYToLatLon }
+export {
+    getUTMZone,
+    LatLonToUTMXY,
+    UTMXYToLatLon
+}

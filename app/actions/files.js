@@ -1,10 +1,10 @@
 'use strict'
 
 export const NEW_FILE = 'file/NEW_FILE'
-export const newFile = (fileText, filename) => ({
+export const newFile = (fileText, fileName) => ({
     type: NEW_FILE,
     fileText,
-    filename
+    fileName
 })
 
 /*

@@ -1,15 +1,15 @@
 import React, {Component} from 'react'
-import { Menu } from 'semantic-ui-react'
+import { Menu, Icon } from 'semantic-ui-react'
 
 import PropTypes from 'prop-types'
-import { connect } from 'react-redux'
-import { cloneDeep, has } from 'lodash'
+import {connect} from 'react-redux'
+import {cloneDeep, has, isEmpty} from 'lodash'
 
 import Feature from './feature'
 import Collection from './collection'
-import { selectFile, toggleFileSlider } from '../../actions/ui'
-import { updateFiles, markFileAsSaved } from '../../actions/files'
-import { getFileByName } from '../../common/utils'
+import {selectFile, toggleFileSlider} from '../../actions/ui'
+import {updateFiles, markFileAsSaved} from '../../actions/files'
+import utils from '../../common/utils'
 
 class Collections extends Component {
     constructor(props) {
@@ -22,12 +22,13 @@ class Collections extends Component {
         }
         this.onSelectFile = this.onSelectFile.bind(this)
         this.onMoveFeature = this.onMoveFeature.bind(this)
+        this.onRemoveFile = this.onRemoveFile.bind(this)
     }
 
     saveFile(fileName) {
-        const { files } = this.props
+        const {files} = this.props
         var element = document.createElement("a")
-        const file = getFileByName(files, fileName)
+        const file = utils.getFileByName(files, fileName)
 
         const blob = new Blob([JSON.stringify(file.featureCollection)], {type: 'application/json'})
 
@@ -40,8 +41,13 @@ class Collections extends Component {
         dispatch(markFileAsSaved(file))
 
     }
+
+    onRemoveFile(fileName) {
+        console.log('remove', fileName)
+    }
+
     toggleVisibility() {
-        const { dispatch, ui } = this.props
+        const {dispatch, ui} = this.props
         console.log('toggle visibility', ui.showFileSlider)
 
         dispatch(toggleFileSlider(!ui.showFileSlider))
@@ -52,13 +58,13 @@ class Collections extends Component {
     }
 
     onSelectFile(id) {
-        const { files } = this.props
+        const {files} = this.props
 
         this.props.onSelectFile(files[id].name)
     }
 
     onMoveFeature(draggedFeatureName, targetFileName) {
-        const { collections, ui, dispatch } = this.props
+        const {collections, ui, dispatch} = this.props
         const clonedConnections = cloneDeep(collections)
 
         let sourceCollection = clonedConnections.find(it => it.name === ui.selectedFileName)
@@ -82,12 +88,15 @@ class Collections extends Component {
 
     render() {
         const {files, ui, onSelectFeature} = this.props
+        console.log('files', files)
+        if (isEmpty(files)) return null
 
-        const selectedCollection = files.find(it => it.name === ui.selectedFileName)
+        const selectedFile = files.find(it => it.name === ui.selectedFileName)
 
+        console.log('selectedFile', selectedFile)
         const features = []
-        if (has(selectedCollection, 'featureCollection')) {
-            selectedCollection.featureCollection.features.map(feature => {
+        if (selectedFile && has(selectedFile, 'featureCollection')) {
+            selectedFile.featureCollection.features.map(feature => {
                 features.push({
                     name: feature.properties.name,
                     type: feature.geometry.type
@@ -104,17 +113,20 @@ class Collections extends Component {
                 <div className="side-panel-top">
                     <h1>Files</h1>
                     <Menu vertical borderless fluid className="collections top">
-                        {files.map((collection, id) => (
-                            <Menu.Item key={id} onClick={(e) => this.onSelectFile(id)} >
-                                <Collection
-                                    collectionName={collection.name}
-                                    altered={collection.altered}
-                                    selectedFileName={ui.selectedFileName}
-                                    onMoveFeature={this.onMoveFeature}
-                                    saveCollection={this.saveFile}
-                                />
-                            </Menu.Item>
-                        ))}
+                        {files.map((file, id) => (
+                            <div>
+                                <Menu.Item key={id} onClick={(e) => this.onSelectFile(id)}>
+                                    <Collection
+                                        collectionName={file.name}
+                                        altered={file.altered}
+                                        selectedFileName={ui.selectedFileName}
+                                        onMoveFeature={this.onMoveFeature}
+                                        saveCollection={this.saveFile}
+                                    />
+                                    <Icon name="delete" color="red" size="large" onClick={(e) => this.onRemoveFile(file.name)} />
+                                </Menu.Item>
+                            </div>
+                            ))}
                     </Menu>
                 </div>
 
@@ -125,7 +137,7 @@ class Collections extends Component {
                             <Menu vertical borderless fluid className="collections bottom">
                                 {features.map((feature, id) => (
                                     <Menu.Item key={id} onClick={(e) => onSelectFeature(id)}>
-                                        <Feature featureType={feature.type} featureName={feature.name} />
+                                        <Feature featureType={feature.type} featureName={feature.name}/>
                                     </Menu.Item>
                                 ))}
                             </Menu>

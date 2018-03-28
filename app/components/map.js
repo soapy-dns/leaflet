@@ -5,12 +5,10 @@ import {toLatLng} from 'utm'
 import PropTypes from 'prop-types'
 import {connect} from 'react-redux'
 import {cloneDeep} from 'lodash'
-
+import moment from 'moment'
 import {DragDropContext} from 'react-dnd'
-import HTML5Backend from 'react-dnd-html5-backend'
 
 import Api from '../utils/api'
-
 import Collections from './collections/collections'
 import MainMenu from './menu/main-menu'
 import Locate from './locate-modal'
@@ -19,30 +17,14 @@ import LoadTrackModal from './load-track-modal'
 import WaypointModal from './waypoint-modal'
 import Elevation from '../components/stats/elevation'
 
-import {saveTrack, selectTrack} from '../actions/tracks'
+import {selectTrack} from '../actions/tracks'
 import {newFile, addFeatureToFile} from '../actions/files'
 import {saveMapDetails} from '../actions/current'
 import {toggleElevation, selectFile, selectLatLng, clearLatLng} from '../actions/ui'
-
 import {getSelectedTrack, getLine, getDistanceBetween2Points, getMillisecsBetween2Points} from '../utils/index'
-
 import {flameIcon, startIcon, markerIcon} from '../common/icons'
-import {geojsonMarkerOptions, geojsonLineMarkerOptions} from '../common/marker-options'
+import {geojsonLineMarkerOptions} from '../common/marker-options'
 import {getWaypointFeature, getGeoJsonLayer, getGeoJsonObject} from '../common/geojson'
-
-
-// todo - reinstate something similar - this has got functionality for processing points
-
-// THIS COULD BE NEW TRACK LAYER?
-// const tracksLayer = new GeoJSON(null, {
-//     pointToLayer: function (feature, latlng) {
-//         console.log('feature', feature.properties.sym)
-//         console.log('indexof', feature.properties.sym.indexOf('Flag'))
-//         if (feature.properties.sym.indexOf('Flag') !== -1) console.log('flag')
-//         return L.marker(latlng, {icon: myIcon, pane: 'markerPane'})
-//     }
-// })
-
 
 let initialTrack = {
     type: "FeatureCollection",
@@ -216,6 +198,9 @@ class MyMap extends Component {
         const scale = new Control.Scale()
         scale.addTo(map)
 
+        // if (!isEmpty(files)) {
+        //
+        // }
         files.forEach(file => {
             const layerGroup = getGeoJsonLayer(file.name, file.featureCollection, dispatch)
 
@@ -285,7 +270,7 @@ class MyMap extends Component {
      That will trigger an update.
      */
     onOpenFile(fileText, fileName, colour) {
-        const { dispatch } = this.props
+        const {dispatch} = this.props
 
         const featureCollection = getGeoJsonObject(fileText, fileName)
         dispatch(newFile(featureCollection, fileName))
@@ -579,42 +564,49 @@ class MyMap extends Component {
     addWaypoint(featureData) {
         const {dispatch, ui, files} = this.props
 
+        const waypointFeature = getWaypointFeature(featureData.pointName, ui.selectedLatitude, ui.selectedLongitude)
+
         if (!ui.selectedFileName) {
-            if (files.length === 0) {
-                // add new collection - but then want to return here - how to do this?
-                // todo - create new collection and add waypoint
-            } else {
-                // add to selected collection
-                const waypointFeature = getWaypointFeature(featureData.pointName, ui.selectedLatitude, ui.selectedLongitude)
-                this.setState({modal: null})
+            // else {
+            // add to selected collection
+            this.setState({modal: null})
 
-                // update the map
-                // get all the features from all collections and add them as 1 single layer
-                // - this is so we can simply remove the lot before re-adding.
-                let features = []
-                files.forEach(it => {
-                    features = features.concat(it.featureCollection.features)
-                })
+            // update the map
+            // get all the features from all collections and add them as 1 single layer
+            // - this is so we can simply remove the lot before re-adding.
+            let features = []
+            files.forEach(it => {
+                features = features.concat(it.featureCollection.features)
+            })
 
-                features.push(waypointFeature)  // add the new feature
-                const featureCollection = {
-                    features  // don't think I need to put in the type
-                }
-
-                // todo - here we are using redux as the source of truth. change?
-                // todo - do we want to have a different layer group for each file
-                // clicking on a collection could then centre on it.
-                //update the map - removes everything, and re-adds
-                map.removeLayer(collectionsLayerGroup)
-                // //todo update the collection here rather than the
-                collectionsLayerGroup = getGeoJsonLayer(ui.selectedFileName, featureCollection, dispatch)
-                collectionsLayerGroup.addTo(map)
-
-                dispatch(addFeatureToFile(waypointFeature, ui.selectedFileName))
-                dispatch(clearLatLng())  // clear the selected lat lng whatever that is
+            features.push(waypointFeature)  // add the new feature
+            const featureCollection = {
+                features  // don't think I need to put in the type
             }
+
+            // todo - here we are using redux as the source of truth. change?
+            // todo - do we want to have a different layer group for each file
+            // clicking on a collection could then centre on it.
+            //update the map - removes everything, and re-adds
+            map.removeLayer(collectionsLayerGroup)
+            // //todo update the collection here rather than the
+            collectionsLayerGroup = getGeoJsonLayer(ui.selectedFileName, featureCollection, dispatch)
+            collectionsLayerGroup.addTo(map)
+
+            dispatch(addFeatureToFile(waypointFeature, ui.selectedFileName))
+            dispatch(clearLatLng())  // clear the selected lat lng whatever that is
+            // }
         } else {
             // need to select collection
+            if (files.length === 0) {
+                // add new file - but then want to return here - how to do this?
+                // todo - create new file and add waypoint
+                const fileName = moment().format('YYYY-MM-DD hh:mm:ss')
+                const featureCollection = {
+                    features: [waypointFeature]
+                }
+                dispatch(newFile(featureCollection, fileName))
+            }
         }
     }
 

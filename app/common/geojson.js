@@ -5,6 +5,7 @@ import toGeoJSON from '@mapbox/togeojson'
 import xmldom from 'xmldom'
 const uuidv4 = require('uuid/v4')
 import { updateWaypointPosition } from '../actions/files'
+import utils from './utils'
 
 const DOMParser = xmldom.DOMParser
 
@@ -54,14 +55,16 @@ export const getGeoJsonLayer = (fileName, featureCollection, dispatch) => {
         pointToLayer: (pointFeature, latlng) => {
             // console.log('dispatch', dispatch)
             if (!latlng) return
-            console.log('add marker', latlng.lat, latlng.lng)
+            // console.log('add marker', latlng.lat, latlng.lng)
             const marker = L.marker(latlng, {icon: markerIcon, draggable: true})
+            marker.bindPopup(pointFeature.properties.name)
+
             marker.on('dragend', function (event) {
                 const marker = event.target
                 const position = marker.getLatLng()
-                console.log('position', position)
+                // console.log('position', position)
                 marker.setLatLng(position, {draggable: 'true'})
-                console.log('featureCollection', featureCollection)
+                // console.log('featureCollection', featureCollection)
 
                 // marker.setLatLng(new L.LatLng(latlng.lat, latlng.lng),{draggable:'true'});
                 // map.panTo(new L.LatLng(position.lat, position.lng))
@@ -102,29 +105,7 @@ export const getGeoJsonLayer = (fileName, featureCollection, dispatch) => {
         }
     })
 
-
     return trackLayerGroup
-}
-
-
-const _ext = (filename) => {
-    return (extension) => {
-        return filename.indexOf(extension) !== -1
-    }
-}
-
-const _getFileType = (fileName) => {
-    const lowerCaseFileName = fileName ? fileName.toLowerCase() : ''
-
-    const ext = _ext(lowerCaseFileName)
-
-    if (ext('.kml')) return 'kml'
-
-    if (ext('.gpx')) return 'gpx'
-
-    if (ext('.geojson') || ext('.json') || ext('.topojson')) return 'geojson'
-
-    return null
 }
 
 /*
@@ -132,7 +113,7 @@ const _getFileType = (fileName) => {
  */
 export const getGeoJsonObject = (fileText, fileName) => {
     let geojson
-    const fileType = _getFileType(fileName)
+    const fileType = utils.getFileType(fileName)
 
     if (!fileType) return null
 

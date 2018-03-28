@@ -1,3 +1,4 @@
+import { isEmpty } from 'lodash'
 import { NEW_FILE, ADD_FEATURE_TO_FILE, UPDATE_FILES, UPDATE_WAYPOINT_POSITION } from '../actions/files'
 
 
@@ -16,24 +17,36 @@ export default function (fileState = [], action) {
     let foundFile, foundFeature
     switch (action.type) {
         case NEW_FILE:
+            console.log('new file', action)
             // todo - need to check for existing matching feature collection
-            // coordinates.splice(i+1, 1)
+            newState = Object.assign([], fileState)
+            console.log('newState', newState)
 
-            foundFile = fileState.find(it => (it.name === action.filename))
-            if (!foundFile) {
+            // todo - need input for file altered or not.  A newly opened file will be unaltered
+            // A new file as a result of a waypoint being added will be altered
+            if (isEmpty(newState)) {
                 // add new collection
-                fileState.push({
-                    name: action.filename,
-                    altered: false,
+                newState.push({
+                    name: action.fileName,
+                    altered: true,
                     featureCollection: action.fileText
                 })
             } else {
-                // todo - should alert if collections has been change
-                foundFile.featureCollection = action.fileText
-                foundFile.altered = false
+                foundFile = newState.find(file => (file.name === action.fileName))
+                if (!foundFile) {
+                    // add new collection
+                    newState.push({
+                        name: action.fileName,
+                        altered: true,
+                        featureCollection: action.fileText
+                    })
+                } else {
+                    foundFile.featureCollection = action.fileText
+                    foundFile.altered = true
+                }
             }
 
-            return fileState
+            return newState
 
         case ADD_FEATURE_TO_FILE:
             newState = Object.assign([], fileState)
@@ -52,19 +65,12 @@ export default function (fileState = [], action) {
             return action.collections
 
         case UPDATE_WAYPOINT_POSITION: {}
-            // console.log('UPDATE_WAYPOINT_POSITION action', action)
-            // const newState = { ...fileState }  // todo - think I need to add something into babel
-            newState = Object.assign([], fileState)
-            //
+          newState = Object.assign([], fileState)
+
             foundFile = _getMatchingFile(newState, action.fileName)
             foundFile.altered = true
 
             foundFeature = _getMatchingFeatureById(foundFile.featureCollection, action.pointId)
-
-            // console.log('foundFeature', foundFeature)
-            // console.log('latlng', action.latlng)
-            // const coords = [action.latlng.lng, action.latlng.lat]
-            // console.log('coords', coords)
             foundFeature.geometry.coordinates = [action.latlng.lng, action.latlng.lat]
 
             return newState

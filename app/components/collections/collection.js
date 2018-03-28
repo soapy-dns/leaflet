@@ -1,8 +1,8 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import { Icon } from 'semantic-ui-react'
+import {Icon} from 'semantic-ui-react'
 
-import { DropTarget } from 'react-dnd'
+import {DropTarget} from 'react-dnd'
 import Constants from '../../common/constants'
 
 const collectionTarget = {
@@ -23,22 +23,19 @@ function collect(connect, monitor) {
 }
 
 
-
 const Collection = (props) => {
     const icon = (props.collectionName === props.selectedFileName) ? 'folder open outline' : 'folder outline'
 
     return props.connectDropTarget(
-            <span>
+        <span>
                 {props.altered ? (
-                    <Icon color="blue" size="large" name="save" onClick={(e) => props.saveCollection(props.collectionName)} />
+                    <Icon color="blue" size="large" name="save"
+                          onClick={(e) => props.saveCollection(props.collectionName)} />
                 ) : null}
 
-                <Icon color="blue" size="large" name={icon} />
-                {props.collectionName}
-
-
-            </span>
-
+            <Icon color="blue" size="large" name={icon}/>
+            {props.collectionName}
+        </span>
     )
 }
 
@@ -55,4 +52,3 @@ Collection.propTypes = {
 }
 
 export default DropTarget(Constants.dragndrop.FEATURE, collectionTarget, collect)(Collection)
-

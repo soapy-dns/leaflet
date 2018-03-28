@@ -14,9 +14,10 @@
     "build-prod": "webpack --progress -p",
     "clean": "rimraf ./dist && mkdir dist",
     "start": "npm run build-prod && node server",
-    "test": "'mocha **/*.spec.js' --recursive --check-leaks --reporter min",
     "heroku-prebuild": "npm i",
-    "heroku-postbuild": "npm run build"
+    "heroku-postbuild": "npm run build",
+    "test": "jest",
+    "test:override": "jest -u"
   },
   "dependencies": {
     "@mapbox/togeojson": "^0.16.0",
@@ -49,6 +50,7 @@
   },
   "devDependencies": {
     "babel-core": "^6.26.0",
+    "babel-jest": "^22.4.3",
     "babel-loader": "^7.1.2",
     "babel-plugin-lodash": "^3.3.2",
     "babel-plugin-transform-object-assign": "^6.22.0",
@@ -62,7 +64,11 @@
     "favicons-webpack-plugin": "0.0.7",
     "file-loader": "^1.1.6",
     "html-webpack-plugin": "^2.30.1",
+    "jest": "^22.4.3",
     "prettier": "^1.10.2",
+    "react-addons-test-utils": "^15.6.2",
+    "react-test-renderer": "^16.2.0",
+    "regenerator-runtime": "^0.11.1",
     "rimraf": "^2.6.2",
     "style-loader": "^0.19.1",
     "url-loader": "^0.6.2",

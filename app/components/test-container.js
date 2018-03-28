@@ -27,12 +27,11 @@ class TestContainer extends Component {
 
         return (
             <Collections
-                collections={collections}
-                selectedFileName="hitw"
-                onSelectCollection={this.doNothing}
+                onSelectFile={this.doNothing}
                 onSelectFeature={this.doNothing}
             />
         )
+
     }
 }
 

@@ -13,6 +13,7 @@ import Splash from '../views/splash'
 import Main from '../components/main'
 import Map from '../components/map'
 // import Map from '../components/mapbox'
+// import Collections from '../components/collections/collections'
 
 const store = createStore(reducer, compose(
     applyMiddleware(thunk),
@@ -60,7 +61,9 @@ class Routes extends Component {
                     <Router history={browserHistory} onUpdate={() => window.scrollTo(0, 0)}>
                         <Route path="/" component={Main}>
                             <IndexRoute component={Map}/>
+                            <Route path="files" component={TestContainer} />
                         </Route>
+                        <Route path="files" component={TestContainer} />
                         <Route path="splash" component={Splash}/>
                         <Route path="*" component={NotFound}/>
                     </Router>
