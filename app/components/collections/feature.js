@@ -24,14 +24,14 @@ class Feature extends Component {
         }
 
         return connectDragSource(
-            <div
+            <span
                 style={{
                     opacity: isDragging ? 0.5 : 1,
                     color: isDragging? "red": null
                 }}
             >
                 {html}
-            </div>
+            </span>
         )
     }
 }

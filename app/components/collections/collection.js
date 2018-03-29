@@ -1,4 +1,4 @@
-import React from 'react'
+import React, {Component} from 'react'
 import PropTypes from 'prop-types'
 import {Icon} from 'semantic-ui-react'
 
@@ -8,7 +8,7 @@ import Constants from '../../common/constants'
 const collectionTarget = {
     drop(props, monitor) {
         const featureName = monitor.getItem().featureName
-        props.onMoveFeature(featureName, props.collectionName)
+        props.onMoveFeature(featureName, props.fileName)
     }
 }
 
@@ -22,29 +22,36 @@ function collect(connect, monitor) {
     }
 }
 
+class Collection extends Component {
+    constructor(props) {
+        super(props)
+    }
 
-const Collection = (props) => {
-    const icon = (props.collectionName === props.selectedFileName) ? 'folder open outline' : 'folder outline'
+    render() {
+        const {fileName, selectedFileName, altered, onSaveFile} = this.props
+        const icon = (fileName === selectedFileName) ? 'folder open outline' : 'folder outline'
 
-    return props.connectDropTarget(
-        <span>
-                {props.altered ? (
-                    <Icon color="blue" size="large" name="save"
-                          onClick={(e) => props.saveCollection(props.collectionName)} />
-                ) : null}
+        return this.props.connectDropTarget(
+            <span>
+                    {altered ? (
+                        <Icon color="blue" size="large" name="save"
+                              onClick={(e) => onSaveFile(fileName)}/>
+                    ) : null}
 
-            <Icon color="blue" size="large" name={icon}/>
-            {props.collectionName}
-        </span>
-    )
+                <Icon color="blue" size="large" name={icon}/>
+                {fileName}
+            </span>
+        )
+    }
 }
 
 Collection.propTypes = {
-    collectionName: PropTypes.string,
+    fileName: PropTypes.string,
     altered: PropTypes.boolean,
     selectedFileName: PropTypes.string,
     onMoveFeature: PropTypes.func,
-    saveCollection: PropTypes.func,
+    saveFile: PropTypes.func,
+    onRemoveFile: PropTypes.func,
 
     // injected by dnd
     connectDropTarget: PropTypes.func.isRequired,

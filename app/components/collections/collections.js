@@ -1,5 +1,5 @@
 import React, {Component} from 'react'
-import { Menu, Icon } from 'semantic-ui-react'
+import {Menu, Icon} from 'semantic-ui-react'
 
 import PropTypes from 'prop-types'
 import {connect} from 'react-redux'
@@ -25,9 +25,20 @@ class Collections extends Component {
         this.onRemoveFile = this.onRemoveFile.bind(this)
     }
 
+    onRemoveFile(e, fileName) {
+        e.stopPropagation()  // stops higher level events from firing
+        console.log('Collections onRemoveFile', fileName)
+        this.props.onRemoveFile(fileName)
+    }
+
+    onRemoveFeature(e, featureName) {
+        e.stopPropagation()
+        console.log('Collections onRemoveFeature', featureName)
+    }
+
     saveFile(fileName) {
         const {files} = this.props
-        var element = document.createElement("a")
+        const element = document.createElement("a")
         const file = utils.getFileByName(files, fileName)
 
         const blob = new Blob([JSON.stringify(file.featureCollection)], {type: 'application/json'})
@@ -42,10 +53,6 @@ class Collections extends Component {
 
     }
 
-    onRemoveFile(fileName) {
-        console.log('remove', fileName)
-    }
-
     toggleVisibility() {
         const {dispatch, ui} = this.props
         console.log('toggle visibility', ui.showFileSlider)
@@ -58,6 +65,7 @@ class Collections extends Component {
     }
 
     onSelectFile(id) {
+        console.log('Collections - onSelectFile')
         const {files} = this.props
 
         this.props.onSelectFile(files[id].name)
@@ -87,7 +95,7 @@ class Collections extends Component {
     }
 
     render() {
-        const {files, ui, onSelectFeature} = this.props
+        const {files, ui, onSelectFeature, onRemoveFile, onRemoveFeature} = this.props
         console.log('files', files)
         if (isEmpty(files)) return null
 
@@ -114,19 +122,19 @@ class Collections extends Component {
                     <h1>Files</h1>
                     <Menu vertical borderless fluid className="collections top">
                         {files.map((file, id) => (
-                            <div>
-                                <Menu.Item key={id} onClick={(e) => this.onSelectFile(id)}>
-                                    <Collection
-                                        collectionName={file.name}
-                                        altered={file.altered}
-                                        selectedFileName={ui.selectedFileName}
-                                        onMoveFeature={this.onMoveFeature}
-                                        saveCollection={this.saveFile}
-                                    />
-                                    <Icon name="delete" color="red" size="large" onClick={(e) => this.onRemoveFile(file.name)} />
-                                </Menu.Item>
-                            </div>
-                            ))}
+                            <Menu.Item key={id} onClick={(e) => this.onSelectFile(id)}>
+                                <Collection
+                                    fileName={file.name}
+                                    altered={file.altered}
+                                    selectedFileName={ui.selectedFileName}
+                                    onMoveFeature={this.onMoveFeature}
+                                    onSaveFile={this.saveFile}
+                                    onRemoveFile={this.onRemoveFile}
+                                />
+                                <Icon name="delete" color="red" size="large"
+                                      onClick={(e) => this.onRemoveFile(e, file.name)}/>
+                            </Menu.Item>
+                        ))}
                     </Menu>
                 </div>
 
@@ -138,7 +146,10 @@ class Collections extends Component {
                                 {features.map((feature, id) => (
                                     <Menu.Item key={id} onClick={(e) => onSelectFeature(id)}>
                                         <Feature featureType={feature.type} featureName={feature.name}/>
+                                        <Icon name="delete" color="red" size="large"
+                                              onClick={(e) => this.onRemoveFeature(e, feature.name)}/>
                                     </Menu.Item>
+
                                 ))}
                             </Menu>
                         </div>
@@ -155,7 +166,9 @@ Collections.propTypes = {
     ui: PropTypes.object,
     files: PropTypes.object,
     onSelectFile: PropTypes.func,
-    onSelectFeature: PropTypes.func
+    onSelectFeature: PropTypes.func,
+    onRemoveFile: PropTypes.func,
+    onRemoveFeature: PropTypes.func
 }
 
 function mapStateToProps(state) {

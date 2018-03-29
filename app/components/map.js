@@ -15,6 +15,7 @@ import Locate from './locate-modal'
 import AwaitingFunctionality from './awaiting-functionality-modal'
 import LoadTrackModal from './load-track-modal'
 import WaypointModal from './waypoint-modal'
+import RemoveFileModal from './collections/remove-file-modal'
 import Elevation from '../components/stats/elevation'
 
 import {selectTrack} from '../actions/tracks'
@@ -133,6 +134,9 @@ class MyMap extends Component {
         this.onSelectFile = this.onSelectFile.bind(this)
         this.onSelectFeature = this.onSelectFeature.bind(this)
         this.onEdit = this.onEdit.bind(this)
+        this.onRemoveFile = this.onRemoveFile.bind(this)
+        this.onRemoveFeature = this.onRemoveFeature.bind(this)
+
 
         this.waypointModal = this.waypointModal.bind(this)
 
@@ -230,6 +234,26 @@ class MyMap extends Component {
         const {latitude, longitude} = toLatLon(locateData.easting, locateData.northing, locateData.zone, undefined, false)
         map.panTo(new L.LatLng(latitude, longitude))
         this.setState({modal: null})
+    }
+
+    onRemoveFile(fileName) {
+        console.log('remove', fileName)
+        this.setState({modal: 'removeFile'})
+    }
+
+    removeFile(fileName) {
+        const { files } = this.props
+        console.log('remove', fileName)
+
+        // remove from map
+
+        //remove from redux
+    }
+
+    onRemoveFeature(e, featureName) {
+        e.stopPropagation();
+
+        console.log('remove feature', featureName)
     }
 
     onEdit() {
@@ -643,6 +667,12 @@ class MyMap extends Component {
                     <WaypointModal cancelAction={this.onCancelAction} okAction={this.addWaypoint}
                                    selectedLatitude={ui.selectedLatitude} selectedLongitude={ui.selectedLongitude}/>
                 ) : null}
+                {(this.state.modal === 'removeFile') ? (
+                    <RemoveFileModal
+                        cancelAction={this.onCancelAction}
+                        okAction={this.removeFile}
+                    />
+                ) : null}
 
                 <MainMenu
                     openFile={this.showOpenFileModal}
@@ -658,7 +688,12 @@ class MyMap extends Component {
                     onEdit={this.onEdit}
                 />
 
-                <Collections onSelectFile={this.onSelectFile} onSelectFeature={this.onSelectFeature}/>
+                <Collections
+                    onSelectFile={this.onSelectFile}
+                    onSelectFeature={this.onSelectFeature}
+                    onRemoveFile={this.onRemoveFile}
+                    onRemoveFeature={this.onSelectFeature}
+                />
 
                 <div id="mapid"></div>
                 <div>showElevation { ui.showElevation }</div>
