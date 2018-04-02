@@ -182,7 +182,7 @@ class TestMap extends Component {
         map = new Map('mapid', {
             center: center,
             zoom: zoom,
-            maxZoom: 17,
+            maxZoom: 19,
             maxNativeZoom: 14,  // don't request tiles with a zoom > this (cos they don't exist)
             // layers: [baseLayer, topoLayer]
             layers: [baseLayer],
