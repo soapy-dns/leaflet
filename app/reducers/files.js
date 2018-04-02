@@ -62,7 +62,7 @@ export default function (fileState = [], action) {
 
         case UPDATE_FILES:
             // console.log('reducer', action.collections)
-            return action.collections
+            return action.files
 
         case UPDATE_WAYPOINT_POSITION: {}
           newState = Object.assign([], fileState)

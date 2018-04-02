@@ -165,12 +165,12 @@ body {
 }
 
 .collections.top {
-    height: 40vh;
+    height: 35vh;
     overflow-y: auto;
 }
 .collections.bottom {
     overflow-y: auto;
-    height: 40vh;
+    height: 35vh;
 }
 
 #mainmenu {

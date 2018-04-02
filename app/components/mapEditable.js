@@ -7,6 +7,7 @@ import {connect} from 'react-redux'
 import {cloneDeep} from 'lodash'
 import moment from 'moment'
 import {DragDropContext} from 'react-dnd'
+import 'leaflet.pm'
 
 import Api from '../utils/api'
 import Collections from './collections/collections'
@@ -19,7 +20,7 @@ import RemoveFileModal from './collections/remove-file-modal'
 import Elevation from '../components/stats/elevation'
 
 import {selectTrack} from '../actions/tracks'
-import { newFile, addFeatureToFile, updateFiles } from '../actions/files'
+import {newFile, addFeatureToFile, updateFiles} from '../actions/files'
 import {saveMapDetails} from '../actions/current'
 import {toggleElevation, selectFile, selectLatLng, clearLatLng} from '../actions/ui'
 import {getSelectedTrack, getLine, getDistanceBetween2Points, getMillisecsBetween2Points} from '../utils/index'
@@ -112,7 +113,7 @@ function onDrawLineClick(e) {
     currentTrackLayerGroup.addLayer(line)
 }
 
-class MyMap extends Component {
+class TestMap extends Component {
     constructor(props) {
         super(props)
         // this.onLocationError = this.onLocationError.bind(this)
@@ -173,6 +174,8 @@ class MyMap extends Component {
         const baseMaps = {
             "Base": baseLayer,
         }
+        // var map = L.map('map', {drawControl: true}).setView([51.505, -0.09], 13);
+
 
         const center = current.center || [-33.668759325519204, 150.34924333915114]
         const zoom = current.zoom || 14
@@ -182,13 +185,29 @@ class MyMap extends Component {
             maxZoom: 17,
             maxNativeZoom: 14,  // don't request tiles with a zoom > this (cos they don't exist)
             // layers: [baseLayer, topoLayer]
-            layers: [baseLayer]
-
+            layers: [baseLayer],
+            editable: true
         })
         map.on('moveend', function (e) {
             dispatch(saveMapDetails({center: map.getCenter(), zoom: map.getZoom()}))
         })
         map.zoomControl.setPosition('bottomright')
+
+        // define toolbar options
+        var options = {
+            position: 'topleft', // toolbar position, options are 'topleft', 'topright', 'bottomleft', 'bottomright'
+            drawMarker: true, // adds button to draw markers
+            drawPolyline: true, // adds button to draw a polyline
+            drawRectangle: true, // adds button to draw a rectangle
+            drawPolygon: true, // adds button to draw a polygon
+            drawCircle: true, // adds button to draw a cricle
+            cutPolygon: true, // adds button to cut a hole in a polygon
+            editMode: true, // adds button to toggle edit mode for all layers
+            removalMode: true, // adds a button to remove layers
+        };
+
+// add leaflet.pm controls to the map
+        map.pm.addControls(options)
 
         // define overlay layers for control
         // overlayLayers = {
@@ -203,12 +222,26 @@ class MyMap extends Component {
         //add scale
         const scale = new Control.Scale()
         scale.addTo(map)
+        // map.editTools.startPolyline()
+        // map.pm.enableDraw('Line', options);
 
-        // if (!isEmpty(files)) {
-        //
-        // }
+        map.on('pm:created', function (e) { // called on finish
+            console.log('created')
+            // var type = e.layerType,
+            //     layer = e.layer;
+            // drawnItems.addLayer(layer)
+        })
+        // listen to when drawing mode gets enabled
+        map.on('pm:drawstart', function(e) {
+            console.log(e.shape); // the name of the shape being drawn (i.e. 'Circle')
+            console.log(e.workingLayer); // the leaflet layer displayed while drawing
+        })
+        // polygonLayer.on('pm:edit', function(e) {console.log('edit')});
+
+
+
         files.forEach(file => {
-            const layerGroup = getGeoJsonLayer(file.name, file.featureCollection, dispatch)
+            const layerGroup = getGeoJsonLayer(file.name, file.featureCollection, dispatch, map)
             layerGroups.push(layerGroup)
             layerGroup.addTo(map)
         })
@@ -244,11 +277,11 @@ class MyMap extends Component {
     }
 
     /*
-    I couldn't figure out how to clear a single geojson layer group so ended up re-populating from redux (minus the file)
+     I couldn't figure out how to clear a single geojson layer group so ended up re-populating from redux (minus the file)
      */
     removeFile(fileName) {
         console.log('props', this.props)
-        const { files, dispatch } = this.props
+        const {files, dispatch} = this.props
         console.log('remove', fileName)
         const newFiles = files.filter(it => it.name !== fileName)
         dispatch(updateFiles(newFiles))  // update redux
@@ -322,8 +355,45 @@ class MyMap extends Component {
         const featureCollectionName = line.properties.name
 
         // create new geojson layer for this featureCollection, and add to map
-        const newFilesLayer = getGeoJsonLayer(fileName, featureCollection, dispatch)
+        const newFilesLayer = getGeoJsonLayer(fileName, featureCollection, dispatch, map)
         newFilesLayer.addTo(map)
+        // var options = {
+        //     // makes the layer draggable
+        //     draggable: true,
+        //
+        //     // makes the vertices snappable to other layers
+        //     // temporarily disable snapping during drag by pressing ALT
+        //     snappable: true,
+        //
+        //     // distance in pixels that needs to be undercut to trigger snapping
+        //     // default: 30
+        //     snapDistance: 30,
+        //
+        //     // self intersection allowed?
+        //     allowSelfIntersection: true,
+        //
+        //     // disable the removal of markers/vertexes via right click
+        //     preventMarkerRemoval: false,
+        //
+        //     // disable the possibility to edit vertexes
+        //     preventVertexEdit: false,
+        // };
+        // newFilesLayer.pm.enable(options)
+        // newFilesLayer.on('pm:edit', function(e) {console.log('edit')})
+        // // listen to when drawing mode gets disabled
+        // newFilesLayer.on('pm:drawend', function(e) {
+        //     console.log('drawend', e.shape) // the name of the shape being drawn (i.e. 'Circle')
+        // });
+
+// listen to when a new layer is created
+//         newFilesLayer.on('pm:create', function(e) {
+//             console.log('pm.create', e.shape) // the name of the shape being drawn (i.e. 'Circle')
+//             console.log(e.layer) // the leaflet layer created
+//         })
+        // listen to when vertexes are being added or removed from the layer
+        // newFilesLayer.on('pm:vertexadded', function(e) {console.log('vertexadded')})
+        // newFilesLayer.on('pm:vertexremoved', function(e) {console.log('vertexremoved')})
+
 
         // todo - set this to the selected featureCollection, and mark all other featureCollections as not selected.  This could be done in the
 
@@ -632,7 +702,7 @@ class MyMap extends Component {
             //update the map - removes everything, and re-adds
             map.removeLayer(collectionsLayerGroup)
             // //todo update the collection here rather than the
-            collectionsLayerGroup = getGeoJsonLayer(ui.selectedFileName, featureCollection, dispatch)
+            collectionsLayerGroup = getGeoJsonLayer(ui.selectedFileName, featureCollection, dispatch, map)
             collectionsLayerGroup.addTo(map)
 
             dispatch(addFeatureToFile(waypointFeature, ui.selectedFileName))
@@ -706,12 +776,12 @@ class MyMap extends Component {
                     onEdit={this.onEdit}
                 />
 
-                <Collections
-                    onSelectFile={this.onSelectFile}
-                    onSelectFeature={this.onSelectFeature}
-                    onRemoveFile={this.onRemoveFile}
-                    onRemoveFeature={this.onSelectFeature}
-                />
+                {/*<Collections*/}
+                    {/*onSelectFile={this.onSelectFile}*/}
+                    {/*onSelectFeature={this.onSelectFeature}*/}
+                    {/*onRemoveFile={this.onRemoveFile}*/}
+                    {/*onRemoveFeature={this.onSelectFeature}*/}
+                {/*/>*/}
 
                 <div id="mapid"></div>
                 <div>showElevation { ui.showElevation }</div>
@@ -720,7 +790,7 @@ class MyMap extends Component {
     }
 }
 
-MyMap.propTypes = {
+TestMap.propTypes = {
     dispatch: PropTypes.func,
     current: PropTypes.object,
     files: PropTypes.object,
@@ -737,7 +807,7 @@ function mapStateToProps(state) {
     }
 }
 
-export default connect(mapStateToProps)(MyMap)
-// export default connect(mapStateToProps)(DragDropContext(HTML5Backend)(MyMap))  // this should work, altho I put the DragDropContext in the 'main' eleement
+export default connect(mapStateToProps)(TestMap)
+// export default connect(mapStateToProps)(DragDropContext(HTML5Backend)(TestMap))  // this should work, altho I put the DragDropContext in the 'main' eleement
 
 

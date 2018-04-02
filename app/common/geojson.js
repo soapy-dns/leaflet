@@ -36,7 +36,8 @@ export const getWaypointFeature = (name, lat, lng) => {
 /*
  get a geoJSON object from a feature collection
  */
-export const getGeoJsonLayer = (fileName, featureCollection, dispatch) => {
+export const getGeoJsonLayer = (fileName, featureCollection, dispatch, map) => {
+    console.log('getGeoJsonLayer map', map)
     // todo - this is only getting the first line
     const line = featureCollection.features.find(feature => feature.geometry.type === 'LineString')
 
@@ -86,20 +87,57 @@ export const getGeoJsonLayer = (fileName, featureCollection, dispatch) => {
                     // dispatch(selectTrack(track))  // will need to implement something like this, only dispatch isn't known here
 
                     // need to change everything to waypoint
-                    feature.geometry.coordinates.forEach(coord => {
-                        // const marker = L.marker([coord[1], coord[0]]).addTo(map)
-                        // add a Point feature
-                        const feature = getWaypointFeature('TEMP', coord[1], coord[0])
-                        featureCollection.features.push(feature)
+                    // feature.geometry.coordinates.forEach(coord => {
+                    //     // const marker = L.marker([coord[1], coord[0]]).addTo(map)
+                    //     // add a Point feature
+                    //     const feature = getWaypointFeature('TEMP', coord[1], coord[0])
+                    //     featureCollection.features.push(feature)
+                    //
+                    //     //save them?
+                    //
+                    // })
 
-                        //save them?
-
+                    const tempGeojsonObj = {
+                        type: 'featureCollection',
+                        features: [feature]
+                    }
+                    console.log('tempGeojsonObj', tempGeojsonObj)
+                    const geojsonLayer = new GeoJSON([tempGeojsonObj], () => {
+                        //any options
                     })
+                    console.log('geojsonLayer', geojsonLayer)
+                    console.log('map', map)
 
-                    this.setStyle({
-                        weight: 5,
-                        dashArray: '5, 10, 7, 10, 10, 10'
-                    })
+                    geojsonLayer.addTo(map)
+                    var options = {
+                        // makes the layer draggable
+                        draggable: true,
+
+                        // makes the vertices snappable to other layers
+                        // temporarily disable snapping during drag by pressing ALT
+                        snappable: true,
+
+                        // distance in pixels that needs to be undercut to trigger snapping
+                        // default: 30
+                        snapDistance: 30,
+
+                        // self intersection allowed?
+                        allowSelfIntersection: true,
+
+                        // disable the removal of markers/vertexes via right click
+                        preventMarkerRemoval: false,
+
+                        // disable the possibility to edit vertexes
+                        preventVertexEdit: false,
+                    };
+                    geojsonLayer.pm.enable(options)
+
+
+
+                    // this.setStyle({
+                    //     weight: 5,
+                    //     dashArray: '5, 10, 7, 10, 10, 10'
+                    // })
                 })
             }
         }

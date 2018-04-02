@@ -119,7 +119,7 @@ class Collections extends Component {
                 </button>
 
                 <div className="side-panel-top">
-                    <h1>Files</h1>
+                    <h3>Files</h3>
                     <Menu vertical borderless fluid className="collections top">
                         {files.map((file, id) => (
                             <Menu.Item key={id} onClick={(e) => this.onSelectFile(id)}>
@@ -141,7 +141,7 @@ class Collections extends Component {
                 {ui.selectedFileName ? (
                     <div>
                         <div className="side-panel-bottom">
-                            <h1>Features</h1>
+                            <h3>Features</h3>
                             <Menu vertical borderless fluid className="collections bottom">
                                 {features.map((feature, id) => (
                                     <Menu.Item key={id} onClick={(e) => onSelectFeature(id)}>
