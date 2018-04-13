@@ -76,3 +76,6 @@ http://tkrajina.github.io/leaflet-editable-polyline/example1.html
 https://github.com/codeofsumit/leaflet.pm
 
 It seems that rather than using geojson for lines, I'd be better using L.Polylines
+
+id in leaflet layers
+https://stackoverflow.com/questions/34322864/finding-a-specific-layer-in-a-leaflet-layergroup-where-layers-are-polygons

@@ -27,7 +27,6 @@
     "esri-leaflet": "^2.1.1",
     "jquery": "^3.2.1",
     "leaflet": "^1.2.0",
-    "leaflet-draw": "^1.0.2",
     "leaflet.pm": "^0.24.0",
     "leaflet.utm": "0.0.4",
     "lodash": "^4.17.4",

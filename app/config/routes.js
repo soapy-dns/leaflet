@@ -12,8 +12,6 @@ import NotFound from '../views/404'
 import Splash from '../views/splash'
 import Main from '../components/main'
 import Map from '../components/map'
-import TestMap from '../components/mapTest'
-import EditMap from '../components/mapEditable'
 // import Map from '../components/mapbox'
 // import Collections from '../components/collections/collections'
 
@@ -64,8 +62,6 @@ class Routes extends Component {
                         <Route path="/" component={Main}>
                             <IndexRoute component={Map}/>
                             <Route path="files" component={TestContainer} />
-                            <Route path="test" component={TestMap} />
-                            <Route path="edit" component={EditMap} />
 
                         </Route>
                         <Route path="files" component={TestContainer} />

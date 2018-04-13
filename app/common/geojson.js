@@ -1,11 +1,13 @@
 'use strict'
-import {markerIcon} from '../common/icons'
-import {GeoJSON} from 'leaflet'
+import { markerIcon } from '../common/icons'
+import { GeoJSON } from 'leaflet'
 import toGeoJSON from '@mapbox/togeojson'
 import xmldom from 'xmldom'
 const uuidv4 = require('uuid/v4')
 import { updateWaypointPosition } from '../actions/files'
+import { showDrawingMenu, selectLine } from '../actions/ui'
 import utils from './utils'
+import editableLineOptions from '../common/editable-line-options'
 
 const DOMParser = xmldom.DOMParser
 
@@ -29,25 +31,20 @@ export const getWaypointFeature = (name, lat, lng) => {
     return waypointFeature
 }
 
-// const _getLayerGroupObject = (dispatch, line) => (
-//     {
-//
-// })
 /*
  get a geoJSON object from a feature collection
  */
-export const getGeoJsonLayer = (fileName, featureCollection, dispatch, map) => {
-    console.log('getGeoJsonLayer map', map)
-    // todo - this is only getting the first line
+export const getGeoJsonLayer = (fileName, featureCollection, dispatch, map, ui) => {
+    // todo - this is only getting the first line in the collection
     const line = featureCollection.features.find(feature => feature.geometry.type === 'LineString')
 
-    const mouseOut = (e) => {
+    const resetStyle = (e) => {
         console.log('layerGroup', e.target)
         trackLayerGroup.resetStyle(e.target)
     }
 
     const trackLayerGroup = new GeoJSON([featureCollection], {
-        style: function (feature) {
+        style: function(feature) {
             return {
                 color: line.properties.color || 'red',
                 weight: 3,
@@ -57,14 +54,14 @@ export const getGeoJsonLayer = (fileName, featureCollection, dispatch, map) => {
             // console.log('dispatch', dispatch)
             if (!latlng) return
             // console.log('add marker', latlng.lat, latlng.lng)
-            const marker = L.marker(latlng, {icon: markerIcon, draggable: true})
+            const marker = L.marker(latlng, { icon: markerIcon, draggable: true })
             marker.bindPopup(pointFeature.properties.name)
 
-            marker.on('dragend', function (event) {
+            marker.on('dragend', function(event) {
                 const marker = event.target
                 const position = marker.getLatLng()
                 // console.log('position', position)
-                marker.setLatLng(position, {draggable: 'true'})
+                marker.setLatLng(position, { draggable: 'true' })
                 // console.log('featureCollection', featureCollection)
 
                 // marker.setLatLng(new L.LatLng(latlng.lat, latlng.lng),{draggable:'true'});
@@ -73,72 +70,51 @@ export const getGeoJsonLayer = (fileName, featureCollection, dispatch, map) => {
             })
             return marker
         },
-        onEachFeature: function (feature, layer) {
+        onEachFeature: function(feature, layer) {
+            // console.log('layerId', trackLayerGroup.getLayerId(layer))
+            console.log('layerId', layer._leaflet_id)  // not defined at this point
             if (feature.geometry.type === 'LineString') {
-                layer.on('mouseover', function () {
+                layer.on('mouseover', function() {
                     this.setStyle({
                         weight: 5
                     })
                 })
-                layer.on('mouseout', mouseOut)
+                layer.on('mouseout', resetStyle)
 
-                layer.on('click', function () {
-                    layer.off('mouseout', mouseOut)
-                    // dispatch(selectTrack(track))  // will need to implement something like this, only dispatch isn't known here
+                /*
+                 A Function that will be called once for each created Feature, after it has been created and styled.
+                 Useful for attaching events and popups to features. The default is to do nothing with the newly created layers:
+                 */
+                layer.on('click', function() {
+                    layer.off('mouseout', resetStyle)
+                    console.log('onClick - showDrawingMenu', layer._leaflet_id) // todo - can store this
+                    dispatch(showDrawingMenu())
 
-                    // need to change everything to waypoint
-                    // feature.geometry.coordinates.forEach(coord => {
-                    //     // const marker = L.marker([coord[1], coord[0]]).addTo(map)
-                    //     // add a Point feature
-                    //     const feature = getWaypointFeature('TEMP', coord[1], coord[0])
-                    //     featureCollection.features.push(feature)
-                    //
-                    //     //save them?
-                    //
-                    // })
-
-                    const tempGeojsonObj = {
-                        type: 'featureCollection',
-                        features: [feature]
-                    }
-                    console.log('tempGeojsonObj', tempGeojsonObj)
-                    const geojsonLayer = new GeoJSON([tempGeojsonObj], () => {
-                        //any options
-                    })
-                    console.log('geojsonLayer', geojsonLayer)
-                    console.log('map', map)
-
-                    geojsonLayer.addTo(map)
-                    var options = {
-                        // makes the layer draggable
-                        draggable: true,
-
-                        // makes the vertices snappable to other layers
-                        // temporarily disable snapping during drag by pressing ALT
-                        snappable: true,
-
-                        // distance in pixels that needs to be undercut to trigger snapping
-                        // default: 30
-                        snapDistance: 30,
-
-                        // self intersection allowed?
-                        allowSelfIntersection: true,
-
-                        // disable the removal of markers/vertexes via right click
-                        preventMarkerRemoval: false,
-
-                        // disable the possibility to edit vertexes
-                        preventVertexEdit: false,
-                    };
-                    geojsonLayer.pm.enable(options)
+                    // dispatch (selectLine (layer.feature.properties.id))
+                    dispatch(selectLine({ leaflet_id: layer._leaflet_id, id: layer.feature.properties.id }))
 
 
+                    console.log('layer leafletId before edit enable', layer._leaflet_id)
+                    layer.pm.enable(editableLineOptions)
+                    layer.id = 123
+                    console.log('made editable', layer.pm.enabled())
+                    console.log('layer leafletId after edit enable', layer._leaflet_id, 'id', layer.id)
 
-                    // this.setStyle({
-                    //     weight: 5,
-                    //     dashArray: '5, 10, 7, 10, 10, 10'
-                    // })
+                    // TODO.  THIS ACTUALLY SEEMS TO CREATE A NEW LEAFLET LAYER, BUT ONLY AFTER WE HAVE EXITED!!!!!!!
+                    //AND ANYTHING WE ADD TO IT GETS WIPED
+
+                    // layer.pm.disable()
+                    // console.log('made disabled', layer.pm.enabled())
+
                 })
+                // check to see if a line is already selected and if so, make it editable
+                if (ui.lineSelectedIds && layer._leaflet_id === ui.lineSelectedIds.leaflet_id) {
+
+                    // if (layer.feature.properties.id === ui.lineSelected) {
+                    // todo - how come this doesn't work?
+                    layer.pm.enable(editableLineOptions)
+                    console.log('made editable', layer.pm.enabled())
+                }
             }
         }
     })
