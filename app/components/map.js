@@ -169,24 +169,22 @@ class EditMap extends Component {
         const baseLayer = new BasemapLayer ('Gray')
 
         // topo layer
-        // const topoLayer = new TiledMapLayer({
-        //     // url: 'http://maps.six.nsw.gov.au/arcgis/rest/services/public/NSW_Topo_Map/MapServer',
-        //     url: 'http://maps4.six.nsw.gov.au/arcgis/rest/services/sixmaps/LPIMap/MapServer',
-        //     maxZoom: 17,
-        //     maxNativeZoom: 15
-        // })
+        const topoLayer = new TiledMapLayer({
+            // url: 'http://maps.six.nsw.gov.au/arcgis/rest/services/public/NSW_Topo_Map/MapServer',
+            url: 'http://maps4.six.nsw.gov.au/arcgis/rest/services/sixmaps/LPIMap/MapServer',
+            maxZoom: 17,
+            maxNativeZoom: 15
+        })
 
         // satellite image layer
-        // const imageLayer = new TiledMapLayer({
-        //     // url: 'http://maps.six.nsw.gov.au/arcgis/rest/services/public/NSW_Imagery/MapServer'
-        //     url: 'http://maps2.six.nsw.gov.au/arcgis/rest/services/sixmaps/LPI_Imagery_Best/MapServer'
-        // })
+        const imageLayer = new TiledMapLayer({
+            // url: 'http://maps.six.nsw.gov.au/arcgis/rest/services/public/NSW_Imagery/MapServer'
+            url: 'http://maps2.six.nsw.gov.au/arcgis/rest/services/sixmaps/LPI_Imagery_Best/MapServer'
+        })
 
         const baseMaps = {
             "Base": baseLayer,
         }
-        // var map = L.map('map', {drawControl: true}).setView([51.505, -0.09], 13);
-
 
         const center = current.center || [-33.668759325519204, 150.34924333915114]
         const zoom = current.zoom || 14
@@ -195,8 +193,8 @@ class EditMap extends Component {
             zoom: zoom,
             maxZoom: 19,
             maxNativeZoom: 14,  // don't request tiles with a zoom > this (cos they don't exist)
-            // layers: [baseLayer, topoLayer]
-            layers: [baseLayer],
+            layers: [baseLayer, topoLayer],
+            // layers: [baseLayer],
             editable: true
         })
         map.on ('moveend', function(e) {
@@ -206,31 +204,18 @@ class EditMap extends Component {
 
 
         // define overlay layers for control
-        // overlayLayers = {
-        //     "Topo": topoLayer,
-        //     "Satellite": imageLayer
-        // }
+        overlayLayers = {
+            "Topo": topoLayer,
+            "Satellite": imageLayer
+        }
 
         // add control button for layers
-        // layersControl = new Control.Layers(baseMaps, overlayLayers)
-        // layersControl.addTo(map)
+        layersControl = new Control.Layers(baseMaps, overlayLayers)
+        layersControl.addTo(map)
 
         //add scale
         const scale = new Control.Scale ()
         scale.addTo (map)
-
-
-        map.on ('pm:created', function(e) { // called on finish
-            console.log ('created')
-            // var type = e.layerType,
-            //     layer = e.layer;
-            // drawnItems.addLayer(layer)
-        })
-        // listen to when drawing mode gets enabled
-        map.on ('pm:drawstart', function(e) {
-            console.log (e.shape); // the name of the shape being drawn (i.e. 'Circle')
-            console.log (e.workingLayer); // the leaflet layer displayed while drawing
-        })
 
         files.forEach (file => {
             console.log('PROCESSING FILE', file.name)

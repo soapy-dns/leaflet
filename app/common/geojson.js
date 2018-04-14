@@ -1,4 +1,3 @@
-'use strict'
 import { markerIcon } from '../common/icons'
 import { GeoJSON } from 'leaflet'
 import toGeoJSON from '@mapbox/togeojson'
