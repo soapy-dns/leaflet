@@ -62,6 +62,7 @@ class Routes extends Component {
                         <Route path="/" component={Main}>
                             <IndexRoute component={Map}/>
                             <Route path="files" component={TestContainer} />
+
                         </Route>
                         <Route path="files" component={TestContainer} />
                         <Route path="splash" component={Splash}/>

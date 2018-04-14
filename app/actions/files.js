@@ -27,7 +27,7 @@ export const moveFeatureAndOpen = (feature, selectedFileName) => {
 export const UPDATE_FILES = 'file/UPDATE_FILES'
 export const updateFiles = (files) => ({
     type: UPDATE_FILES,
-    collections: files,
+    files: files,
 })
 
 export const MARK_FILE_AS_SAVED = 'file/MARK_FILE_AS_SAVED'

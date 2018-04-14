@@ -8,6 +8,8 @@ import './styles/main.css'
 import 'semantic-ui-css/semantic.min.css'
 import 'leaflet/dist/leaflet.css'  //
 
+import 'leaflet.pm/dist/leaflet.pm.css'
+
 import Routes from './config/routes'
 
 console.log(document.getElementById('app'))

@@ -55,3 +55,27 @@ There are 2 types of data store here.  The map and the redux store.
 The map is the source of truth.  Redux is only used for refreshes / restarts, and for manipulating
 collections / features etc.  The reason for having it this way round, and not having
 redux as the source of truth is because we can make use of leaflets methods eg setBounds etc
+
+
+fullscreen
+https://github.com/brunob/leaflet.fullscreen
+
+mouse coords
+https://github.com/PowerPan/leaflet.mouseCoordinate
+
+antpath
+https://github.com/rubenspgcavalcante/leaflet-ant-path
+
+drawing
+
+leaflet draw plugin.  works ok - adding point to an existing line may be an issue.
+https://leaflet.github.io/Leaflet.draw/docs/leaflet-draw-latest.html#l-draw
+http://www.d3noob.org/2014/01/using-leafletdraw-plugin-for-leafletjs.html
+
+http://tkrajina.github.io/leaflet-editable-polyline/example1.html
+https://github.com/codeofsumit/leaflet.pm
+
+It seems that rather than using geojson for lines, I'd be better using L.Polylines
+
+id in leaflet layers
+https://stackoverflow.com/questions/34322864/finding-a-specific-layer-in-a-leaflet-layergroup-where-layers-are-polygons

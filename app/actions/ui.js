@@ -41,3 +41,24 @@ export const toggleFileSlider = (boolean) => ({
     type: TOGGLE_FILE_SLIDER,
     showFileSlider: boolean
 })
+
+export const SHOW_DRAWING_MENU = 'ui/SHOW_DRAWING_MENU'
+export const showDrawingMenu = () => ({
+    type: SHOW_DRAWING_MENU
+})
+
+export const SHOW_MAIN_MENU = 'ui/SHOW_MAIN_MENU'
+export const showMainMenu = () => ({
+    type: SHOW_MAIN_MENU
+})
+
+export const SELECT_LINE = 'ui/SELECT_LINE'
+export const selectLine = (selectedLinId) => ({
+    type: SELECT_LINE,
+    selectedLinId
+})
+
+export const UNSELECT_LINE = 'ui/UNSELECT_LINE'
+export const unselectLine = () => ({
+    type: UNSELECT_LINE
+})
