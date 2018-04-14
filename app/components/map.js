@@ -10,7 +10,7 @@ import { DragDropContext } from 'react-dnd'
 import 'leaflet.pm'
 
 import Api from '../utils/api'
-// import Collections from './collections/collections'
+import Collections from './collections/collections'
 import MainMenu from './menu/main-menu'
 import DrawingMenu from './menu/drawing-menu'
 import Locate from './locate-modal'
@@ -36,7 +36,6 @@ import { getSelectedTrack, getLine, getDistanceBetween2Points, getMillisecsBetwe
 import { flameIcon, startIcon, markerIcon } from '../common/icons'
 import { geojsonLineMarkerOptions } from '../common/marker-options'
 import { getWaypointFeature, getGeoJsonLayer, getGeoJsonObject } from '../common/geojson'
-// import editableLineOptions from '../common/editable-line-options'
 
 let initialTrack = {
     type: "FeatureCollection",
@@ -55,7 +54,6 @@ let initialTrack = {
 let map
 let overlayLayers
 let layersControl
-// let currentTrack
 let currentTrackLayerGroup
 let collectionsLayerGroup  // features from all featureCollections
 const layerGroups = []
@@ -713,22 +711,9 @@ class EditMap extends Component {
 
     onStopLineEdit() {
         console.log ('onStopLineEdit')
-        const { ui } = this.props
+        const { ui, dispatch } = this.props
 
         if (ui.lineSelectedIds){
-            console.log('line changed should be saved',ui.lineSelectedIds)
-
-            // get leaflet layer
-
-
-            // convert it to geojson.
-
-            // get the geojson stored in redux.
-
-            // swap them.
-
-            // remove the selected line details
-
 
             // there is a layer group for each geojson file.  Inside that there is a layer for every feature
             layerGroups.forEach(layerGroup => {
@@ -736,8 +721,16 @@ class EditMap extends Component {
                 const layers = layerGroup.getLayers ()
                 layers.forEach(layer => {
                     if (layer.id) { // layer id is what I added
-                        layer.pm.disable()
-                        // should also reset the layer, and change the state.  Also don't need to save the _leaflet_id in the state
+                        layer.pm.disable() // disable editing
+                        layerGroup.resetStyle(layer) // reset style back to the original
+                        dispatch(unselectLine()) // update redux as this line is no longer selected for editing
+                        dispatch(showMainMenu())
+                        // todo
+                        // convert it to geojson.
+
+                        // get the geojson stored in redux.
+
+                        // swap them.
                     }
                 })
             })
@@ -793,12 +786,12 @@ class EditMap extends Component {
                 )}
 
 
-                {/*<Collections*/}
-                {/*onSelectFile={this.onSelectFile}*/}
-                {/*onSelectFeature={this.onSelectFeature}*/}
-                {/*onRemoveFile={this.onRemoveFile}*/}
-                {/*onRemoveFeature={this.onSelectFeature}*/}
-                {/*/>*/}
+                <Collections
+                    onSelectFile={this.onSelectFile}
+                    onSelectFeature={this.onSelectFeature}
+                    onRemoveFile={this.onRemoveFile}
+                    onRemoveFeature={this.onSelectFeature}
+                />
 
                 <div id="mapid"></div>
                 <div>showElevation { ui.showElevation }</div>

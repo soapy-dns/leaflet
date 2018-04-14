@@ -50,29 +50,23 @@ export const getGeoJsonLayer = (fileName, featureCollection, dispatch, map, ui) 
                 weight: 3,
             }
         },
+
         pointToLayer: (pointFeature, latlng) => {
-            // console.log('dispatch', dispatch)
             if (!latlng) return
-            // console.log('add marker', latlng.lat, latlng.lng)
             const marker = L.marker(latlng, { icon: markerIcon, draggable: true })
             marker.bindPopup(pointFeature.properties.name)
 
             marker.on('dragend', function(event) {
                 const marker = event.target
                 const position = marker.getLatLng()
-                // console.log('position', position)
                 marker.setLatLng(position, { draggable: 'true' })
-                // console.log('featureCollection', featureCollection)
 
-                // marker.setLatLng(new L.LatLng(latlng.lat, latlng.lng),{draggable:'true'});
-                // map.panTo(new L.LatLng(position.lat, position.lng))
+                // todo - panning? map.panTo(new L.LatLng(position.lat, position.lng))
                 dispatch(updateWaypointPosition(fileName, pointFeature.properties.id, position))
             })
             return marker
         },
         onEachFeature: function(feature, layer) {
-            // console.log('layerId', trackLayerGroup.getLayerId(layer))
-            console.log('layerId', layer._leaflet_id)  // not defined at this point
             if (feature.geometry.type === 'LineString') {
                 layer.on('mouseover', function() {
                     this.setStyle({
@@ -81,36 +75,16 @@ export const getGeoJsonLayer = (fileName, featureCollection, dispatch, map, ui) 
                 })
                 layer.on('mouseout', resetStyle)
 
-                /*
-                 A Function that will be called once for each created Feature, after it has been created and styled.
-                 Useful for attaching events and popups to features. The default is to do nothing with the newly created layers:
-                 */
                 layer.on('click', function() {
                     layer.off('mouseout', resetStyle)
-                    console.log('onClick - showDrawingMenu', layer._leaflet_id) // todo - can store this
+                    console.log('onClick - showDrawingMenu', layer.feature.properties.id)
                     dispatch(showDrawingMenu())
-
-                    // dispatch (selectLine (layer.feature.properties.id))
-                    dispatch(selectLine({ leaflet_id: layer._leaflet_id, id: layer.feature.properties.id }))
-
-
-                    console.log('layer leafletId before edit enable', layer._leaflet_id)
+                    dispatch(selectLine(layer.feature.properties.id))
                     layer.pm.enable(editableLineOptions)
-                    layer.id = 123
-                    console.log('made editable', layer.pm.enabled())
-                    console.log('layer leafletId after edit enable', layer._leaflet_id, 'id', layer.id)
-
-                    // TODO.  THIS ACTUALLY SEEMS TO CREATE A NEW LEAFLET LAYER, BUT ONLY AFTER WE HAVE EXITED!!!!!!!
-                    //AND ANYTHING WE ADD TO IT GETS WIPED
-
-                    // layer.pm.disable()
-                    // console.log('made disabled', layer.pm.enabled())
-
+                    layer.id = layer.feature.properties.id  // todo - do I need this as it is in there all the time?
                 })
                 // check to see if a line is already selected and if so, make it editable
-                if (ui.lineSelectedIds && layer._leaflet_id === ui.lineSelectedIds.leaflet_id) {
-
-                    // if (layer.feature.properties.id === ui.lineSelected) {
+                if (ui.selectedLineId && layer.feature.properties.id === ui.selectedLineId) {
                     // todo - how come this doesn't work?
                     layer.pm.enable(editableLineOptions)
                     console.log('made editable', layer.pm.enabled())

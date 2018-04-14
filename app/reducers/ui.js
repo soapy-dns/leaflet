@@ -38,10 +38,10 @@ export default function (uiState = defaultState, action) {
             return merge(uiState, {menuType: 'drawing'})
 
         case SELECT_LINE:
-            return merge(uiState, {lineSelectedIds: action.lineSelectedIds})
+            return merge(uiState, {selectedLineId: action.selectedLineId})
 
         case UNSELECT_LINE:
-            return merge(uiState, {lineSelectedIds: undefined})
+            return merge(uiState, {selectedLineId: undefined})
 
         default:
             return uiState
