@@ -29,10 +29,19 @@ export const updateFiles = (files) => ({
 })
 
 export const UPDATE_FILE = 'file/UPDATE_FILE'
-export const updateFile = (file) => ({
+export const updateFile = (fileName) => ({
     type: UPDATE_FILE,
-    file: file,
+    file: fileName,
 })
+
+export const REMOVE_FILE = 'file/REMOVE_FILE'
+export const removeFileFromStore = (fileName) => {
+    console.log('removeFileFromStore action', fileName)
+    return {
+        type: REMOVE_FILE,
+        file: fileName
+    }
+}
 
 export const MARK_FILE_AS_SAVED = 'file/MARK_FILE_AS_SAVED'
 export const markFileAsSaved = file => ({

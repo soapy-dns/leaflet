@@ -21,7 +21,12 @@ import RemoveFileModal from './collections/remove-file-modal'
 import Elevation from '../components/stats/elevation'
 
 import { selectTrack } from '../actions/tracks'
-import { newFile, addFeatureToFile, updateFiles, updateFile } from '../actions/files'
+import { newFile,
+    addFeatureToFile,
+    updateFiles,
+    updateFile,
+    removeFileFromStore
+} from '../actions/files'
 import { saveMapDetails } from '../actions/current'
 import {
     toggleElevation,
@@ -226,18 +231,18 @@ class EditMap extends Component {
         })
     }
 
-    /*
-     The source of truth is the redux state.
-     If this changes, we may need to re-render.  However this is expensive, so only re-render when necessary.
-     */
-    shouldComponentUpdate(nextProps, nextState) {
-        // return a boolean value  - add test
-        console.log ('shouldComponentUpdate')
-        return true
-    }
+    // /*
+    //  The source of truth is the redux state.
+    //  If this changes, we may need to re-render.  However this is expensive, so only re-render when necessary.
+    //  */
+    // shouldComponentUpdate(nextProps, nextState) {
+    //     // return a boolean value  - add test
+    //     console.log ('shouldComponentUpdate')
+    //     return true
+    // }
 
     onCancelAction() {
-        console.log ('cancelAction')
+        // console.log ('cancelAction')
         this.setState ({ modal: null })
     }
 
@@ -251,7 +256,7 @@ class EditMap extends Component {
     }
 
     onRemoveFile(fileName) {
-        console.log ('remove', fileName)
+        // console.log ('remove', fileName)
         this.setState ({ modal: 'removeFile' })
     }
 
@@ -259,17 +264,15 @@ class EditMap extends Component {
      I couldn't figure out how to clear a single geojson layer group so ended up re-populating from redux (minus the file)
      */
     removeFile(fileName) {
-        console.log ('props', this.props)
-        const { files, dispatch } = this.props
-        console.log ('remove', fileName)
-        const newFiles = files.filter (it => it.name !== fileName)
-        dispatch (updateFiles (newFiles))  // update redux
+        console.log ('remove file props>', fileName, this.props)
+        const { dispatch } = this.props
+        dispatch (removeFileFromStore (fileName))  // update redux
 
-        // const layerGroups = L.LayerGroup.getLayers()
+        // layerGroups.forEach (layerGroup => {
+        //     console.log ('layer', layerGroup.getLayers ())
+        // })
+        this.setState ({ modal: null })
 
-        layerGroups.forEach (layerGroup => {
-            console.log ('layer', layerGroup.getLayers ())
-        })
 
         // const x = layerGroups.getLayers()
         // remove from map
@@ -318,7 +321,6 @@ class EditMap extends Component {
         this.props.dispatch (toggleElevation (false))
     }
 
-// todo -change newTracksLayer -> newTrackLayer
     /*
      save the FeatureCollection to redux
      That will trigger an update.
@@ -718,7 +720,7 @@ class EditMap extends Component {
                             file.featureCollection.features.splice(featureIndex, 1)
                             file.featureCollection.features.push(geoJson)
 
-                            dispatch(updateFile(file))
+                            dispatch(updateFile(file.name))
                         })
                     }
                 })
