@@ -18,12 +18,12 @@ import AwaitingFunctionality from './awaiting-functionality-modal'
 import LoadTrackModal from './load-track-modal'
 import WaypointModal from './waypoint-modal'
 import RemoveFileModal from './collections/remove-file-modal'
+import RemoveFeatureModal from './collections/remove-feature-modal'
 import Elevation from '../components/stats/elevation'
 
 import { selectTrack } from '../actions/tracks'
 import { newFile,
     addFeatureToFile,
-    updateFiles,
     updateFile,
     removeFileFromStore
 } from '../actions/files'
@@ -152,6 +152,7 @@ class EditMap extends Component {
         this.onRemoveFile = this.onRemoveFile.bind (this)
         this.removeFile = this.removeFile.bind (this)
         this.onRemoveFeature = this.onRemoveFeature.bind (this)
+        this.removeFeature = this.removeFeature.bind(this)
         this.onCancelDraw = this.onCancelDraw.bind (this)
         this.onStopLineEdit = this.onStopLineEdit.bind (this)
         this.drawLine = this.drawLine.bind (this)
@@ -161,14 +162,11 @@ class EditMap extends Component {
 
         this.state = {
             locate: false,
-            // waypointModal: false,
             modal: null
         }
     }
 
     componentDidMount() {
-        // console.log('map - utm>>', utm)
-        console.log ('connect>>', connect)
         const { dispatch, current, ui, files } = this.props
 
         const baseLayer = new BasemapLayer ('Gray')
@@ -256,37 +254,34 @@ class EditMap extends Component {
     }
 
     onRemoveFile(fileName) {
-        // console.log ('remove', fileName)
         this.setState ({ modal: 'removeFile' })
     }
 
-    /*
-     I couldn't figure out how to clear a single geojson layer group so ended up re-populating from redux (minus the file)
-     */
     removeFile(fileName) {
-        console.log ('remove file props>', fileName, this.props)
         const { dispatch } = this.props
-        dispatch (removeFileFromStore (fileName))  // update redux
-
-        // layerGroups.forEach (layerGroup => {
-        //     console.log ('layer', layerGroup.getLayers ())
-        // })
+        dispatch (removeFileFromStore (fileName))
         this.setState ({ modal: null })
-
-
-        // const x = layerGroups.getLayers()
-        // remove from map
-        // files.forEach(file => {
-        //
-        // })
-
-        //remove from redux
     }
 
-    onRemoveFeature(e, featureName) {
-        e.stopPropagation ();
+    onRemoveFeature(featureId) {
+        console.log ('remove feature', featureId)
+        this.setState ({ modal: 'removeFeature' })
+    }
 
-        console.log ('remove feature', featureName)
+    /*
+    removes the feature from the file, and marks the file as altered
+     */
+    removeFeature(featureId) {
+        console.log('removeFeature', featureId)
+        const { dispatch, files } = this.props
+
+        files.forEach(file => {
+            const featureIndex = file.featureCollection.features.findIndex(feature => feature.properties.id === featureId)
+            file.featureCollection.features.splice(featureIndex, 1)
+
+            dispatch(updateFile(file.name)) // need to set as altered
+            this.setState ({ modal: null })
+        })
     }
 
     onEdit() {
@@ -697,7 +692,6 @@ class EditMap extends Component {
     }
 
     onStopLineEdit() {
-        console.log ('onStopLineEdit')
         const { ui, dispatch, files } = this.props
 
         if (ui.selectedLineId){
@@ -730,7 +724,7 @@ class EditMap extends Component {
 
     render() {
         // todo - display all the tracks stored in redux state, and set the bounds to the selected Track
-
+        console.log('modal', this.state.modal)
         const { ui, currentLayer, files, dispatch } = this.props
         return (
             <div id="mapwrap">
@@ -751,6 +745,12 @@ class EditMap extends Component {
                     <RemoveFileModal
                         cancelAction={this.onCancelAction}
                         okAction={this.removeFile}
+                    />
+                ) : null}
+                {(this.state.modal === 'removeFeature') ? (
+                    <RemoveFeatureModal
+                        cancelAction={this.onCancelAction}
+                        okAction={this.removeFeature}
                     />
                 ) : null}
 
@@ -781,7 +781,7 @@ class EditMap extends Component {
                     onSelectFile={this.onSelectFile}
                     onSelectFeature={this.onSelectFeature}
                     onRemoveFile={this.onRemoveFile}
-                    onRemoveFeature={this.onSelectFeature}
+                    onRemoveFeature={this.onRemoveFeature}
                 />
 
                 <div id="mapid"></div>

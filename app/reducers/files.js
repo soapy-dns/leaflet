@@ -69,11 +69,12 @@ export default function(fileState = [], action) {
             return action.files
 
         case UPDATE_FILE:
+            console.log('reducers updateFile')
             newState = Object.assign([], fileState)
 
             foundFile = _getMatchingFile(newState, action.fileName)
             foundFile = action.file
-            foundFile.altered = true
+            console.log('foundFile', foundFile)
 
             return newState
 

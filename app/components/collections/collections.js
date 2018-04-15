@@ -31,9 +31,10 @@ class Collections extends Component {
         this.props.onRemoveFile(fileName)
     }
 
-    onRemoveFeature(e, featureName) {
+    onRemoveFeature(e, featureId) {
         e.stopPropagation()
-        console.log('Collections onRemoveFeature', featureName)
+        console.log('Collections onRemoveFeature', featureId)
+        this.props.onRemoveFeature(featureId)
     }
 
     saveFile(fileName) {
@@ -96,18 +97,17 @@ class Collections extends Component {
 
     render() {
         const {files, ui, onSelectFeature, onRemoveFile, onRemoveFeature} = this.props
-        // console.log('files', files)
         if (isEmpty(files)) return null
 
         const selectedFile = files.find(it => it.name === ui.selectedFileName)
 
-        // console.log('selectedFile', selectedFile)
         const features = []
         if (selectedFile && has(selectedFile, 'featureCollection')) {
             selectedFile.featureCollection.features.map(feature => {
                 features.push({
                     name: feature.properties.name,
-                    type: feature.geometry.type
+                    type: feature.geometry.type,
+                    id: feature.properties.id
                 })
             })
         }
@@ -145,17 +145,18 @@ class Collections extends Component {
                             <Menu vertical borderless fluid className="collections bottom">
                                 {features.map((feature, id) => (
                                     <Menu.Item key={id} onClick={(e) => onSelectFeature(id)}>
-                                        <Feature featureType={feature.type} featureName={feature.name}/>
+                                        <Feature
+                                            featureType={feature.type}
+                                            featureName={feature.name}
+                                        />
                                         <Icon name="delete" color="red" size="large"
-                                              onClick={(e) => this.onRemoveFeature(e, feature.name)}/>
+                                              onClick={(e) => this.onRemoveFeature(e, feature.id)}/>
                                     </Menu.Item>
-
                                 ))}
                             </Menu>
                         </div>
                     </div>
                 ) : null}
-
             </div>
         )
     }

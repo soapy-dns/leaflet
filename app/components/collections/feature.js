@@ -62,7 +62,7 @@ function collect(connect, monitor) {
 Feature.propTypes = {
     featureType: PropTypes.string,
     featureName: PropTypes.string,
-    // collectionName: PropTypes.string,
+    onRemoveFeature: PropTypes.func,
 
     // Injected by React DnD:
     isDragging: PropTypes.bool.isRequired,
