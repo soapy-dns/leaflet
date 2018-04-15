@@ -22,13 +22,11 @@ export default function(fileState = [], action) {
             newState = Object.assign([], fileState)
             console.log('newState', newState)
 
-            // todo - need input for file altered or not.  A newly opened file will be unaltered
-            // A new file as a result of a waypoint being added will be altered
             if (isEmpty(newState)) {
                 // add new collection
                 newState.push({
                     name: action.fileName,
-                    altered: true,
+                    altered: false,
                     featureCollection: action.fileText
                 })
             } else {
@@ -70,6 +68,7 @@ export default function(fileState = [], action) {
 
             foundFile = _getMatchingFile(newState, action.file.name)
             foundFile = action.file
+            foundFile.altered = true
 
             return newState
 

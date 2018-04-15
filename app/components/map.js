@@ -331,7 +331,7 @@ class EditMap extends Component {
 
         // get the name from the lineString
         const line = featureCollection.features.find (it => it.geometry.type === 'LineString')
-        const featureCollectionName = line.properties.name
+        // const featureCollectionName = line.properties.name
 
         // create new geojson layer for this featureCollection, and add to map
         const newFilesLayer = getGeoJsonLayer (fileName, featureCollection, dispatch, map, ui)
@@ -710,12 +710,9 @@ class EditMap extends Component {
                         layerGroup.resetStyle(layer) // reset style back to the original
                         dispatch(unselectLine()) // update redux as this line is no longer selected for editing
                         dispatch(showMainMenu())
-                        // todo
-                        // convert it to geojson.
-                        const geoJson = layer.toGeoJSON()
-                        console.log('layer to geojson', geoJson)
 
                         // update the geojson stored in redux.
+                        const geoJson = layer.toGeoJSON()
                         files.forEach(file => {
                             const featureIndex = file.featureCollection.features.findIndex(feature => feature.properties.id === layer.id)
                             file.featureCollection.features.splice(featureIndex, 1)
