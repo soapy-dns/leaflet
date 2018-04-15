@@ -96,12 +96,12 @@ class Collections extends Component {
 
     render() {
         const {files, ui, onSelectFeature, onRemoveFile, onRemoveFeature} = this.props
-        console.log('files', files)
+        // console.log('files', files)
         if (isEmpty(files)) return null
 
         const selectedFile = files.find(it => it.name === ui.selectedFileName)
 
-        console.log('selectedFile', selectedFile)
+        // console.log('selectedFile', selectedFile)
         const features = []
         if (selectedFile && has(selectedFile, 'featureCollection')) {
             selectedFile.featureCollection.features.map(feature => {

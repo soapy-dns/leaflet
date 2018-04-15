@@ -53,9 +53,9 @@ export const showMainMenu = () => ({
 })
 
 export const SELECT_LINE = 'ui/SELECT_LINE'
-export const selectLine = (selectedLinId) => ({
+export const selectLine = (selectedLineId) => ({
     type: SELECT_LINE,
-    selectedLinId
+    selectedLineId
 })
 
 export const UNSELECT_LINE = 'ui/UNSELECT_LINE'

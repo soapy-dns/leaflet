@@ -20,14 +20,18 @@ export const addFeatureToFile = (feature, selectedFileName) => ({
 export const MOVE_FEATURE_AND_OPEN = 'file/MOVE_FEATURE_AND_OPEN'
 export const moveFeatureAndOpen = (feature, selectedFileName) => {
     // do stuff
-
-
 }
 
 export const UPDATE_FILES = 'file/UPDATE_FILES'
 export const updateFiles = (files) => ({
     type: UPDATE_FILES,
     files: files,
+})
+
+export const UPDATE_FILE = 'file/UPDATE_FILE'
+export const updateFile = (file) => ({
+    type: UPDATE_FILE,
+    file: file,
 })
 
 export const MARK_FILE_AS_SAVED = 'file/MARK_FILE_AS_SAVED'

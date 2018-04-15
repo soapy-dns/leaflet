@@ -38,6 +38,7 @@ export default function (uiState = defaultState, action) {
             return merge(uiState, {menuType: 'drawing'})
 
         case SELECT_LINE:
+            console.log('selectedLineId', action.selectedLineId)
             return merge(uiState, {selectedLineId: action.selectedLineId})
 
         case UNSELECT_LINE:

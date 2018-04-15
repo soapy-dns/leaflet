@@ -1,5 +1,5 @@
 import { isEmpty } from 'lodash'
-import { NEW_FILE, ADD_FEATURE_TO_FILE, UPDATE_FILES, UPDATE_WAYPOINT_POSITION } from '../actions/files'
+import { NEW_FILE, ADD_FEATURE_TO_FILE, UPDATE_FILES, UPDATE_FILE, UPDATE_WAYPOINT_POSITION } from '../actions/files'
 
 
 const _getMatchingFile = (stateObj, fileName) => {
@@ -12,7 +12,7 @@ const _getMatchingFeatureById = (featureCollection, featureId) => {
 
 }
 
-export default function (fileState = [], action) {
+export default function(fileState = [], action) {
     let newState
     let foundFile, foundFeature
     switch (action.type) {
@@ -64,8 +64,18 @@ export default function (fileState = [], action) {
             // console.log('reducer', action.collections)
             return action.files
 
-        case UPDATE_WAYPOINT_POSITION: {}
-          newState = Object.assign([], fileState)
+        case UPDATE_FILE:
+            console.log('update file reducer', action)
+            newState = Object.assign([], fileState)
+
+            foundFile = _getMatchingFile(newState, action.file.name)
+            foundFile = action.file
+
+            return newState
+
+        case UPDATE_WAYPOINT_POSITION: {
+        }
+            newState = Object.assign([], fileState)
 
             foundFile = _getMatchingFile(newState, action.fileName)
             foundFile.altered = true
@@ -79,3 +89,4 @@ export default function (fileState = [], action) {
             return fileState
     }
 }
+

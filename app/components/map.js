@@ -21,7 +21,7 @@ import RemoveFileModal from './collections/remove-file-modal'
 import Elevation from '../components/stats/elevation'
 
 import { selectTrack } from '../actions/tracks'
-import { newFile, addFeatureToFile, updateFiles } from '../actions/files'
+import { newFile, addFeatureToFile, updateFiles, updateFile } from '../actions/files'
 import { saveMapDetails } from '../actions/current'
 import {
     toggleElevation,
@@ -696,9 +696,9 @@ class EditMap extends Component {
 
     onStopLineEdit() {
         console.log ('onStopLineEdit')
-        const { ui, dispatch } = this.props
+        const { ui, dispatch, files } = this.props
 
-        if (ui.lineSelectedIds){
+        if (ui.selectedLineId){
 
             // there is a layer group for each geojson file.  Inside that there is a layer for every feature
             layerGroups.forEach(layerGroup => {
@@ -712,10 +712,17 @@ class EditMap extends Component {
                         dispatch(showMainMenu())
                         // todo
                         // convert it to geojson.
+                        const geoJson = layer.toGeoJSON()
+                        console.log('layer to geojson', geoJson)
 
-                        // get the geojson stored in redux.
+                        // update the geojson stored in redux.
+                        files.forEach(file => {
+                            const featureIndex = file.featureCollection.features.findIndex(feature => feature.properties.id === layer.id)
+                            file.featureCollection.features.splice(featureIndex, 1)
+                            file.featureCollection.features.push(geoJson)
 
-                        // swap them.
+                            dispatch(updateFile(file))
+                        })
                     }
                 })
             })
