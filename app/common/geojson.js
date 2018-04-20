@@ -45,7 +45,7 @@ export const getGeoJsonLayer = (fileName, featureCollection, dispatch, map, ui) 
     const trackLayerGroup = new GeoJSON([featureCollection], {
         style: function(feature) {
             return {
-                color: line.properties.color || 'red',
+                color: line && line.properties.color || 'red',
                 weight: 3,
             }
         },
