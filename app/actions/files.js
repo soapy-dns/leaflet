@@ -31,7 +31,7 @@ export const updateFiles = (files) => ({
 export const UPDATE_FILE = 'file/UPDATE_FILE'
 export const updateFile = (fileName) => ({
     type: UPDATE_FILE,
-    file: fileName,
+    fileName: fileName,
 })
 
 export const REMOVE_FILE = 'file/REMOVE_FILE'

@@ -42,7 +42,7 @@ export default function(fileState = [], action) {
                     // add new collection
                     newState.push({
                         name: action.fileName,
-                        altered: true,
+                        altered: false,
                         featureCollection: action.fileText
                     })
                 } else {
@@ -73,8 +73,10 @@ export default function(fileState = [], action) {
             newState = Object.assign([], fileState)
 
             foundFile = _getMatchingFile(newState, action.fileName)
-            foundFile = action.file
-            console.log('foundFile', foundFile)
+            // foundFile = action.file
+            console.log('foundFile>', foundFile)
+            foundFile.altered = true
+
 
             return newState
 
