@@ -25,10 +25,11 @@ class Collections extends Component {
         this.onRemoveFile = this.onRemoveFile.bind(this)
     }
 
-    onRemoveFile(e, fileName) {
+    onRemoveFile(e, fileId) {
+        console.log('collections -on remove file')
         e.stopPropagation()  // stops higher level events from firing
-        console.log('Collections onRemoveFile', fileName)
-        this.props.onRemoveFile(fileName)
+        console.log('Collections onRemoveFile', fileId)
+        this.props.onRemoveFile(fileId)
     }
 
     onRemoveFeature(e, featureId) {
@@ -91,7 +92,7 @@ class Collections extends Component {
         sourceCollection.altered = true
 
         // update redux
-        dispatch(selectFile(targetFileName))
+        dispatch(selectFile(targetFileName, targetCollection.id)) // todo will ultimately remove the name
         dispatch(updateFiles(clonedConnections))
     }
 
@@ -111,6 +112,7 @@ class Collections extends Component {
                 })
             })
         }
+        files.forEach(it => console.log('fileId', it.id))
 
         return (
             <div id="collections" className={ui.showFileSlider ? "open" : null}>
@@ -132,7 +134,7 @@ class Collections extends Component {
                                     onRemoveFile={this.onRemoveFile}
                                 />
                                 <Icon name="delete" color="red" size="large"
-                                      onClick={(e) => this.onRemoveFile(e, file.name)}/>
+                                      onClick={(e) => this.onRemoveFile(e, file.id)}/>
                             </Menu.Item>
                         ))}
                     </Menu>

@@ -20,7 +20,10 @@ export default function (uiState = defaultState, action) {
             return merge(uiState, { showElevation: action.boolean })
 
         case SELECT_FILE:
-            return merge(uiState, { selectedFileName: action.selectedFileName})
+            const newState = merge(uiState, { selectedFileName: action.selectedFileName})
+            if (!!action.selectedFileName) newState.selectedFileName = null
+
+            return newState
 
         case SELECT_LATLNG:
             return merge(uiState, { selectedLatitude: action.selectedLatitude, selectedLongitude: action.selectedLongitude })

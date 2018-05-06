@@ -1,5 +1,6 @@
 import React, { Component } from 'react'
 import PropTypes from 'prop-types'
+const uuidv4 = require('uuid/v4')
 
 import { Icon } from 'semantic-ui-react'
 
@@ -7,15 +8,15 @@ import { Icon } from 'semantic-ui-react'
 
 class Uploader extends Component {
 
-    constructor(props) {
+    constructor (props) {
         super(props)
         console.log('TrackUploader constructor')
         this.state = {
             // uploaded: false,
-        //     uploading: false,
+            //     uploading: false,
             files: [],
-        //     expectedBytes: 0,
-        //     progressPercent: 0,
+            //     expectedBytes: 0,
+            //     progressPercent: 0,
             success: null,
             error: null
         }
@@ -27,7 +28,7 @@ class Uploader extends Component {
         // this.reset = this.reset.bind(this)
     }
 
-    getCaption(caption) {
+    getCaption (caption) {
         return (
             <span className="caption">
                 {caption}
@@ -35,18 +36,18 @@ class Uploader extends Component {
         )
     }
 
-    gallery() {
+    gallery () {
         if (!this.state.file) return null
         const caption = this.getCaption(this.state.file.name)
 
         return (
             <div>
-                <Icon name="file outline" color="blue" size="large" />{caption}
+                <Icon name="file outline" color="blue" size="large"/>{caption}
             </div>
         )
     }
 
-    uploadFiles(event) {
+    uploadFiles (event) {
         const maxFileSize = '1000000'  // max size 1MB - probably make this smaller
         const maxFileSizeError = 'Each file must be smaller than 1 MB'
         const maxFiles = 1
@@ -73,24 +74,26 @@ class Uploader extends Component {
         // read file into memory
         const reader = new FileReader()
         const filename = uploadedFiles[0].name
+        const fileId = uuidv4() // give file a unique id
+
         reader.onload = (subEvent) => {
-            this.props.onUploaded(subEvent.target.result, filename)
+            this.props.onUploaded(subEvent.target.result, filename, fileId)
         }
         reader.readAsText(uploadedFiles[0])
     }
 
-    render() {
+    render () {
         const { accept } = this.props
         console.log('accept', accept)
         return (<div>
-         <div>
-             {this.gallery()}
-         </div>
+            <div>
+                {this.gallery()}
+            </div>
             {!this.state.file ?
-             (
-                 <input type="file" name="upload" onChange={this.uploadFiles} accept={accept} width="50" />
-             ) : null
-         }
+                (
+                    <input type="file" name="upload" onChange={this.uploadFiles} accept={accept} width="50"/>
+                ) : null
+            }
         </div>)
     }
 }

@@ -1,5 +1,6 @@
 import { isEmpty } from 'lodash'
 import {
+    ADD_FILE,
     NEW_FILE,
     ADD_FEATURE_TO_FILE,
     UPDATE_FILES,
@@ -23,33 +24,55 @@ export default function(fileState = [], action) {
     let newState
     let foundFile, foundFeature
     switch (action.type) {
+        /*
+        should we check for a file of the same name?
+         */
+        case ADD_FILE:
+            console.log('add file', action)
+            newState = Object.assign([], fileState)
+            newState.push({
+                name: action.fileName,
+                id: action.fileId,
+                altered: false,
+                featureCollection: action.fileText
+            })
+
+            return newState
+
         case NEW_FILE:
+            // new file is being called from open file, and when adding a new waypoint - todo - fix it
             console.log('new file', action)
             // todo - need to check for existing matching feature collection
             newState = Object.assign([], fileState)
             console.log('newState', newState)
+            newState.push({
+                name: action.fileName,
+                altered: true,
+                featureCollection: action.fileText
+            })
 
-            if (isEmpty(newState)) {
-                // add new collection
-                newState.push({
-                    name: action.fileName,
-                    altered: false,
-                    featureCollection: action.fileText
-                })
-            } else {
-                foundFile = newState.find(file => (file.name === action.fileName))
-                if (!foundFile) {
-                    // add new collection
-                    newState.push({
-                        name: action.fileName,
-                        altered: false,
-                        featureCollection: action.fileText
-                    })
-                } else {
-                    foundFile.featureCollection = action.fileText
-                    foundFile.altered = true
-                }
-            }
+            // if (isEmpty(newState)) {
+            //     // there are no files at all - this is a brand new file which should be marked as altered so it can be saved
+            //     newState.push({
+            //         name: action.fileName,
+            //         altered: true,
+            //         featureCollection: action.fileText
+            //     })
+            // } else {
+            //     foundFile = newState.find(file => (file.name === action.fileName))
+            //     if (!foundFile) {
+            //         // add new file
+            //         newState.push({
+            //             name: action.fileName,
+            //             altered: false,
+            //             featureCollection: action.fileText
+            //         })
+            //     } else {
+            //         console.log('when would we go in here?')
+            //         // foundFile.featureCollection = action.fileText
+            //         // foundFile.altered = false
+            //     }
+            // }
 
             return newState
 
@@ -83,7 +106,7 @@ export default function(fileState = [], action) {
         case REMOVE_FILE:
             console.log('remove fil')
             newState = Object.assign([], fileState)
-            const fileIndex =  newState.findIndex(it => it.name === action.fileName)
+            const fileIndex = newState.findIndex(it => it.name === action.fileName)
             console.log('X1', fileIndex, action.fileName)
 
             newState.splice(fileIndex, 1)

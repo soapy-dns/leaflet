@@ -1,11 +1,11 @@
-import React, {Component} from 'react'
+import React, { Component } from 'react'
 import PropTypes from 'prop-types'
 import { Button, Modal } from 'semantic-ui-react'
 
 import Uploader from './uploader'
 
 class LoadTrackModal extends Component {
-    constructor(props) {
+    constructor (props) {
         super(props)
         this.state = {
             uploaded: false
@@ -17,17 +17,18 @@ class LoadTrackModal extends Component {
     }
 
     /*
-    performs the ok action on file upload.  No need for submit.  todo - remove submit, or allow changes
+     performs the ok action on file upload.  No need for submit.  todo - remove submit, or allow changes
      */
-    onUploaded(fileText, filename) {
+    onUploaded (fileText, filename, fileId) {
         console.log('onUploaded')
-        this.setState({uploaded: true})
-        this.props.okAction(fileText, filename)
+        this.setState({ uploaded: true })
+
+        this.props.okAction(fileText, filename, fileId)
     }
 
-    onChange(event) {
+    onChange (event) {
         const name = event.target.name
-        this.setState({[name]: event.target.value})
+        this.setState({ [name]: event.target.value })
     }
 
     // onSubmit(event) {
@@ -39,8 +40,8 @@ class LoadTrackModal extends Component {
     //
     // }
 
-    render() {
-        const {cancelAction} = this.props
+    render () {
+        const { cancelAction } = this.props
         console.log('load-track-modal')
         return (
             <Modal size='small' open>

@@ -1,13 +1,14 @@
 import React, { Component } from 'react'
 import L, { Control, Marker, Map, GeoJSON, LayerGroup } from 'leaflet'
 import { BasemapLayer, TiledMapLayer } from 'esri-leaflet'
-import { toLatLng } from 'utm'
+import { toLatLon } from 'utm'
 import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
 import { cloneDeep } from 'lodash'
 import moment from 'moment'
 import { DragDropContext } from 'react-dnd'
 import 'leaflet.pm'
+const uuidv4 = require('uuid/v4')
 
 import Api from '../utils/api'
 import Collections from './collections/collections'
@@ -20,9 +21,12 @@ import WaypointModal from './waypoint-modal'
 import RemoveFileModal from './collections/remove-file-modal'
 import RemoveFeatureModal from './collections/remove-feature-modal'
 import Elevation from '../components/stats/elevation'
+import utils from '../common/utils'
 
 import { selectTrack } from '../actions/tracks'
-import { newFile,
+import {
+    newFile,
+    addFile,
     addFeatureToFile,
     updateFile,
     removeFileFromStore
@@ -40,7 +44,7 @@ import {
 import { getSelectedTrack, getLine, getDistanceBetween2Points, getMillisecsBetween2Points } from '../utils/index'
 import { flameIcon, startIcon, markerIcon } from '../common/icons'
 import { geojsonLineMarkerOptions } from '../common/marker-options'
-import { getWaypointFeature, getGeoJsonLayer, getGeoJsonObject } from '../common/geojson'
+import Geo from '../common/Geo'
 
 let initialTrack = {
     type: "FeatureCollection",
@@ -60,11 +64,12 @@ let map
 let overlayLayers
 let layersControl
 let currentTrackLayerGroup
-let collectionsLayerGroup  // features from all featureCollections
-const layerGroups = []
+const fileLayerGroups = []
+
+let geo
 
 const _getInitialLineGeojsonFeature = (latlng) => {
-    console.log ('_getInitialLineFeature')
+    console.log('_getInitialLineFeature')
     return {
         type: "Feature",
         properties: {
@@ -81,109 +86,114 @@ const _getInitialLineGeojsonFeature = (latlng) => {
 
 // creates line by from the current track geojson (not sure where this is stored now.
 // for each point in a line add a waypoint aswell as a point in a line
-function onDrawLineClick(e) {
-    const currentGeoJson = currentTrackLayerGroup.toGeoJSON ()
+function onDrawLineClick (e) {
+    const currentGeoJson = currentTrackLayerGroup.toGeoJSON()
 
     // get all the Points
-    const pointFeatures = currentGeoJson.features.filter (it => it.geometry.type === 'Point')
+    const pointFeatures = currentGeoJson.features.filter(it => it.geometry.type === 'Point')
 
     // get the one and only line (do we want to restrict to 1 line?)
-    let lineFeature = currentGeoJson.features.find (it => it.geometry.type === 'LineString')
-    if (!lineFeature) lineFeature = _getInitialLineGeojsonFeature (e.latlng)
+    let lineFeature = currentGeoJson.features.find(it => it.geometry.type === 'LineString')
+    if (!lineFeature) lineFeature = _getInitialLineGeojsonFeature(e.latlng)
 
-    pointFeatures.push (waypointFeature)
+    pointFeatures.push(waypointFeature)
 
     //add waypointFeature coords to line
-    lineFeature.geometry.coordinates.push ([e.latlng.lng, e.latlng.lat])
+    lineFeature.geometry.coordinates.push([e.latlng.lng, e.latlng.lat])
 
     // create temp waypoint
-    const points = L.geoJSON (pointFeatures, {
+    const points = L.geoJSON(pointFeatures, {
         // each point will be converted to a marker with the defined options
         pointToLayer: function(feature) {
             const featureLatlng = [feature.geometry.coordinates[1], feature.geometry.coordinates[0]]
             if (feature.properties.type !== "user") {
-                return L.circleMarker (featureLatlng, geojsonLineMarkerOptions);
+                return L.circleMarker(featureLatlng, geojsonLineMarkerOptions);
             } else {
-                return L.marker (featureLatlng, markerIcon)
+                return L.marker(featureLatlng, markerIcon)
             }
         }
     })
-    const line = L.geoJSON (lineFeature, {
+    const line = L.geoJSON(lineFeature, {
         style: function(feature) {
             return { color: feature.properties.color };
         },
         onEachFeature: function(feature, layer) {
             if (feature.properties && feature.properties.name) {
-                layer.bindPopup (feature.properties.name);
+                layer.bindPopup(feature.properties.name);
             }
         }
     })
 
     // clear current track group layer before re-adding
-    currentTrackLayerGroup.clearLayers ()
+    currentTrackLayerGroup.clearLayers()
 
     // add to group
-    currentTrackLayerGroup.addLayer (points)
-    currentTrackLayerGroup.addLayer (line)
+    currentTrackLayerGroup.addLayer(points)
+    currentTrackLayerGroup.addLayer(line)
 }
 
 class EditMap extends Component {
-    constructor(props) {
-        super (props)
+    constructor (props) {
+        super(props)
         // this.onLocationError = this.onLocationError.bind(this)
         // this.onLocationFound = this.onLocationFound.bind(this)
-        this.onCancelAction = this.onCancelAction.bind (this)
-        this.showAwaitingFunctionalityModal = this.showAwaitingFunctionalityModal.bind (this)
-        this.showLocateModal = this.showLocateModal.bind (this)
-        this.showOpenFileModal = this.showOpenFileModal.bind (this)
-        this.onLocate = this.onLocate.bind (this)
-        this.onOpenFile = this.onOpenFile.bind (this)
-        this.centreOnCurrentLocation = this.centreOnCurrentLocation.bind (this)
-        this.addWaypoint = this.addWaypoint.bind (this)
-        this.addWaypointOnClick = this.addWaypointOnClick.bind (this)
+        this.onCancelAction = this.onCancelAction.bind(this)
+        this.showAwaitingFunctionalityModal = this.showAwaitingFunctionalityModal.bind(this)
+        this.showLocateModal = this.showLocateModal.bind(this)
+        this.showOpenFileModal = this.showOpenFileModal.bind(this)
+        this.onLocate = this.onLocate.bind(this)
+        this.onOpenFile = this.onOpenFile.bind(this)
+        this.centreOnCurrentLocation = this.centreOnCurrentLocation.bind(this)
+        this.addWaypoint = this.addWaypoint.bind(this)
+        this.addWaypointOnClick = this.addWaypointOnClick.bind(this)
 
-        this.getMajorIncidents = this.getMajorIncidents.bind (this)
-        this.autoCorrectTrack = this.autoCorrectTrack.bind (this)
-        this.showElevationPlot = this.showElevationPlot.bind (this)
-        this.hideElevationPlot = this.hideElevationPlot.bind (this)
-        this.onSelectFile = this.onSelectFile.bind (this)
-        this.onSelectFeature = this.onSelectFeature.bind (this)
-        this.onEdit = this.onEdit.bind (this)
-        this.onRemoveFile = this.onRemoveFile.bind (this)
-        this.removeFile = this.removeFile.bind (this)
-        this.onRemoveFeature = this.onRemoveFeature.bind (this)
+        this.getMajorIncidents = this.getMajorIncidents.bind(this)
+        this.autoCorrectTrack = this.autoCorrectTrack.bind(this)
+        this.showElevationPlot = this.showElevationPlot.bind(this)
+        this.hideElevationPlot = this.hideElevationPlot.bind(this)
+        this.onSelectFile = this.onSelectFile.bind(this)
+        this.onSelectFeature = this.onSelectFeature.bind(this)
+        this.onEdit = this.onEdit.bind(this)
+        this.onRemoveFile = this.onRemoveFile.bind(this)
+        this.removeFile = this.removeFile.bind(this)
+        this.onRemoveFeature = this.onRemoveFeature.bind(this)
         this.removeFeature = this.removeFeature.bind(this)
-        this.onCancelDraw = this.onCancelDraw.bind (this)
-        this.onStopLineEdit = this.onStopLineEdit.bind (this)
-        this.drawLine = this.drawLine.bind (this)
-        this.stopDrawLine = this.stopDrawLine.bind (this)
+        this.onCancelDraw = this.onCancelDraw.bind(this)
+        this.onStopLineEdit = this.onStopLineEdit.bind(this)
+        this.drawLine = this.drawLine.bind(this)
+        this.stopDrawLine = this.stopDrawLine.bind(this)
 
-        this.waypointModal = this.waypointModal.bind (this)
+        this.waypointModal = this.waypointModal.bind(this)
 
         this.state = {
             locate: false,
-            modal: null
+            modal: null,
+            removeFileId: null
         }
+
     }
 
-    componentDidMount() {
+    componentDidMount () {
         const { dispatch, current, ui, files } = this.props
 
-        const baseLayer = new BasemapLayer ('Gray')
+        geo = new Geo(dispatch)
+
+
+        const baseLayer = new BasemapLayer('Gray')
 
         // topo layer
-        const topoLayer = new TiledMapLayer({
-            // url: 'http://maps.six.nsw.gov.au/arcgis/rest/services/public/NSW_Topo_Map/MapServer',
-            url: 'http://maps4.six.nsw.gov.au/arcgis/rest/services/sixmaps/LPIMap/MapServer',
-            maxZoom: 17,
-            maxNativeZoom: 15
-        })
+        // const topoLayer = new TiledMapLayer({
+        //     // url: 'http://maps.six.nsw.gov.au/arcgis/rest/services/public/NSW_Topo_Map/MapServer',
+        //     url: 'http://maps4.six.nsw.gov.au/arcgis/rest/services/sixmaps/LPIMap/MapServer',
+        //     maxZoom: 17,
+        //     maxNativeZoom: 15
+        // })
 
         // satellite image layer
-        const imageLayer = new TiledMapLayer({
-            // url: 'http://maps.six.nsw.gov.au/arcgis/rest/services/public/NSW_Imagery/MapServer'
-            url: 'http://maps2.six.nsw.gov.au/arcgis/rest/services/sixmaps/LPI_Imagery_Best/MapServer'
-        })
+        // const imageLayer = new TiledMapLayer({
+        //     // url: 'http://maps.six.nsw.gov.au/arcgis/rest/services/public/NSW_Imagery/MapServer'
+        //     url: 'http://maps2.six.nsw.gov.au/arcgis/rest/services/sixmaps/LPI_Imagery_Best/MapServer'
+        // })
 
         const baseMaps = {
             "Base": baseLayer,
@@ -191,41 +201,41 @@ class EditMap extends Component {
 
         const center = current.center || [-33.668759325519204, 150.34924333915114]
         const zoom = current.zoom || 14
-        map = new Map ('mapid', {
+        map = new Map('mapid', {
             center: center,
             zoom: zoom,
             maxZoom: 19,
             maxNativeZoom: 14,  // don't request tiles with a zoom > this (cos they don't exist)
-            layers: [baseLayer, topoLayer],
-            // layers: [baseLayer],
+            // layers: [baseLayer, topoLayer],
+            layers: [baseLayer],
             editable: true
         })
-        map.on ('moveend', function(e) {
-            dispatch (saveMapDetails ({ center: map.getCenter (), zoom: map.getZoom () }))
+        map.on('moveend', function(e) {
+            dispatch(saveMapDetails({ center: map.getCenter(), zoom: map.getZoom() }))
         })
-        map.zoomControl.setPosition ('bottomright')
+        map.zoomControl.setPosition('bottomright')
 
 
         // define overlay layers for control
-        overlayLayers = {
-            "Topo": topoLayer,
-            "Satellite": imageLayer
-        }
+        // overlayLayers = {
+        //     "Topo": topoLayer,
+        //     "Satellite": imageLayer
+        // }
 
         // add control button for layers
-        layersControl = new Control.Layers(baseMaps, overlayLayers)
-        layersControl.addTo(map)
+        // layersControl = new Control.Layers(baseMaps, overlayLayers)
+        // layersControl.addTo(map)
 
         //add scale
-        const scale = new Control.Scale ()
-        scale.addTo (map)
+        const scale = new Control.Scale()
+        scale.addTo(map)
 
-        files.forEach (file => {
+        files.forEach(file => {
             console.log('PROCESSING FILE', file.name)
-            const layerGroup = getGeoJsonLayer (file.name, file.featureCollection, dispatch, map, ui)
+            const layerGroup = geo.getGeoJsonLayer(file.name, file.id, file.featureCollection.features, ui)
 
-            layerGroups.push (layerGroup)
-            layerGroup.addTo (map)
+            // fileLayerGroups.push(layerGroup)
+            layerGroup.addTo(map)
         })
     }
 
@@ -239,39 +249,52 @@ class EditMap extends Component {
     //     return true
     // }
 
-    onCancelAction() {
+    onCancelAction () {
         // console.log ('cancelAction')
-        this.setState ({ modal: null })
+        this.setState({ modal: null })
     }
 
     /*
      convert form data to lat / long and move the map to that point (and turn off the modal)
      */
-    onLocate(locateData) {
-        const { latitude, longitude } = toLatLon (locateData.easting, locateData.northing, locateData.zone, undefined, false)
-        map.panTo (new L.LatLng (latitude, longitude))
-        this.setState ({ modal: null })
+    onLocate (locateData) {
+        const { latitude, longitude } = toLatLon(locateData.easting, locateData.northing, locateData.zone, undefined, false)
+        map.panTo(new L.LatLng(latitude, longitude))
+        this.setState({ modal: null })
     }
 
-    onRemoveFile(fileName) {
-        this.setState ({ modal: 'removeFile' })
+    onRemoveFile (fileId) {
+        this.setState({ modal: 'removeFile', removeFileId: fileId })
     }
 
-    removeFile(fileName) {
-        const { dispatch } = this.props
-        dispatch (removeFileFromStore (fileName))
-        this.setState ({ modal: null })
+    removeFile () {
+        const { dispatch, ui } = this.props
+
+        dispatch(removeFileFromStore(this.state.removeFileId))
+
+        // clear selected filename in redux
+        if (ui.selectedFileId === this.state.removeFileId) dispatch(selectFile(null, null))
+
+        map.eachLayer(layer => {
+            console.log('layer.id', layer.id)
+            console.log('fileId', this.state.removeFileId)
+            if (layer.id === this.state.removeFileId) map.removeLayer(layer)
+        })
+
+        this.setState({ modal: null, removeFileId: null})
+
+        // todo - removes from the collections, but not from the map
     }
 
-    onRemoveFeature(featureId) {
-        console.log ('remove feature', featureId)
-        this.setState ({ modal: 'removeFeature' })
+    onRemoveFeature (featureId) {
+        console.log('remove feature', featureId)
+        this.setState({ modal: 'removeFeature' })
     }
 
     /*
-    removes the feature from the file, and marks the file as altered
+     removes the feature from the file, and marks the file as altered
      */
-    removeFeature(featureId) {
+    removeFeature (featureId) {
         console.log('removeFeature', featureId)
         const { dispatch, files } = this.props
 
@@ -280,81 +303,80 @@ class EditMap extends Component {
             file.featureCollection.features.splice(featureIndex, 1)
 
             dispatch(updateFile(file.name)) // need to set as altered
-            this.setState ({ modal: null })
+            this.setState({ modal: null })
         })
     }
 
-    onEdit() {
-        console.log ('onEdit')
+    onEdit () {
+        console.log('onEdit')
     }
 
-    showLocateModal(e) {
-        console.log ('showLocateModal', e)
-        this.setState ({ modal: 'locate' })
+    showLocateModal (e) {
+        console.log('showLocateModal', e)
+        this.setState({ modal: 'locate' })
     }
 
-    showAwaitingFunctionalityModal() {
-        this.setState ({ modal: 'awaitingFunctionality' })
+    showAwaitingFunctionalityModal () {
+        this.setState({ modal: 'awaitingFunctionality' })
     }
 
     /*
      show open track modal
      */
-    showOpenFileModal() {
-        console.log ('showOpenFile')
-        this.setState ({ modal: 'openTrack' })
+    showOpenFileModal () {
+        console.log('showOpenFile')
+        this.setState({ modal: 'openTrack' })
     }
 
-    showElevationPlot() {
-        console.log ('show elevation')
-        this.props.dispatch (toggleElevation (true))
+    showElevationPlot () {
+        console.log('show elevation')
+        this.props.dispatch(toggleElevation(true))
         // todo think I need to update
     }
 
-    hideElevationPlot() {
-        console.log ('show elevation')
-        this.props.dispatch (toggleElevation (false))
+    hideElevationPlot () {
+        console.log('show elevation')
+        this.props.dispatch(toggleElevation(false))
     }
 
     /*
      save the FeatureCollection to redux
      That will trigger an update.
      */
-    onOpenFile(fileText, fileName, colour) {
+    onOpenFile (fileText, fileName, fileId) {
         const { dispatch, ui } = this.props
 
-        const featureCollection = getGeoJsonObject (fileText, fileName)
-        dispatch (newFile (featureCollection, fileName))
+        const featureCollection = geo.getGeoJsonObject(fileText, fileName)
 
         // get the name from the lineString
-        const line = featureCollection.features.find (it => it.geometry.type === 'LineString')
-        // const featureCollectionName = line.properties.name
+        const line = featureCollection.features.find(it => it.geometry.type === 'LineString')
 
-        // create new geojson layer for this featureCollection, and add to map
-        const newFilesLayer = getGeoJsonLayer (fileName, featureCollection, dispatch, map, ui)
-        newFilesLayer.addTo (map)
-
-        // todo - set this to the selected featureCollection, and mark all other featureCollections as not selected.  This could be done in the
+        const newFilesLayer = geo.getGeoJsonLayer(fileName, fileId, featureCollection.features, ui)
+        newFilesLayer.addTo(map)
 
         // set bounds to fit this new layer
-        map.fitBounds (newFilesLayer.getBounds ())
+        map.fitBounds(newFilesLayer.getBounds())
+
+        // add to redux
+        dispatch(addFile(featureCollection, fileName, fileId))
+        dispatch(selectFile(fileName, fileId))
 
         // turn modal off
-        this.setState ({ modal: null })
+        this.setState({ modal: null })
     }
 
-    getMajorIncidents() {
+    getMajorIncidents () {
         // todo - move to redux
         //https://stackoverflow.com/questions/43871637/no-access-control-allow-origin-header-is-present-on-the-requested-resource-whe
         // flames = https://assets-cdn.github.com/images/icons/emoji/unicode/1f525.png
-        Api.getMajorIncidents ().then (data => {
-            console.log ('MAJOR INCIDENTS - %J', data)
+        Api.getMajorIncidents().then(data => {
+            console.log('MAJOR INCIDENTS - %J', data)
             // create waypoint
-            const majorIncidents = L.geoJSON (data.data, {
+            const majorIncidents = L.geoJSON(data.data, {
                 // each point will be converted to a marker with the defined options
                 pointToLayer: function(feature, latlng) {
                     // return L.circleMarker(e.latlng, geojsonMarkerOptions);
-                    return L.marker (latlng, { icon: flameIcon })
+                    return L.marker(latlng, { icon: flameIcon })
                     // L.marker([51.5, -0.09], {icon: greenIcon}).addTo(map);
 
                 },
@@ -364,7 +386,7 @@ class EditMap extends Component {
                 // }
                 onEachFeature: function(feature, layer) {
                     if (feature.properties && feature.properties.title) {
-                        layer.bindPopup (feature.properties.title);
+                        layer.bindPopup(feature.properties.title);
                     }
                 }
             })
@@ -373,48 +395,48 @@ class EditMap extends Component {
             overlayLayers['Major Incidents'] = majorIncidents
 
             // add track layer to layer control
-            layersControl.addOverlay (majorIncidents, 'Major Incidents')
+            layersControl.addOverlay(majorIncidents, 'Major Incidents')
 
-            majorIncidents.addTo (map)
+            majorIncidents.addTo(map)
             // dispatch(contactFormSuccess());
-        }).catch ((err) => {
-            console.log ('ERROR', err)
+        }).catch((err) => {
+            console.log('ERROR', err)
             // dispatch(contactFormFailed(err.message));
         });
     }
 
-    autoCorrectTrack() {
+    autoCorrectTrack () {
         const { tracks } = this.props
         // find the selected track
-        const selectedTrack = getSelectedTrack (tracks)
+        const selectedTrack = getSelectedTrack(tracks)
         // console.log('selectedTrack', selectedTrack)
-        const line = getLine (selectedTrack)
+        const line = getLine(selectedTrack)
         // console.log('line', line)
-        const coordinates = cloneDeep (line.geometry.coordinates)
-        const coordTimes = cloneDeep (line.properties.coordTimes)
+        const coordinates = cloneDeep(line.geometry.coordinates)
+        const coordTimes = cloneDeep(line.properties.coordTimes)
 
         // console.log('coordinates', coordinates)
-        console.log ('coordTimes', coordTimes)
+        console.log('coordTimes', coordTimes)
         const distances = []
         const limit = coordinates.length - 1
         for (let i = 0; i < limit; i++) {
-            distances.push (getDistanceBetween2Points (coordinates[i], coordinates[i + 1]))
+            distances.push(getDistanceBetween2Points(coordinates[i], coordinates[i + 1]))
         }
-        console.log ('distances', distances)
+        console.log('distances', distances)
 
         const times = []
         for (let i = 0; i < limit; i++) {
-            times.push (getMillisecsBetween2Points (coordTimes[i], coordTimes[i + 1]))
+            times.push(getMillisecsBetween2Points(coordTimes[i], coordTimes[i + 1]))
         }
 
         const speeds = []
-        console.log ('times', times)
+        console.log('times', times)
         const numberOfElements = distances.length - 1
         for (let i = 0; i < numberOfElements; i++) {
             // time in ms, distance m, convert to km / hour
-            speeds.push (distances[i] * 3600 / times[i])
+            speeds.push(distances[i] * 3600 / times[i])
         }
-        console.log ('speeds', speeds)
+        console.log('speeds', speeds)
 
         const maxSpeed = 3 // want to make variable
         const minSpeed = 2
@@ -423,28 +445,28 @@ class EditMap extends Component {
 
             // remove coordinates and times where there was no movement.
             if (speeds[i] < minSpeed || speeds[i] > 10) {
-                distances.splice (i, 1)
-                times.splice (i, 1)
-                coordinates.splice (i + 1, 1)
-                coordTimes.splice (i + 1, 1)
+                distances.splice(i, 1)
+                times.splice(i, 1)
+                coordinates.splice(i + 1, 1)
+                coordTimes.splice(i + 1, 1)
             } else {
-                updatedSpeeds.push (speeds[i])
+                updatedSpeeds.push(speeds[i])
             }
         }
 
-        console.log ('new speeds', updatedSpeeds)
-        console.log ('new distances', distances)
-        console.log ('new times', times)
+        console.log('new speeds', updatedSpeeds)
+        console.log('new distances', distances)
+        console.log('new times', times)
 
         // now build a new track
-        const newLine = cloneDeep (line)
+        const newLine = cloneDeep(line)
         newLine.geometry.coordinates = coordinates
         newLine.properties.coordTimes = coordTimes
 
         // todo - copy over other features
         let newtracksLayer
         // create new geojson layer for this track
-        newtracksLayer = new GeoJSON ([newLine], {
+        newtracksLayer = new GeoJSON([newLine], {
             style: function(feature) {
                 return {
                     // color: line.properties.color || 'red',
@@ -453,19 +475,19 @@ class EditMap extends Component {
                 };
             },
             onEachFeature: function(feature, layer) {
-                layer.on ('mouseover', function() {
-                    this.setStyle ({
+                layer.on('mouseover', function() {
+                    this.setStyle({
                         weight: 5
                     })
                 })
-                layer.on ('mouseout', function() {
-                    newtracksLayer.resetStyle (this)
+                layer.on('mouseout', function() {
+                    newtracksLayer.resetStyle(this)
                 })
-                layer.on ('click', function() {
-                    console.log ('select3')
-                    layer.off (mouseout, mouseout ())
-                    dispatch (selectTrack (newtracksLayer))
-                    this.setStyle ({
+                layer.on('click', function() {
+                    console.log('select3')
+                    layer.off(mouseout, mouseout())
+                    dispatch(selectTrack(newtracksLayer))
+                    this.setStyle({
                         weight: 5,
                         dashArray: '5, 10, 7, 10, 10, 10'
                     })
@@ -478,10 +500,10 @@ class EditMap extends Component {
         overlayLayers[trackName] = newtracksLayer
 
         // add track layer to layer control
-        layersControl.addOverlay (newtracksLayer, trackName)
+        layersControl.addOverlay(newtracksLayer, trackName)
 
 
-        console.log ('autocorrect the current track')
+        console.log('autocorrect the current track')
         // const currentGeoJson = currentTrackLayerGroup.toGeoJSON()
         // https://github.com/hypertrack/time-aware-polyline-js/blob/master/src/polyline.js
 
@@ -526,46 +548,46 @@ class EditMap extends Component {
         //check that there are times in the track
     }
 
-    centreOnCurrentLocation() {
-        map.locate ({ setView: true })
-        map.on ('locationerror', onLocationError)
-        map.on ('locationfound', onLocationFound)
+    centreOnCurrentLocation () {
+        map.locate({ setView: true })
+        map.on('locationerror', onLocationError)
+        map.on('locationfound', onLocationFound)
 
-        function onLocationError(e) {
-            alert (e.message)
+        function onLocationError (e) {
+            alert(e.message)
         }
 
-        function onLocationFound(e) {
+        function onLocationFound (e) {
             // console.log('onLocation found', e)
             var radius = e.accuracy / 2
             // console.log(`you are within ${radius} meters from this point`)
 
 
-            L.circle (e.latlng, {
+            L.circle(e.latlng, {
                 color: '#3ad',
                 fillColor: '#30f',
                 fillOpacity: 0.5,
                 radius
-            }).addTo (map).bindPopup ("You are located within this circle").openPopup ()
+            }).addTo(map).bindPopup("You are located within this circle").openPopup()
         }
     }
 
     /*
      remove crosshairs cursor and click functionality
      */
-    stopDrawLine() {
-        L.DomUtil.removeClass (map._container, 'leaflet-crosshair')
-        map.off ('click', onDrawLineClick)
+    stopDrawLine () {
+        L.DomUtil.removeClass(map._container, 'leaflet-crosshair')
+        map.off('click', onDrawLineClick)
     }
 
     /*
      Stop drawing the line without saving any changes
      This means removing the drawing menu and not showing the editable waypoints of the track.
      */
-    onCancelDraw() {
+    onCancelDraw () {
         // need to know which line we are dealing with, so this has be be saved on clicking the track to start drawing
-        this.props.dispatch (showMainMenu ())
-        this.props.dispatch (unselectLine ())
+        this.props.dispatch(showMainMenu())
+        this.props.dispatch(unselectLine())
         // trackLayerGroup.pm.disable()
         // also need to remove waypoints and stuff from the line being edited
     }
@@ -575,12 +597,12 @@ class EditMap extends Component {
      change cursor and add click functionality
      // todo - may change to use pm
      */
-    drawLine() {
+    drawLine () {
         const { dispatch } = this.props
-        console.log ('drawLine')
-        L.DomUtil.addClass (map._container, 'leaflet-crosshair')
-        map.on ('click', onDrawLineClick)
-        dispatch (showDrawingMenu ())
+        console.log('drawLine')
+        L.DomUtil.addClass(map._container, 'leaflet-crosshair')
+        map.on('click', onDrawLineClick)
+        dispatch(showDrawingMenu())
     }
 
     /*
@@ -589,29 +611,29 @@ class EditMap extends Component {
 
      open the modal for adding / modifying details of the waypoint
      */
-    waypointModal() {
+    waypointModal () {
         // change cursor to crosshairs
-        L.DomUtil.addClass (map._container, 'leaflet-crosshair')
+        L.DomUtil.addClass(map._container, 'leaflet-crosshair')
 
-        map.on ('click', this.addWaypointOnClick)
+        map.on('click', this.addWaypointOnClick)
     }
 
     /*
      waypoint has been selected.  Store its details in state, update the cursor, and remove the listener
      */
-    addWaypointOnClick(e) {
+    addWaypointOnClick (e) {
         const { dispatch } = this.props
 
         // save latlng
-        dispatch (selectLatLng (e.latlng.lat, e.latlng.lng))
+        dispatch(selectLatLng(e.latlng.lat, e.latlng.lng))
 
         //open waypont modal
-        this.setState ({ modal: 'waypoint' })
+        this.setState({ modal: 'waypoint' })
 
         // turn off waypoint select
-        L.DomUtil.removeClass (map._container, 'leaflet-crosshair')
+        L.DomUtil.removeClass(map._container, 'leaflet-crosshair')
 
-        map.off ('click', this.addWaypointOnClick)
+        map.off('click', this.addWaypointOnClick)
     }
 
     /*
@@ -628,78 +650,71 @@ class EditMap extends Component {
      solution
      we never update the map directly - it always comes from the state
      */
-    addWaypoint(featureData) {
+    addWaypoint (featureData) {
         const { dispatch, ui, files } = this.props
 
-        const waypointFeature = getWaypointFeature (featureData.pointName, ui.selectedLatitude, ui.selectedLongitude)
+        const waypointFeature = geo.getWaypointFeature(featureData.pointName, ui.selectedLatitude, ui.selectedLongitude)
 
-        if (!ui.selectedFileName) {
-            // else {
-            // add to selected collection
-            this.setState ({ modal: null })
+        console.log('ui', ui)
+        if (ui.selectedFileName) {
+            this.setState({ modal: null })
 
-            // update the map
-            // get all the features from all collections and add them as 1 single layer
-            // - this is so we can simply remove the lot before re-adding.
-            let features = []
-            files.forEach (it => {
-                features = features.concat (it.featureCollection.features)
-            })
+            // find the file we are dealing with
+            const foundFile = utils.getFileByName(files, ui.selectedFileName)
 
-            features.push (waypointFeature)  // add the new feature
-            const featureCollection = {
-                features  // don't think I need to put in the type
-            }
+            // add the new waypoint to the features
+            const fileFeatures = Object.assign([], foundFile.featureCollection)
+            fileFeatures.push(waypointFeature)
 
-            // todo - here we are using redux as the source of truth. change?
-            // todo - do we want to have a different layer group for each file
-            // clicking on a collection could then centre on it.
-            //update the map - removes everything, and re-adds
-            map.removeLayer (collectionsLayerGroup)
-            // //todo update the collection here rather than the
-            collectionsLayerGroup = getGeoJsonLayer (ui.selectedFileName, featureCollection, dispatch, map, ui)
-            collectionsLayerGroup.addTo (map)
+            const layerGroup = geo.getGeoJsonLayer(foundFile.name, foundFile.id, fileFeatures, ui)
 
-            dispatch (addFeatureToFile (waypointFeature, ui.selectedFileName))
-            dispatch (clearLatLng ())  // clear the selected lat lng whatever that is
-            // }
+            layerGroup.addTo(map)
+
+            // ADD TO REDUX
+            dispatch(addFeatureToFile(waypointFeature, ui.selectedFileName))
+            dispatch(clearLatLng())  // clear the selected lat lng (for resetting based on the waypoint?)
         } else {
-            // need to select collection
-            if (files.length === 0) {
-                // add new file - but then want to return here - how to do this?
-                // todo - create new file and add waypoint
-                const fileName = moment ().format ('YYYY-MM-DD hh:mm:ss')
-                const featureCollection = {
-                    features: [waypointFeature]
-                }
-                dispatch (newFile (featureCollection, fileName))
+            // create new file and add waypoint
+            const fileName = moment().format('YYYY-MM-DD hh:mm:ss')
+            const featureCollection = {
+                features: [waypointFeature]
             }
+            const fileId = uuidv4() // give file a unique id
+
+            const newFilesLayer = geo.getGeoJsonLayer(fileName, fileId, featureCollection.features, ui)
+            newFilesLayer.addTo(map)
+
+            // ADD TO REDUX
+            dispatch(newFile(featureCollection, fileName))
+            dispatch(selectFile(fileName, fileId))
+            this.setState({ modal: null })
         }
     }
 
     /*
 
      */
-    onSelectFile(fileName) {
-        console.log ('onSelectFile', fileName)
-        this.props.dispatch (selectFile (fileName))
+    onSelectFile (fileName) {
+        // todo use fileId rather than fileName
+        console.log('onSelectFile', fileName)
+        this.props.dispatch(selectFile(fileName))
     }
 
-    onSelectFeature(id) {
-        console.log ('onSelectFeature')
+    onSelectFeature (id) {
+        console.log('onSelectFeature')
         // this.props.dispatch(selectFile(collectionName))
 
     }
 
-    onStopLineEdit() {
+    onStopLineEdit () {
         const { ui, dispatch, files } = this.props
 
-        if (ui.selectedLineId){
+        if (ui.selectedLineId) {
 
             // there is a layer group for each geojson file.  Inside that there is a layer for every feature
-            layerGroups.forEach(layerGroup => {
+            fileLayerGroups.forEach(layerGroup => {
 
-                const layers = layerGroup.getLayers ()
+                const layers = layerGroup.getLayers()
                 layers.forEach(layer => {
                     if (layer.id) { // layer id is what I added
                         layer.pm.disable() // disable editing
@@ -722,9 +737,9 @@ class EditMap extends Component {
         }
     }
 
-    render() {
+    render () {
         // todo - display all the tracks stored in redux state, and set the bounds to the selected Track
-        console.log('modal', this.state.modal)
+        console.log('render')
         const { ui, currentLayer, files, dispatch } = this.props
         return (
             <div id="mapwrap">
@@ -799,7 +814,7 @@ EditMap.propTypes = {
     tracks: PropTypes.array
 }
 
-function mapStateToProps(state) {
+function mapStateToProps (state) {
     return {
         current: state.current,
         ui: state.ui,
@@ -808,7 +823,7 @@ function mapStateToProps(state) {
     }
 }
 
-export default connect (mapStateToProps) (EditMap)
+export default connect(mapStateToProps)(EditMap)
 // export default connect(mapStateToProps)(DragDropContext(HTML5Backend)(EditMap))  // this should work, altho I put the DragDropContext in the 'main' eleement
 
 
