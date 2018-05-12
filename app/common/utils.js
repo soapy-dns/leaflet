@@ -5,13 +5,13 @@ const _ext = (filename) => {
 }
 
 const service = {
-    getFileByName: (files, fileName) => {
-        return files.find(it => it.name === fileName)
+    getFileById: (files, fileId) => {
+        return files.find(it => it.id === fileId)
     },
 
-    getFileById: (files, id) => {
-        return files.find(it => it.id === id)
-    },
+    // getFileById: (files, id) => {
+    //     return files.find(it => it.id === id)
+    // },
 
     getFileType: (fileName) => {
         const lowerCaseFileName = fileName ? fileName.toLowerCase() : ''

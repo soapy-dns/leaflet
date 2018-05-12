@@ -3,9 +3,6 @@
   "version": "1.0.0",
   "description": "test leaflet app",
   "main": "app/index.html",
-  "engines": {
-    "node": "=7.6"
-  },
   "author": "Neil",
   "license": "ISC",
   "scripts": {

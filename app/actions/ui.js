@@ -15,9 +15,8 @@ export const toggleElevation = (boolean) => {
 
 // todo remove selectedFileName
 export const SELECT_FILE = 'ui/SELECT_FILES'
-export const selectFile = (fileName, fileId) => ({
+export const selectFile = (fileId) => ({
     type: SELECT_FILE,
-    selectedFileName: fileName,
     selectedFileId: fileId
 })
 

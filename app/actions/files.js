@@ -24,14 +24,14 @@ export const addFile = (fileText, fileName, fileId) => ({
  add feature to feature collection - should perhaps change the name
  */
 export const ADD_FEATURE_TO_FILE = 'file/ADD_FEATURE_TO_FILE'
-export const addFeatureToFile = (feature, selectedFileName) => ({
+export const addFeatureToFile = (feature, selectedFileId) => ({
     type: ADD_FEATURE_TO_FILE,
     feature,
-    selectedFileName
+    selectedFileId
 })
 
 export const MOVE_FEATURE_AND_OPEN = 'file/MOVE_FEATURE_AND_OPEN'
-export const moveFeatureAndOpen = (feature, selectedFileName) => {
+export const moveFeatureAndOpen = (feature, selectedFileId) => {
     // do stuff
 }
 

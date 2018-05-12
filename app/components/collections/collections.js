@@ -38,10 +38,10 @@ class Collections extends Component {
         this.props.onRemoveFeature(featureId)
     }
 
-    saveFile(fileName) {
+    saveFile(fileName, fileId) {
         const {files} = this.props
         const element = document.createElement("a")
-        const file = utils.getFileByName(files, fileName)
+        const file = utils.getFileById(files, fileId)
 
         const blob = new Blob([JSON.stringify(file.featureCollection)], {type: 'application/json'})
 
@@ -66,19 +66,20 @@ class Collections extends Component {
         console.log('collections component did mount')
     }
 
-    onSelectFile(id) {
-        console.log('Collections - onSelectFile')
+    onSelectFile(fileId) {
+        console.log('Collections - onSelectFile', fileId)
         const {files} = this.props
+        console.log('files', files)
 
-        this.props.onSelectFile(files[id].name)
+        this.props.onSelectFile(fileId)
     }
 
-    onMoveFeature(draggedFeatureName, targetFileName) {
+    onMoveFeature(draggedFeatureName, targetFileId) {
         const {collections, ui, dispatch} = this.props
         const clonedConnections = cloneDeep(collections)
 
-        let sourceCollection = clonedConnections.find(it => it.name === ui.selectedFileName)
-        const targetCollection = clonedConnections.find(it => it.name === targetFileName)
+        let sourceCollection = clonedConnections.find(it => it.id === ui.selectedFileId)
+        const targetCollection = clonedConnections.find(it => it.id === targetFileId)
 
         const draggedFeature = sourceCollection.featureCollection.features.find(it => it.properties.name === draggedFeatureName)
 
@@ -92,7 +93,7 @@ class Collections extends Component {
         sourceCollection.altered = true
 
         // update redux
-        dispatch(selectFile(targetFileName, targetCollection.id)) // todo will ultimately remove the name
+        dispatch(selectFile(targetFileId, targetCollection.id)) // todo will ultimately remove the name
         dispatch(updateFiles(clonedConnections))
     }
 
@@ -100,7 +101,7 @@ class Collections extends Component {
         const {files, ui, onSelectFeature, onRemoveFile, onRemoveFeature} = this.props
         if (isEmpty(files)) return null
 
-        const selectedFile = files.find(it => it.name === ui.selectedFileName)
+        const selectedFile = files.find(it => it.id === ui.selectedFileId)
 
         const features = []
         if (selectedFile && has(selectedFile, 'featureCollection')) {
@@ -112,7 +113,7 @@ class Collections extends Component {
                 })
             })
         }
-        files.forEach(it => console.log('fileId', it.id))
+        // files.forEach(it => console.log('fileId', it.id))
 
         return (
             <div id="collections" className={ui.showFileSlider ? "open" : null}>
@@ -123,12 +124,13 @@ class Collections extends Component {
                 <div className="side-panel-top">
                     <h3>Files</h3>
                     <Menu vertical borderless fluid className="collections top">
-                        {files.map((file, id) => (
-                            <Menu.Item key={id} onClick={(e) => this.onSelectFile(id)}>
+                        {files.map((file) => (
+                            <Menu.Item key={file.id} onClick={(e) => this.onSelectFile(file.id)}>
                                 <Collection
+                                    fileId={file.id}
                                     fileName={file.name}
                                     altered={file.altered}
-                                    selectedFileName={ui.selectedFileName}
+                                    selectedFileId={ui.selectedFileId}
                                     onMoveFeature={this.onMoveFeature}
                                     onSaveFile={this.saveFile}
                                     onRemoveFile={this.onRemoveFile}
@@ -140,7 +142,7 @@ class Collections extends Component {
                     </Menu>
                 </div>
 
-                {ui.selectedFileName ? (
+                {ui.selectedFileId ? (
                     <div>
                         <div className="side-panel-bottom">
                             <h3>Features</h3>

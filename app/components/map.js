@@ -9,6 +9,8 @@ import moment from 'moment'
 import { DragDropContext } from 'react-dnd'
 import 'leaflet.pm'
 const uuidv4 = require('uuid/v4')
+import { Dimmer, Loader, Image, Segment } from 'semantic-ui-react'
+
 
 import Api from '../utils/api'
 import Collections from './collections/collections'
@@ -86,7 +88,7 @@ const _getInitialLineGeojsonFeature = (latlng) => {
 
 // creates line by from the current track geojson (not sure where this is stored now.
 // for each point in a line add a waypoint aswell as a point in a line
-function onDrawLineClick (e) {
+function onDrawLineClick(e) {
     const currentGeoJson = currentTrackLayerGroup.toGeoJSON()
 
     // get all the Points
@@ -133,7 +135,7 @@ function onDrawLineClick (e) {
 }
 
 class EditMap extends Component {
-    constructor (props) {
+    constructor(props) {
         super(props)
         // this.onLocationError = this.onLocationError.bind(this)
         // this.onLocationFound = this.onLocationFound.bind(this)
@@ -168,12 +170,13 @@ class EditMap extends Component {
         this.state = {
             locate: false,
             modal: null,
-            removeFileId: null
+            removeFileId: null,
+            loading: true
         }
 
     }
 
-    componentDidMount () {
+    componentDidMount() {
         const { dispatch, current, ui, files } = this.props
 
         geo = new Geo(dispatch)
@@ -249,7 +252,7 @@ class EditMap extends Component {
     //     return true
     // }
 
-    onCancelAction () {
+    onCancelAction() {
         // console.log ('cancelAction')
         this.setState({ modal: null })
     }
@@ -257,17 +260,17 @@ class EditMap extends Component {
     /*
      convert form data to lat / long and move the map to that point (and turn off the modal)
      */
-    onLocate (locateData) {
+    onLocate(locateData) {
         const { latitude, longitude } = toLatLon(locateData.easting, locateData.northing, locateData.zone, undefined, false)
         map.panTo(new L.LatLng(latitude, longitude))
         this.setState({ modal: null })
     }
 
-    onRemoveFile (fileId) {
+    onRemoveFile(fileId) {
         this.setState({ modal: 'removeFile', removeFileId: fileId })
     }
 
-    removeFile () {
+    removeFile() {
         const { dispatch, ui } = this.props
 
         dispatch(removeFileFromStore(this.state.removeFileId))
@@ -281,12 +284,12 @@ class EditMap extends Component {
             if (layer.id === this.state.removeFileId) map.removeLayer(layer)
         })
 
-        this.setState({ modal: null, removeFileId: null})
+        this.setState({ modal: null, removeFileId: null })
 
         // todo - removes from the collections, but not from the map
     }
 
-    onRemoveFeature (featureId) {
+    onRemoveFeature(featureId) {
         console.log('remove feature', featureId)
         this.setState({ modal: 'removeFeature' })
     }
@@ -294,7 +297,7 @@ class EditMap extends Component {
     /*
      removes the feature from the file, and marks the file as altered
      */
-    removeFeature (featureId) {
+    removeFeature(featureId) {
         console.log('removeFeature', featureId)
         const { dispatch, files } = this.props
 
@@ -307,34 +310,34 @@ class EditMap extends Component {
         })
     }
 
-    onEdit () {
+    onEdit() {
         console.log('onEdit')
     }
 
-    showLocateModal (e) {
+    showLocateModal(e) {
         console.log('showLocateModal', e)
         this.setState({ modal: 'locate' })
     }
 
-    showAwaitingFunctionalityModal () {
+    showAwaitingFunctionalityModal() {
         this.setState({ modal: 'awaitingFunctionality' })
     }
 
     /*
      show open track modal
      */
-    showOpenFileModal () {
+    showOpenFileModal() {
         console.log('showOpenFile')
         this.setState({ modal: 'openTrack' })
     }
 
-    showElevationPlot () {
+    showElevationPlot() {
         console.log('show elevation')
         this.props.dispatch(toggleElevation(true))
         // todo think I need to update
     }
 
-    hideElevationPlot () {
+    hideElevationPlot() {
         console.log('show elevation')
         this.props.dispatch(toggleElevation(false))
     }
@@ -343,7 +346,7 @@ class EditMap extends Component {
      save the FeatureCollection to redux
      That will trigger an update.
      */
-    onOpenFile (fileText, fileName, fileId) {
+    onOpenFile(fileText, fileName, fileId) {
         const { dispatch, ui } = this.props
 
         const featureCollection = geo.getGeoJsonObject(fileText, fileName)
@@ -365,7 +368,7 @@ class EditMap extends Component {
         this.setState({ modal: null })
     }
 
-    getMajorIncidents () {
+    getMajorIncidents() {
         // todo - move to redux
         //https://stackoverflow.com/questions/43871637/no-access-control-allow-origin-header-is-present-on-the-requested-resource-whe
         // flames = https://assets-cdn.github.com/images/icons/emoji/unicode/1f525.png
@@ -405,7 +408,7 @@ class EditMap extends Component {
         });
     }
 
-    autoCorrectTrack () {
+    autoCorrectTrack() {
         const { tracks } = this.props
         // find the selected track
         const selectedTrack = getSelectedTrack(tracks)
@@ -548,16 +551,16 @@ class EditMap extends Component {
         //check that there are times in the track
     }
 
-    centreOnCurrentLocation () {
+    centreOnCurrentLocation() {
         map.locate({ setView: true })
         map.on('locationerror', onLocationError)
         map.on('locationfound', onLocationFound)
 
-        function onLocationError (e) {
+        function onLocationError(e) {
             alert(e.message)
         }
 
-        function onLocationFound (e) {
+        function onLocationFound(e) {
             // console.log('onLocation found', e)
             var radius = e.accuracy / 2
             // console.log(`you are within ${radius} meters from this point`)
@@ -575,7 +578,7 @@ class EditMap extends Component {
     /*
      remove crosshairs cursor and click functionality
      */
-    stopDrawLine () {
+    stopDrawLine() {
         L.DomUtil.removeClass(map._container, 'leaflet-crosshair')
         map.off('click', onDrawLineClick)
     }
@@ -584,7 +587,7 @@ class EditMap extends Component {
      Stop drawing the line without saving any changes
      This means removing the drawing menu and not showing the editable waypoints of the track.
      */
-    onCancelDraw () {
+    onCancelDraw() {
         // need to know which line we are dealing with, so this has be be saved on clicking the track to start drawing
         this.props.dispatch(showMainMenu())
         this.props.dispatch(unselectLine())
@@ -597,7 +600,7 @@ class EditMap extends Component {
      change cursor and add click functionality
      // todo - may change to use pm
      */
-    drawLine () {
+    drawLine() {
         const { dispatch } = this.props
         console.log('drawLine')
         L.DomUtil.addClass(map._container, 'leaflet-crosshair')
@@ -611,7 +614,7 @@ class EditMap extends Component {
 
      open the modal for adding / modifying details of the waypoint
      */
-    waypointModal () {
+    waypointModal() {
         // change cursor to crosshairs
         L.DomUtil.addClass(map._container, 'leaflet-crosshair')
 
@@ -621,7 +624,7 @@ class EditMap extends Component {
     /*
      waypoint has been selected.  Store its details in state, update the cursor, and remove the listener
      */
-    addWaypointOnClick (e) {
+    addWaypointOnClick(e) {
         const { dispatch } = this.props
 
         // save latlng
@@ -650,17 +653,17 @@ class EditMap extends Component {
      solution
      we never update the map directly - it always comes from the state
      */
-    addWaypoint (featureData) {
+    addWaypoint(featureData) {
         const { dispatch, ui, files } = this.props
 
         const waypointFeature = geo.getWaypointFeature(featureData.pointName, ui.selectedLatitude, ui.selectedLongitude)
 
         console.log('ui', ui)
-        if (ui.selectedFileName) {
+        if (ui.selectedFileId) {
             this.setState({ modal: null })
 
             // find the file we are dealing with
-            const foundFile = utils.getFileByName(files, ui.selectedFileName)
+            const foundFile = utils.getFileById(files, ui.selectedFileId)
 
             // add the new waypoint to the features
             const fileFeatures = Object.assign([], foundFile.featureCollection)
@@ -694,19 +697,19 @@ class EditMap extends Component {
     /*
 
      */
-    onSelectFile (fileName) {
+    onSelectFile(fileId) {
         // todo use fileId rather than fileName
-        console.log('onSelectFile', fileName)
-        this.props.dispatch(selectFile(fileName))
+        console.log('map - onSelectFile', fileId)
+        this.props.dispatch(selectFile(fileId))
     }
 
-    onSelectFeature (id) {
+    onSelectFeature(id) {
         console.log('onSelectFeature')
         // this.props.dispatch(selectFile(collectionName))
 
     }
 
-    onStopLineEdit () {
+    onStopLineEdit() {
         const { ui, dispatch, files } = this.props
 
         if (ui.selectedLineId) {
@@ -737,12 +740,15 @@ class EditMap extends Component {
         }
     }
 
-    render () {
+    render() {
         // todo - display all the tracks stored in redux state, and set the bounds to the selected Track
         console.log('render')
         const { ui, currentLayer, files, dispatch } = this.props
+
         return (
             <div id="mapwrap">
+
+
                 {(this.state.modal === 'locate') ? (
                     <Locate cancelAction={this.onCancelAction} okAction={this.onLocate}/>
                 ) : null}
@@ -802,6 +808,8 @@ class EditMap extends Component {
                 <div id="mapid"></div>
                 <div>showElevation { ui.showElevation }</div>
                 { ui.showElevation ? (<Elevation hideElevationPlot={this.hideElevationPlot}/>) : null }
+
+
             </div>)
     }
 }
@@ -814,7 +822,7 @@ EditMap.propTypes = {
     tracks: PropTypes.array
 }
 
-function mapStateToProps (state) {
+function mapStateToProps(state) {
     return {
         current: state.current,
         ui: state.ui,

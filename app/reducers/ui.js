@@ -20,8 +20,12 @@ export default function (uiState = defaultState, action) {
             return merge(uiState, { showElevation: action.boolean })
 
         case SELECT_FILE:
-            const newState = merge(uiState, { selectedFileName: action.selectedFileName})
-            if (!!action.selectedFileName) newState.selectedFileName = null
+            console.log('SELECT_FILE', action)
+            const newState = merge(uiState, { selectedFileId: action.selectedFileId })
+            console.log('newState', newState)
+            if (!action.selectedFileId) newState.selectedFileId = null
+            console.log('newState', newState)
+
 
             return newState
 

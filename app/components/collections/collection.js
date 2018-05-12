@@ -8,7 +8,7 @@ import Constants from '../../common/constants'
 const collectionTarget = {
     drop(props, monitor) {
         const featureName = monitor.getItem().featureName
-        props.onMoveFeature(featureName, props.fileName)
+        props.onMoveFeature(featureName, props.fileId)
     }
 }
 
@@ -28,14 +28,14 @@ class Collection extends Component {
     }
 
     render() {
-        const {fileName, selectedFileName, altered, onSaveFile} = this.props
-        const icon = (fileName === selectedFileName) ? 'folder open outline' : 'folder outline'
+        const {fileId, fileName, selectedFileId, altered, onSaveFile} = this.props
+        const icon = (fileId === selectedFileId) ? 'folder open outline' : 'folder outline'
 
         return this.props.connectDropTarget(
             <span>
                     {altered ? (
                         <Icon color="blue" size="large" name="save"
-                              onClick={(e) => onSaveFile(fileName)}/>
+                              onClick={(e) => onSaveFile(fileName, fileId)}/>
                     ) : null}
 
                 <Icon color="blue" size="large" name={icon}/>
@@ -46,9 +46,10 @@ class Collection extends Component {
 }
 
 Collection.propTypes = {
+    fileId: PropTypes.string,
     fileName: PropTypes.string,
     altered: PropTypes.boolean,
-    selectedFileName: PropTypes.string,
+    selectedFileId: PropTypes.string,
     onMoveFeature: PropTypes.func,
     saveFile: PropTypes.func,
     onRemoveFile: PropTypes.func,

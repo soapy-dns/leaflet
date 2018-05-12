@@ -10,8 +10,8 @@ import {
 } from '../actions/files'
 
 
-const _getMatchingFile = (stateObj, fileName) => {
-    return stateObj.find(it => it.name === fileName)
+const _getMatchingFile = (stateObj, fileId) => {
+    return stateObj.find(it => it.id === fileId)
 }
 
 const _getMatchingFeatureById = (featureCollection, featureId) => {
@@ -79,7 +79,7 @@ export default function(fileState = [], action) {
         case ADD_FEATURE_TO_FILE:
             newState = Object.assign([], fileState)
 
-            foundFile = _getMatchingFile(newState, action.selectedFileName)
+            foundFile = _getMatchingFile(newState, action.selectedFileId)
 
             // add the new feature to it
             foundFile.featureCollection.features.push(action.feature)
