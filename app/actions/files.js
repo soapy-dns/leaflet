@@ -42,17 +42,17 @@ export const updateFiles = (files) => ({
 })
 
 export const UPDATE_FILE = 'file/UPDATE_FILE'
-export const updateFile = (fileName) => ({
+export const updateFile = (fileId) => ({
     type: UPDATE_FILE,
-    fileName: fileName,
+    fileId
 })
 
 export const REMOVE_FILE = 'file/REMOVE_FILE'
-export const removeFileFromStore = (fileName) => {
-    console.log('removeFileFromStore action', fileName)
+export const removeFileFromStore = (fileId) => {
+    console.log('removeFileFromStore action', fileId)
     return {
         type: REMOVE_FILE,
-        file: fileName
+        fileId
     }
 }
 

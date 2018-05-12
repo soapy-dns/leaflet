@@ -305,7 +305,7 @@ class EditMap extends Component {
             const featureIndex = file.featureCollection.features.findIndex(feature => feature.properties.id === featureId)
             file.featureCollection.features.splice(featureIndex, 1)
 
-            dispatch(updateFile(file.name)) // need to set as altered
+            dispatch(updateFile(file.id)) // need to set as altered
             this.setState({ modal: null })
         })
     }
@@ -732,7 +732,7 @@ class EditMap extends Component {
                             file.featureCollection.features.splice(featureIndex, 1)
                             file.featureCollection.features.push(geoJson)
 
-                            dispatch(updateFile(file.name))
+                            dispatch(updateFile(file.id))
                         })
                     }
                 })
