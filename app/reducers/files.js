@@ -16,9 +16,7 @@ const _getMatchingFile = (stateObj, fileId) => {
 }
 
 const _getMatchingFeatureById = (featureCollection, featureId) => {
-    console.log('featureCollection %j', featureCollection.features, featureId)
     return featureCollection.features.find(feature => feature.properties.id === featureId)
-
 }
 
 export default function(fileState = [], action) {
@@ -29,7 +27,6 @@ export default function(fileState = [], action) {
         should we check for a file of the same name?
          */
         case ADD_FILE:
-            console.log('add file', action)
             newState = Object.assign([], fileState)
             newState.push({
                 name: action.fileName,
@@ -42,44 +39,17 @@ export default function(fileState = [], action) {
 
         case NEW_FILE:
             // new file is being called from open file, and when adding a new waypoint - todo - fix it
-            console.log('new file', action)
-            // todo - need to check for existing matching feature collection
             newState = Object.assign([], fileState)
-            console.log('newState', newState)
             newState.push({
                 name: action.fileName,
                 altered: true,
                 featureCollection: action.fileText
             })
 
-            // if (isEmpty(newState)) {
-            //     // there are no files at all - this is a brand new file which should be marked as altered so it can be saved
-            //     newState.push({
-            //         name: action.fileName,
-            //         altered: true,
-            //         featureCollection: action.fileText
-            //     })
-            // } else {
-            //     foundFile = newState.find(file => (file.name === action.fileName))
-            //     if (!foundFile) {
-            //         // add new file
-            //         newState.push({
-            //             name: action.fileName,
-            //             altered: false,
-            //             featureCollection: action.fileText
-            //         })
-            //     } else {
-            //         console.log('when would we go in here?')
-            //         // foundFile.featureCollection = action.fileText
-            //         // foundFile.altered = false
-            //     }
-            // }
-
             return newState
 
         case ADD_FEATURE_TO_FILE:
             newState = Object.assign([], fileState)
-            console.log('ADD_FEATURE_TO_FILE', action)
 
             foundFile = _getMatchingFile(newState, action.selectedFileId)
 
@@ -105,9 +75,7 @@ export default function(fileState = [], action) {
             return newState
 
         case MARK_FILE_AS_ALTERED:
-            // console.log('reducers MARK_FILE_AS_ALTERED', action)
             newState = Object.assign([], fileState)
-
 
             foundFile = _getMatchingFile(newState, action.fileId)
             foundFile.altered = true
@@ -115,14 +83,12 @@ export default function(fileState = [], action) {
             return newState
 
         case REMOVE_FILE:
-            console.log('remove fil')
             newState = Object.assign([], fileState)
             remove(newState, it => it.id === action.fileId)
 
             return newState
 
-        case UPDATE_WAYPOINT_POSITION: {
-        }
+        case UPDATE_WAYPOINT_POSITION:
             newState = Object.assign([], fileState)
 
             foundFile = _getMatchingFile(newState, action.fileName)

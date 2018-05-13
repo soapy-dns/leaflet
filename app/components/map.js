@@ -760,14 +760,10 @@ class EditMap extends Component {
     }
 
     render() {
-        // todo - display all the tracks stored in redux state, and set the bounds to the selected Track
-        console.log('render')
         const { ui, currentLayer, files, dispatch } = this.props
 
         return (
             <div id="mapwrap">
-
-
                 {(this.state.modal === 'locate') ? (
                     <Locate cancelAction={this.onCancelAction} okAction={this.onLocate}/>
                 ) : null}
@@ -851,6 +847,3 @@ function mapStateToProps(state) {
 }
 
 export default connect(mapStateToProps)(EditMap)
-// export default connect(mapStateToProps)(DragDropContext(HTML5Backend)(EditMap))  // this should work, altho I put the DragDropContext in the 'main' eleement
-
-

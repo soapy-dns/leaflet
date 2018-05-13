@@ -75,26 +75,27 @@ class Collections extends Component {
     }
 
     onMoveFeature(draggedFeatureName, targetFileId) {
-        const {collections, ui, dispatch} = this.props
-        const clonedConnections = cloneDeep(collections)
+        const {files, ui, dispatch} = this.props
+        const clonedFiles = cloneDeep(files)
+        console.log('clonedFiles', clonedFiles)
 
-        let sourceCollection = clonedConnections.find(it => it.id === ui.selectedFileId)
-        const targetCollection = clonedConnections.find(it => it.id === targetFileId)
+        let sourceFile = clonedFiles.find(it => it.id === ui.selectedFileId)
+        const targetFile = clonedFiles.find(it => it.id === targetFileId)
 
-        const draggedFeature = sourceCollection.featureCollection.features.find(it => it.properties.name === draggedFeatureName)
+        const draggedFeature = sourceFile.featureCollection.features.find(it => it.properties.name === draggedFeatureName)
 
         //add feature its new collection
-        targetCollection.featureCollection.features.push(draggedFeature)
-        targetCollection.altered = true
+        targetFile.featureCollection.features.push(draggedFeature)
+        targetFile.altered = true
 
         //remove feature from selectedCollection
-        const sourceFeatures = sourceCollection.featureCollection.features
-        sourceCollection.featureCollection.features = sourceFeatures.filter(it => it.properties.name !== draggedFeatureName)
-        sourceCollection.altered = true
+        const sourceFeatures = sourceFile.featureCollection.features
+        sourceFile.featureCollection.features = sourceFeatures.filter(it => it.properties.name !== draggedFeatureName)
+        sourceFile.altered = true
 
         // update redux
-        dispatch(selectFile(targetFileId, targetCollection.id)) // todo will ultimately remove the name
-        dispatch(updateFiles(clonedConnections))
+        dispatch(selectFile(targetFileId, targetFile.id)) // todo will ultimately remove the name
+        dispatch(updateFiles(clonedFiles))
     }
 
     render() {
