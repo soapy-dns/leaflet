@@ -79,6 +79,7 @@ export default function(fileState = [], action) {
 
         case ADD_FEATURE_TO_FILE:
             newState = Object.assign([], fileState)
+            console.log('ADD_FEATURE_TO_FILE', action)
 
             foundFile = _getMatchingFile(newState, action.selectedFileId)
 

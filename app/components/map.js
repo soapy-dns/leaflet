@@ -693,7 +693,7 @@ class EditMap extends Component {
             layerGroup.addTo(map)
 
             // ADD TO REDUX
-            dispatch(addFeatureToFile(waypointFeature, ui.selectedFileName))
+            dispatch(addFeatureToFile(waypointFeature, ui.selectedFileId))
             dispatch(clearLatLng())  // clear the selected lat lng (for resetting based on the waypoint?)
         } else {
             // create new file and add waypoint

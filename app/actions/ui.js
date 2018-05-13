@@ -13,18 +13,11 @@ export const toggleElevation = (boolean) => {
     }
 }
 
-// todo remove selectedFileName
 export const SELECT_FILE = 'ui/SELECT_FILES'
 export const selectFile = (fileId) => ({
     type: SELECT_FILE,
     selectedFileId: fileId
 })
-
-// export const UNSELECT_FILE = 'ui/UNSELECT_FILES'
-// export const unselectFile = fileName => ({
-//     type: SELECT_FILE,
-//     selectedFileName: null
-// })
 
 export const SELECT_LATLNG = 'ui/SELECT_LATLNG'
 export const selectLatLng = (lat, lng) => ({
