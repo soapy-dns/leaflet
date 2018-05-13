@@ -1,4 +1,4 @@
-import { isEmpty } from 'lodash'
+import { isEmpty, remove } from 'lodash'
 import {
     ADD_FILE,
     NEW_FILE,
@@ -6,7 +6,8 @@ import {
     UPDATE_FILES,
     UPDATE_FILE,
     UPDATE_WAYPOINT_POSITION,
-    REMOVE_FILE
+    REMOVE_FILE,
+    MARK_FILE_AS_ALTERED
 } from '../actions/files'
 
 
@@ -92,25 +93,31 @@ export default function(fileState = [], action) {
             return action.files
 
         case UPDATE_FILE:
-            console.log('reducers updateFile', action)
+            newState = Object.assign([], fileState)
+
+            const newFile = action.file
+            newFile.altered = true
+            remove(newState, it => it.id === action.file.id)
+
+            newState.push(newFile)
+
+            return newState
+
+        case MARK_FILE_AS_ALTERED:
+            // console.log('reducers MARK_FILE_AS_ALTERED', action)
             newState = Object.assign([], fileState)
 
 
             foundFile = _getMatchingFile(newState, action.fileId)
-            // foundFile = action.file
-            console.log('foundFile>', foundFile)
             foundFile.altered = true
-
 
             return newState
 
         case REMOVE_FILE:
             console.log('remove fil')
             newState = Object.assign([], fileState)
-            const fileIndex = newState.findIndex(it => it.name === action.fileName)
-            console.log('X1', fileIndex, action.fileName)
+            remove(newState, it => it.id === action.fileId)
 
-            newState.splice(fileIndex, 1)
             return newState
 
         case UPDATE_WAYPOINT_POSITION: {

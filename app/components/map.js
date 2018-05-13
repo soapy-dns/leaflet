@@ -171,6 +171,7 @@ class EditMap extends Component {
             locate: false,
             modal: null,
             removeFileId: null,
+            removeFeatureId: null,
             loading: true
         }
 
@@ -290,23 +291,41 @@ class EditMap extends Component {
     }
 
     onRemoveFeature(featureId) {
-        console.log('remove feature', featureId)
-        this.setState({ modal: 'removeFeature' })
+        console.log('on remove feature', featureId)
+        this.setState({ modal: 'removeFeature', removeFeatureId: featureId })
+
     }
 
     /*
      removes the feature from the file, and marks the file as altered
      */
-    removeFeature(featureId) {
-        console.log('removeFeature', featureId)
-        const { dispatch, files } = this.props
+    removeFeature() {
+        console.log('removeFeature', this.state.removeFeatureId)
+        const { dispatch, files, ui } = this.props
 
+        // todo - don't change props
+        // remove feature from redux
+        let newFile
         files.forEach(file => {
-            const featureIndex = file.featureCollection.features.findIndex(feature => feature.properties.id === featureId)
-            file.featureCollection.features.splice(featureIndex, 1)
+            newFile = Object.assign({}, file)
+            const featureIndex = file.featureCollection.features.findIndex(feature => feature.id === this.state.removeFeatureId)
 
-            dispatch(updateFile(file.id)) // need to set as altered
-            this.setState({ modal: null })
+            if (featureIndex) {
+                newFile.featureCollection.features.splice(featureIndex, 1)
+
+                dispatch(updateFile(newFile))
+                this.setState({ modal: null, removeFeatureId: null })
+            }
+        })
+
+        // remove feature from map
+        map.eachLayer(layer => {
+            console.log('layer', layer.id, layer)
+            if (layer.id === newFile.id) {
+                map.removeLayer(layer)
+                const newGeoJsonLayer = geo.getGeoJsonLayer(newFile.name, newFile.id, newFile.featureCollection.features, ui)
+                newGeoJsonLayer.addTo(map)
+            }
         })
     }
 
@@ -732,7 +751,7 @@ class EditMap extends Component {
                             file.featureCollection.features.splice(featureIndex, 1)
                             file.featureCollection.features.push(geoJson)
 
-                            dispatch(updateFile(file.id))
+                            dispatch(updateFile(file)) // How can this possibly work?????
                         })
                     }
                 })

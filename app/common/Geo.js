@@ -123,7 +123,10 @@ class Geo {
         // now stick an id on each feature (for internal use eg moving features)
         geojson.features.forEach(feature => {
             if (!feature.properties.id) {
-                feature.properties.id = uuidv4() // unique id for each feature
+                const id = uuidv4()
+                feature.properties.id = id // unique id for each feature
+                feature.id = id // easier to use here, especially when looping thru layers which may not have properties
+                // may get rid of feature.properties.id
             }
         })
 

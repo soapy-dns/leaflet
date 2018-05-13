@@ -1,6 +1,6 @@
 /*
-A BRAND NEW FILE.  AS IT ISN'T ON THE FILE SYSTEM THE SAVE ICON SHOULD APPEAR
-EG ACTION WHEN ADDING A WAYPOINT
+ A BRAND NEW FILE.  AS IT ISN'T ON THE FILE SYSTEM THE SAVE ICON SHOULD APPEAR
+ EG ACTION WHEN ADDING A WAYPOINT
  */
 export const NEW_FILE = 'file/NEW_FILE'
 export const newFile = (fileText, fileName) => ({
@@ -10,8 +10,8 @@ export const newFile = (fileText, fileName) => ({
 })
 
 /*
-ADD FILE RESULTS IN A NEW FILE BEING LOADED -
-AS IT HAS NOT CHANGED THE SAVE ICON SHOULD NOT APPEAR
+ ADD FILE RESULTS IN A NEW FILE BEING LOADED -
+ AS IT HAS NOT CHANGED THE SAVE ICON SHOULD NOT APPEAR
  */
 export const ADD_FILE = 'file/ADD_FILE'
 export const addFile = (fileText, fileName, fileId) => ({
@@ -42,7 +42,13 @@ export const updateFiles = (files) => ({
 })
 
 export const UPDATE_FILE = 'file/UPDATE_FILE'
-export const updateFile = (fileId) => ({
+export const updateFile = (file) => ({
+    type: UPDATE_FILE,
+    file
+})
+
+export const MARK_FILE_AS_ALTERED = 'file/MARK_FILE_AS_ALTERED'
+export const markFileAsAltered = (fileId) => ({
     type: UPDATE_FILE,
     fileId
 })
