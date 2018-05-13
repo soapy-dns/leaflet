@@ -381,7 +381,7 @@ class EditMap extends Component {
 
         // add to redux
         dispatch(addFile(featureCollection, fileName, fileId))
-        dispatch(selectFile(fileName, fileId))
+        dispatch(selectFile(fileId))
 
         // turn modal off
         this.setState({ modal: null })
