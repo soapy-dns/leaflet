@@ -84,7 +84,6 @@ class Uploader extends Component {
 
     render () {
         const { accept } = this.props
-        console.log('accept', accept)
         return (<div>
             <div>
                 {this.gallery()}

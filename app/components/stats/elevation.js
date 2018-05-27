@@ -60,6 +60,8 @@ class Elevation extends Component {
         console.log('render Elevation')
         const { hideElevationPlot, tracks } = this.props
 
+        if (tracks.length === 0) return null
+
         const track = getSelectedTrack(tracks)
 
         console.log('---track---', track)

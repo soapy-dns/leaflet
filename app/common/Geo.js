@@ -2,11 +2,11 @@ import { markerIcon } from '../common/icons'
 import { GeoJSON } from 'leaflet'
 import toGeoJSON from '@mapbox/togeojson'
 import xmldom from 'xmldom'
-const uuidv4 = require('uuid/v4')
 import { updateWaypointPosition } from '../actions/files'
 import { showDrawingMenu, selectLine } from '../actions/ui'
 import utils from './utils'
 import editableLineOptions from '../common/editable-line-options'
+const uuidv4 = require('uuid/v4')
 
 const DOMParser = xmldom.DOMParser
 
@@ -37,6 +37,8 @@ class Geo {
     }
 
     getGeoJsonLayer(fileName, fileId, features, ui) {
+        const dispatch = this.dispatch
+
         // todo - this is only getting the first line in the collection
         const line = features.find(feature => feature.geometry.type === 'LineString')
 
@@ -126,7 +128,7 @@ class Geo {
                 const id = uuidv4()
                 feature.properties.id = id // unique id for each feature
                 feature.id = id // easier to use here, especially when looping thru layers which may not have properties
-                // may get rid of feature.properties.id
+                // may get rid of feature.properties.id, but currently need them both - removeFeatures uses it, not sure if necessary or not
             }
         })
 

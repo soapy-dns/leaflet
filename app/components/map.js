@@ -4,13 +4,12 @@ import { BasemapLayer, TiledMapLayer } from 'esri-leaflet'
 import { toLatLon } from 'utm'
 import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
-import { cloneDeep } from 'lodash'
+import { cloneDeep, remove, filter } from 'lodash'
 import moment from 'moment'
 import { DragDropContext } from 'react-dnd'
 import 'leaflet.pm'
 const uuidv4 = require('uuid/v4')
 import { Dimmer, Loader, Image, Segment } from 'semantic-ui-react'
-
 
 import Api from '../utils/api'
 import Collections from './collections/collections'
@@ -24,6 +23,7 @@ import RemoveFileModal from './collections/remove-file-modal'
 import RemoveFeatureModal from './collections/remove-feature-modal'
 import Elevation from '../components/stats/elevation'
 import utils from '../common/utils'
+import MouseControl from '../common/Mouse-control'
 
 import { selectTrack } from '../actions/tracks'
 import {
@@ -177,8 +177,14 @@ class EditMap extends Component {
 
     }
 
+    /*
+    NOTE
+     here will be a layer added for everything.  geojson layers, markers line
+    NOTE
+     */
     componentDidMount() {
         const { dispatch, current, ui, files } = this.props
+        console.log('dispatch', dispatch)
 
         geo = new Geo(dispatch)
 
@@ -186,12 +192,12 @@ class EditMap extends Component {
         const baseLayer = new BasemapLayer('Gray')
 
         // topo layer
-        // const topoLayer = new TiledMapLayer({
-        //     // url: 'http://maps.six.nsw.gov.au/arcgis/rest/services/public/NSW_Topo_Map/MapServer',
-        //     url: 'http://maps4.six.nsw.gov.au/arcgis/rest/services/sixmaps/LPIMap/MapServer',
-        //     maxZoom: 17,
-        //     maxNativeZoom: 15
-        // })
+        const topoLayer = new TiledMapLayer({
+            // url: 'http://maps.six.nsw.gov.au/arcgis/rest/services/public/NSW_Topo_Map/MapServer',
+            url: 'http://maps4.six.nsw.gov.au/arcgis/rest/services/sixmaps/LPIMap/MapServer',
+            maxZoom: 17,
+            maxNativeZoom: 15
+        })
 
         // satellite image layer
         // const imageLayer = new TiledMapLayer({
@@ -210,8 +216,8 @@ class EditMap extends Component {
             zoom: zoom,
             maxZoom: 19,
             maxNativeZoom: 14,  // don't request tiles with a zoom > this (cos they don't exist)
-            // layers: [baseLayer, topoLayer],
-            layers: [baseLayer],
+            layers: [baseLayer, topoLayer],
+            // layers: [baseLayer],
             editable: true
         })
         map.on('moveend', function(e) {
@@ -221,26 +227,36 @@ class EditMap extends Component {
 
 
         // define overlay layers for control
-        // overlayLayers = {
-        //     "Topo": topoLayer,
-        //     "Satellite": imageLayer
-        // }
+        overlayLayers = {
+            "Topo": topoLayer,
+            // "Satellite": imageLayer
+        }
 
         // add control button for layers
         // layersControl = new Control.Layers(baseMaps, overlayLayers)
         // layersControl.addTo(map)
 
+        // add mouse control
+        const mouseControl = new MouseControl()
+        mouseControl.setPosition('topright')
+
+        mouseControl.addTo(map)
+
         //add scale
         const scale = new Control.Scale()
+        scale.setPosition('topright')
         scale.addTo(map)
 
         files.forEach(file => {
-            console.log('PROCESSING FILE', file.name)
+            console.log('PROCESSING FILE', file)
             const layerGroup = geo.getGeoJsonLayer(file.name, file.id, file.featureCollection.features, ui)
 
-            // fileLayerGroups.push(layerGroup)
+            // each file is a layer
             layerGroup.addTo(map)
         })
+        // map.eachLayer(layer => {
+        //     console.log('layer', layer.id, layer)
+        // })
     }
 
     // /*
@@ -263,6 +279,7 @@ class EditMap extends Component {
      */
     onLocate(locateData) {
         const { latitude, longitude } = toLatLon(locateData.easting, locateData.northing, locateData.zone, undefined, false)
+        console.log('latitude', latitude, 'longitude', longitude)
         map.panTo(new L.LatLng(latitude, longitude))
         this.setState({ modal: null })
     }
@@ -293,7 +310,6 @@ class EditMap extends Component {
     onRemoveFeature(featureId) {
         console.log('on remove feature', featureId)
         this.setState({ modal: 'removeFeature', removeFeatureId: featureId })
-
     }
 
     /*
@@ -308,14 +324,19 @@ class EditMap extends Component {
         let newFile
         files.forEach(file => {
             newFile = Object.assign({}, file)
-            const featureIndex = file.featureCollection.features.findIndex(feature => feature.id === this.state.removeFeatureId)
 
-            if (featureIndex) {
-                newFile.featureCollection.features.splice(featureIndex, 1)
-
-                dispatch(updateFile(newFile))
-                this.setState({ modal: null, removeFeatureId: null })
-            }
+            // console.log('newFile', newFile)
+            remove(newFile.featureCollection.features, feature => {
+                // console.log('feature>', feature)
+                if (feature.properties) {
+                    if (feature.properties.id === this.state.removeFeatureId) {
+                        return true
+                    }
+                }
+            })
+            // console.log('newFile - updated', newFile)
+            dispatch(updateFile(newFile))
+            this.setState({ modal: null, removeFeatureId: null })
         })
 
         // remove feature from map
@@ -729,34 +750,31 @@ class EditMap extends Component {
     }
 
     onStopLineEdit() {
+        console.log('onStopLineEdit')
         const { ui, dispatch, files } = this.props
 
-        if (ui.selectedLineId) {
+        //NOTE:- the line has already been updated in leaflet.  Just need to disable editing, and update redux
 
-            // there is a layer group for each geojson file.  Inside that there is a layer for every feature
-            fileLayerGroups.forEach(layerGroup => {
+        map.eachLayer(layer => {
+            if (layer.id === ui.selectedLineId) {
+                layer.pm.disable() // disable editing
+                layerGroup.resetStyle(layer) // reset style back to the original
+                dispatch(unselectLine()) // update redux as this line is no longer selected for editing
+                dispatch(showMainMenu())
+            }
 
-                const layers = layerGroup.getLayers()
-                layers.forEach(layer => {
-                    if (layer.id) { // layer id is what I added
-                        layer.pm.disable() // disable editing
-                        layerGroup.resetStyle(layer) // reset style back to the original
-                        dispatch(unselectLine()) // update redux as this line is no longer selected for editing
-                        dispatch(showMainMenu())
+            if (layer.id === ui.selectedFileId) {
+                const geoJson = layer.toGeoJSON()
+                console.log('geoJson', geoJson)
+                console.log('files', files)
+                const newFile = find(files, it => it.id === layer.id)
+                console.log('newfile is false here!!')
+                console.log('newFile', newFile)
+                newFile.featureCollection = geoJson
 
-                        // update the geojson stored in redux.
-                        const geoJson = layer.toGeoJSON()
-                        files.forEach(file => {
-                            const featureIndex = file.featureCollection.features.findIndex(feature => feature.properties.id === layer.id)
-                            file.featureCollection.features.splice(featureIndex, 1)
-                            file.featureCollection.features.push(geoJson)
-
-                            dispatch(updateFile(file)) // How can this possibly work?????
-                        })
-                    }
-                })
-            })
-        }
+                dispatch(updateFile(newFile))
+            }
+        })
     }
 
     render() {
@@ -811,7 +829,6 @@ class EditMap extends Component {
                         onHelp={this.showAwaitingFunctionalityModal}
                     />
                 )}
-
 
                 <Collections
                     onSelectFile={this.onSelectFile}

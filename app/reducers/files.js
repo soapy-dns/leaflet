@@ -65,12 +65,18 @@ export default function(fileState = [], action) {
 
         case UPDATE_FILE:
             newState = Object.assign([], fileState)
+            console.log('action.file', action.file)
 
             const newFile = action.file
             newFile.altered = true
+
+            console.log('files before remove', newState[0])
             remove(newState, it => it.id === action.file.id)
+            console.log('files after remove', newState[0])
+
 
             newState.push(newFile)
+            console.log('files after add', newState[0], newState[1])
 
             return newState
 
