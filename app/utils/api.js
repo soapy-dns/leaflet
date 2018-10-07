@@ -8,13 +8,19 @@ Axios.interceptors.request.use((conf) => {
     // updatedConfig.headers.Authorization = token;
 
     return updatedConfig;
-});
+})
+
+const endpoint = 'http://localhost:3001'
 
 const Api = {
 
     // rural fire service stuff
-    getMajorIncidents: () => Axios.get('https://cors-anywhere.herokuapp.com/https://www.rfs.nsw.gov.au/feeds/majorIncidents.json'),
+    // getMajorIncidents: () => Axios.get('https://cors-anywhere.herokuapp.com/https://www.rfs.nsw.gov.au/feeds/majorIncidents.json'),
 
+    postLearningImage: (img, label) => Axios.post(`${endpoint}/face/${label}`, img),
+
+    train: () => Axios.put(`${endpoint}/face/train`),
+    identifyFace: (img) => Axios.post(`${endpoint}/face/identify`, img)
 
 };
 

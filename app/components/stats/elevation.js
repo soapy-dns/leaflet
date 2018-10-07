@@ -5,7 +5,7 @@ import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
 import { Line } from 'react-chartjs-2'
 
-import { getLine, getSelectedTrack } from '../../utils/index'
+// import { getLine } from '../../utils/index'
 
 let elevationData = {}
 
@@ -58,16 +58,18 @@ class Elevation extends Component {
 
     render() {
         console.log('render Elevation')
-        const { hideElevationPlot, tracks } = this.props
+        const { hideElevationPlot, track} = this.props
+        // console.log('selectedLineId', ui.selectedLineId)
 
-        if (tracks.length === 0) return null
 
-        const track = getSelectedTrack(tracks)
+        // if (tracks.length === 0) return null
+
+        // const track = getSelectedTrack(tracks)
 
         console.log('---track---', track)
         if (!track) return null
 
-        const line = getLine(track)
+        const line = track
         // console.log('gotLineTrack', !!line)
         elevationData.labels = line.properties.coordTimes  // x axis
         elevationData.yaxis = line.geometry.coordinates.map(it => it[2])
@@ -147,17 +149,21 @@ class Elevation extends Component {
 }
 
 Elevation.propTypes = {
-    dispatch: PropTypes.func,
-    currentLayer: PropTypes.object
+    // dispatch: PropTypes.func,
+    // currentLayer: PropTypes.object,
+    hideElevationPlot: PropTypes.func.isRequired
 }
 
-function mapStateToProps(state) {
-    return {
-        tracks: state.tracks
-    }
-}
+// function mapStateToProps(state) {
+//     console.log('elevation state', state)
+//     return {
+//         ui: state.ui,
+//         files: state.ui
+//     }
+// }
 
-export default connect(mapStateToProps)(Elevation)
+export default Elevation
+// export default connect(mapStateToProps)(Elevation)
 //
 // <div id="elevation" className="open" >Test graph</div>
 //

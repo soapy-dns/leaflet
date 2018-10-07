@@ -1,0 +1,60 @@
+
+html, body {
+    width: 100%;
+    height: 100%;
+    font-size: 14px;
+    background: #fff;
+}
+
+
+body {
+    font-family: 'Open Sans', sans-serif;
+    line-height: 1.5;
+    font-weight: 300;
+    
+}
+
+.container {
+    width: 60%;
+    margin-left: 20%;
+    display: grid;    
+    grid-template-columns: repeat(12, 1fr);
+    /* grid-template-rows: 50px 350px 50px; */
+    grid-template-rows: 50px 350px 50px;
+}
+
+header {
+    height: 100%;
+    display: flex;
+    grid-column: span 12;
+    background-color : rgba( 255, 0, 0, 0.5);
+    /* vertical-align isn't working for me */
+    vertical-align: text-bottom;
+}
+header > div:nth-child(3) {
+    margin-left: auto;
+}
+header > div {
+    padding:1px;
+    height: 100%;
+    text-align : center;
+    border: 2px solid aqua;
+    color: white;
+    font-weight: 900;
+    display: flex;
+    align-items: center; /* works with flex only */
+    /* To align vertically https://stackoverflow.com/questions/8865458/how-do-i-vertically-center-text-with-css */
+}
+
+aside {
+    grid-column: span 2;
+    border: 2px solid aqua;
+
+}
+main {
+    grid-column: span 10;
+    border: 2px solid aqua;
+}
+footer {
+    grid-column: span 12;
+}

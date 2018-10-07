@@ -31,23 +31,21 @@ const MouseControl = Control.extend({
         }
         lng -= 180
 
-        const gps = { lat: lat, lng: lng }
         let content = "<table>"
 
         const { easting, northing, zoneNum, zoneLetter } = fromLatLon(lat, lng)
+
         content += "<tr><td>UTM</td><td colspan='2'>" + zoneNum + "&nbsp" + zoneLetter + "&nbsp" + easting.toFixed(0) + "&nbsp" + northing.toFixed(0) + "</td></tr>"
 
         const sixfigure = this._to6Figure(easting, northing)
-        const nswmap = this._nswMapRef(gps)
+        const nswmap = this._nswMapRef(lat, lng)
         content += "<table><tr><td>"+nswmap+"</td><td>"+sixfigure+"</td></tr></table>"
         
         content += "</table>"
         this._gpsPositionContainer.innerHTML = content
     },
 
-    _nswMapGridRef: function(gps) {
-        var lat = gps.lat, lng = gps.lng
-
+    _nswMapGridRef: function(lat, lng) {
         var X = Math.floor(lng * 2) - 211
         if (X < 10) X = '0' + X
         var Y = Math.floor(lat * 2) + 98
@@ -64,8 +62,8 @@ const MouseControl = Control.extend({
         return [s25k, s50k, s100k]
     },
 
-    _nswMapRef: function(gps) {
-        const mapGrid = this._nswMapGridRef(gps)
+    _nswMapRef: function(lat, lng) {
+        const mapGrid = this._nswMapGridRef(lat, lng)
 
         const mapList = {}
         for (let i = 0; i < nswMapBounds.length; i++) {

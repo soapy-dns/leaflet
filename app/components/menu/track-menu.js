@@ -3,14 +3,14 @@ import { Menu, Dropdown } from 'semantic-ui-react'
 
 import PropTypes from 'prop-types'
 
-class DrawingMenu extends Component {
+class TrackMenu extends Component {
     constructor(props) {
         super(props)
 
     }
 
     componentDidMount() {
-        console.log('DrawingMenu component did mount')
+        console.log('TrackMenu component did mount')
     }
 
 
@@ -18,11 +18,19 @@ class DrawingMenu extends Component {
         const {
             onStop,
             onCancel,
-            onHelp
+            onHelp,
+            trackElevation,
+            autoCorrectTrack
         } = this.props
 
         return (
             <Menu id="mainmenu" compact >
+                <Menu.Item onClick={trackElevation}>
+                    Show Elevation
+                </Menu.Item>
+                <Menu.Item onClick={autoCorrectTrack}>
+                    Auto Correct
+                </Menu.Item>
                 <Menu.Item onClick={onStop}>
                     Stop
                 </Menu.Item>
@@ -39,12 +47,14 @@ class DrawingMenu extends Component {
     }
 }
 
-DrawingMenu.propTypes = {
+TrackMenu.propTypes = {
     onStop: PropTypes.func,
     onCancel: PropTypes.func,
-    onHelp: PropTypes.func
+    onHelp: PropTypes.func,
+    trackElevation: PropTypes.func,
+    autoCorrectTrack: PropTypes.func
 }
 
-export default DrawingMenu
+export default TrackMenu
 
 

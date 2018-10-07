@@ -14,8 +14,9 @@ import { Dimmer, Loader, Image, Segment } from 'semantic-ui-react'
 import Api from '../utils/api'
 import Collections from './collections/collections'
 import MainMenu from './menu/main-menu'
-import DrawingMenu from './menu/drawing-menu'
+import TrackMenu from './menu/track-menu'
 import Locate from './locate-modal'
+import Help from './help-modal'
 import AwaitingFunctionality from './awaiting-functionality-modal'
 import LoadTrackModal from './load-track-modal'
 import WaypointModal from './waypoint-modal'
@@ -39,7 +40,7 @@ import {
     selectFile,
     selectLatLng,
     clearLatLng,
-    showDrawingMenu,
+    showTrackMenu,
     showMainMenu,
     unselectLine
 } from '../actions/ui'
@@ -148,7 +149,7 @@ class EditMap extends Component {
         this.centreOnCurrentLocation = this.centreOnCurrentLocation.bind(this)
         this.addWaypoint = this.addWaypoint.bind(this)
         this.addWaypointOnClick = this.addWaypointOnClick.bind(this)
-
+        this.newFile = this.newFile.bind(this)
         this.getMajorIncidents = this.getMajorIncidents.bind(this)
         this.autoCorrectTrack = this.autoCorrectTrack.bind(this)
         this.showElevationPlot = this.showElevationPlot.bind(this)
@@ -164,6 +165,7 @@ class EditMap extends Component {
         this.onStopLineEdit = this.onStopLineEdit.bind(this)
         this.drawLine = this.drawLine.bind(this)
         this.stopDrawLine = this.stopDrawLine.bind(this)
+        this.showHelpModal = this.showHelpModal.bind(this)
 
         this.waypointModal = this.waypointModal.bind(this)
 
@@ -284,6 +286,10 @@ class EditMap extends Component {
         this.setState({ modal: null })
     }
 
+    newFile(fileName) {
+        console.log('Todo - add new file.')
+    }
+
     onRemoveFile(fileId) {
         this.setState({ modal: 'removeFile', removeFileId: fileId })
     }
@@ -371,14 +377,19 @@ class EditMap extends Component {
         this.setState({ modal: 'openTrack' })
     }
 
+    showHelpModal() {
+        console.log('showHelp - change modal state to help')
+        this.setState({ modal: 'help' })
+    }
+
     showElevationPlot() {
-        console.log('show elevation')
+        console.log('show elevationPlot')
         this.props.dispatch(toggleElevation(true))
         // todo think I need to update
     }
 
     hideElevationPlot() {
-        console.log('show elevation')
+        console.log('hideElevationPlot')
         this.props.dispatch(toggleElevation(false))
     }
 
@@ -645,7 +656,7 @@ class EditMap extends Component {
         console.log('drawLine')
         L.DomUtil.addClass(map._container, 'leaflet-crosshair')
         map.on('click', onDrawLineClick)
-        dispatch(showDrawingMenu())
+        dispatch(showTrackMenu())
     }
 
     /*
@@ -778,30 +789,41 @@ class EditMap extends Component {
     }
 
     render() {
+        console.log('render')
         const { ui, currentLayer, files, dispatch } = this.props
+        console.log('state', this.state)
+        const { modal } = this.state
+        console.log('modal', modal)
+        let selectedLine
+        if (ui.selectedLineId) {
+            selectedLine = utils.getSelectedLine(ui.selectedLineId, files)
+        }
 
         return (
             <div id="mapwrap">
-                {(this.state.modal === 'locate') ? (
+                {(modal === 'locate') ? (
                     <Locate cancelAction={this.onCancelAction} okAction={this.onLocate}/>
                 ) : null}
-                {(this.state.modal === 'awaitingFunctionality') ? (
+                 {(modal === 'help') ? (
+                    <Help cancelAction={this.onCancelAction} />
+                ) : null}
+                {(modal === 'awaitingFunctionality') ? (
                     <AwaitingFunctionality cancelAction={this.onCancelAction}/>
                 ) : null}
-                {(this.state.modal === 'openTrack') ? (
+                {(modal === 'openTrack') ? (
                     <LoadTrackModal cancelAction={this.onCancelAction} okAction={this.onOpenFile}/>
                 ) : null}
-                {(this.state.modal === 'waypoint') ? (
+                {(modal === 'waypoint') ? (
                     <WaypointModal cancelAction={this.onCancelAction} okAction={this.addWaypoint}
                                    selectedLatitude={ui.selectedLatitude} selectedLongitude={ui.selectedLongitude}/>
                 ) : null}
-                {(this.state.modal === 'removeFile') ? (
+                {(modal === 'removeFile') ? (
                     <RemoveFileModal
                         cancelAction={this.onCancelAction}
                         okAction={this.removeFile}
                     />
                 ) : null}
-                {(this.state.modal === 'removeFeature') ? (
+                {(modal === 'removeFeature') ? (
                     <RemoveFeatureModal
                         cancelAction={this.onCancelAction}
                         okAction={this.removeFeature}
@@ -811,6 +833,7 @@ class EditMap extends Component {
                 {(ui.menuType === 'main') ? (
                     <MainMenu
                         openFile={this.showOpenFileModal}
+                        newFile={this.newFile}
                         locate={this.showLocateModal}
                         awaitingFunctionality={this.showAwaitingFunctionalityModal}
                         centreOnCurrentLocation={this.centreOnCurrentLocation}
@@ -818,15 +841,18 @@ class EditMap extends Component {
                         stopDrawLine={this.stopDrawLine}
                         addWaypoint={this.waypointModal}
                         getMajorIncidents={this.getMajorIncidents}
-                        autoCorrectTrack={this.autoCorrectTrack}
-                        showElevationPlot={this.showElevationPlot}
+                        // autoCorrectTrack={this.autoCorrectTrack}
+                        // showElevationPlot={this.showElevationPlot}
+                        showHelp={this.showHelpModal}
                         onEdit={this.onEdit}
                     />
                 ) : (
-                    <DrawingMenu
+                    <TrackMenu
                         onStop={this.onStopLineEdit}
                         onCancel={this.onCancelDraw}
                         onHelp={this.showAwaitingFunctionalityModal}
+                        trackElevation={this.showElevationPlot}
+                        autoCorrectTrack={this.autoCorrectTrack}
                     />
                 )}
 
@@ -839,7 +865,8 @@ class EditMap extends Component {
 
                 <div id="mapid"></div>
                 <div>showElevation { ui.showElevation }</div>
-                { ui.showElevation ? (<Elevation hideElevationPlot={this.hideElevationPlot}/>) : null }
+                {console.log('show elevaton?', ui.showElevation)}
+                {ui.showElevation && selectedLine && <Elevation hideElevationPlot={this.hideElevationPlot} track={selectedLine} />}
 
 
             </div>)

@@ -11,6 +11,7 @@ export const getLine = (geoJson) => {
 }
 
 /*
+I think tracks are gone now.  Replaced with files
 tracks is as stored in reducx
  */
 export const getSelectedTrack = (tracks) => {

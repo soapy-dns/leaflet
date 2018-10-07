@@ -19,13 +19,15 @@ class MainMenu extends Component {
             locate,
             awaitingFunctionality,
             openFile,
+            newFile,
             centreOnCurrentLocation,
             drawLine,
             stopDrawLine,
             addWaypoint,
             getMajorIncidents,
-            autoCorrectTrack,
-            showElevationPlot,
+            // autoCorrectTrack,
+            // showElevationPlot,
+            showHelp,
             onEdit
         } = this.props
 
@@ -39,13 +41,7 @@ class MainMenu extends Component {
                     <Dropdown.Menu>
                         <Dropdown.Item onClick={addWaypoint}>Waypoint</Dropdown.Item>
                         <Dropdown.Item onClick={drawLine}>Track</Dropdown.Item>
-                    </Dropdown.Menu>
-                </Dropdown>
-
-                <Dropdown text='Selected Track' className='link item'>
-                    <Dropdown.Menu>
-                        <Dropdown.Item onClick={autoCorrectTrack}>Auto correct</Dropdown.Item>
-                        <Dropdown.Item onClick={showElevationPlot}>Show Elevation Plot</Dropdown.Item>
+                        <Dropdown.Item onClick={newFile}>File</Dropdown.Item>
                     </Dropdown.Menu>
                 </Dropdown>
 
@@ -59,6 +55,9 @@ class MainMenu extends Component {
                     </Dropdown.Menu>
                 </Dropdown>
 
+                <Menu.Item onClick={showHelp}>
+                    Help
+                </Menu.Item>
             </Menu>
         )
     }
@@ -69,14 +68,14 @@ MainMenu.propTypes = {
     awaitingFunctionality: PropTypes.func,
     centreOnCurrentLocation: PropTypes.func,
     openFile: PropTypes.func,
+    newFile: PropTypes.func,
     okAction: PropTypes.func,
     cancelAction: PropTypes.func,
     addWaypoint: PropTypes.func,
     drawLine: PropTypes.func,
     stopDrawLine: PropTypes.func,
     getMajorIncidents: PropTypes.func,
-    autoCorrectTrack: PropTypes.func,
-    showElevationPlot: PropTypes.func
+    showHelp: PropTypes.func
 }
 
 export default MainMenu

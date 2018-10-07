@@ -17,6 +17,7 @@ const defaultState = { showFileSlider: false, menuType: 'main' }
 export default function (uiState = defaultState, action) {
     switch (action.type) {
         case TOGGLE_ELEVATION:
+        console.log('toggle elevation', action.boolean)
             return merge(uiState, { showElevation: action.boolean })
 
         case SELECT_FILE:

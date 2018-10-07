@@ -25,9 +25,15 @@ const service = {
         if (ext('.geojson') || ext('.json') || ext('.topojson')) return 'geojson'
 
         return null
+    },
+
+    getSelectedLine(id, files ) {
+        for (let file of files) {
+            const foundLine = file.featureCollection.features.find(feature => (feature.id = id))
+            if (foundLine) return foundLine
+        }
     }
 }
-
 
 //
 export default service
