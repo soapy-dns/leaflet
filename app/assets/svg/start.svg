@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg">
-    <ellipse ry="8" rx="8" id="svg_1" stroke-width="1.5" stroke="#000" cy="10" cx="10" fill="#fff"/>
-    <text font-family="Helvetica, Arial, sans-serif" font-size="16" id="svg_2" stroke-width="0" fill="#ff0000" y="16" x="5">S</text>
-    <line stroke-linecap="null" stroke-linejoin="null" id="svg_3" y2="31" x2="10" y1="17" x1="10" fill-opacity="null" stroke-opacity="null" stroke="#000" fill="none"/>
+    <ellipse ry="6" rx="6" id="svg_1" stroke-width="1.5" stroke="#000" cy="7" cx="7" fill="#fff"/>
+    <!-- <text font-family="Helvetica, Arial, sans-serif" font-size="16" id="svg_2" stroke-width="0" fill="#ff0000" y="16" x="5">X</text> -->
+    <line stroke-linecap="null" stroke-linejoin="null" stroke-width="2" id="svg_3" y2="20" x2="7" y1="14" x1="7" fill-opacity="null" stroke-opacity="null" stroke="#000" fill="none"/>
 </svg>

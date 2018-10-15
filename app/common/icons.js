@@ -23,3 +23,11 @@ export const startIcon = new Icon({
 export const markerIcon = new L.Icon.Default({
     shadowSize: [0, 0]
 })
+
+export const pinIcon = new Icon({
+    iconUrl: 'assets/svg/start.svg',
+    // iconUrl: 'assets/svg/rect.svg',
+    iconSize: [14, 20],
+    iconAnchor: [7, 20],
+    popupAnchor: [0, -20]
+})

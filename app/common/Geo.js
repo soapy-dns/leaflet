@@ -1,4 +1,4 @@
-import { markerIcon } from '../common/icons'
+import { markerIcon, pinIcon } from '../common/icons'
 import { GeoJSON } from 'leaflet'
 import toGeoJSON from '@mapbox/togeojson'
 import xmldom from 'xmldom'
@@ -17,10 +17,11 @@ class Geo {
     }
 
     getWaypointFeature(name, lat, lng) {
+        console.log('getWaypointFeature')
         const waypointFeature = {
             "type": "Feature",
             "properties": {
-                id: uuidv4(),
+                id: uuidv4(), // set unique id
                 "name": name,
             },
             "geometry": {
@@ -43,7 +44,7 @@ class Geo {
         const line = features.find(feature => feature.geometry.type === 'LineString')
 
         const resetStyle = (e) => {
-            console.log('layerGroup', e.target)
+            // console.log('layerGroup', e.target)
             trackLayerGroup.resetStyle(e.target)
         }
 
@@ -55,9 +56,10 @@ class Geo {
                 }
             },
 
+            // config for each point
             pointToLayer: (pointFeature, latlng) => {
                 if (!latlng) return
-                const marker = L.marker(latlng, { icon: markerIcon, draggable: true })
+                const marker = L.marker(latlng, { icon: pinIcon, draggable: true })
                 marker.bindPopup(pointFeature.properties.name)
 
                 marker.on('dragend', function(event) {
@@ -66,11 +68,16 @@ class Geo {
                     marker.setLatLng(position, { draggable: 'true' })
 
                     // todo - panning? map.panTo(new L.LatLng(position.lat, position.lng))
-                    dispatch(updateWaypointPosition(fileName, pointFeature.properties.id, position))
+                    dispatch(updateWaypointPosition(fileId, pointFeature.properties.id, position))
                 })
                 return marker
             },
 
+            /**
+             * Define behaviour of lines - mouse over, click, and editable
+             * @param {*} feature
+             * @param {*} layer
+             */
             onEachFeature: function(feature, layer) {
                 if (feature.geometry.type === 'LineString') {
                     layer.on('mouseover', function() {

@@ -70,9 +70,9 @@ export const markFileAsSaved = file => ({
 
 // TODO - wip
 export const UPDATE_WAYPOINT_POSITION = 'file/UPDATE_WAYPOINT_POSITION'
-export const updateWaypointPosition = (fileName, pointId, latlng) => ({
+export const updateWaypointPosition = (fileId, pointId, latlng) => ({
     type: UPDATE_WAYPOINT_POSITION,
-    fileName,
+    fileId,
     pointId,
     latlng
 })

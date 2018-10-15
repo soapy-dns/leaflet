@@ -45,7 +45,7 @@ import {
     unselectLine
 } from '../actions/ui'
 import { getSelectedTrack, getLine, getDistanceBetween2Points, getMillisecsBetween2Points } from '../utils/index'
-import { flameIcon, startIcon, markerIcon } from '../common/icons'
+import { flameIcon, startIcon, markerIcon, pinIcon } from '../common/icons'
 import { geojsonLineMarkerOptions } from '../common/marker-options'
 import Geo from '../common/Geo'
 
@@ -112,7 +112,7 @@ function onDrawLineClick(e) {
             if (feature.properties.type !== "user") {
                 return L.circleMarker(featureLatlng, geojsonLineMarkerOptions);
             } else {
-                return L.marker(featureLatlng, markerIcon)
+                return L.marker(featureLatlng, pinIcon)
             }
         }
     })
@@ -186,7 +186,7 @@ class EditMap extends Component {
      */
     componentDidMount() {
         const { dispatch, current, ui, files } = this.props
-        console.log('dispatch', dispatch)
+        // console.log('dispatch', dispatch)
 
         geo = new Geo(dispatch)
 
@@ -234,8 +234,8 @@ class EditMap extends Component {
             // "Satellite": imageLayer
         }
 
-        // add control button for layers
-        // layersControl = new Control.Layers(baseMaps, overlayLayers)
+        // add control button for layers - still need to the layersControl, maybe not the buttom
+        layersControl = new Control.Layers(baseMaps, overlayLayers)
         // layersControl.addTo(map)
 
         // add mouse control
@@ -460,14 +460,19 @@ class EditMap extends Component {
     }
 
     autoCorrectTrack() {
-        const { tracks } = this.props
+        const { ui, files } = this.props
         // find the selected track
-        const selectedTrack = getSelectedTrack(tracks)
-        // console.log('selectedTrack', selectedTrack)
-        const line = getLine(selectedTrack)
+        let selectedLine
+        if (ui.selectedLineId) {
+            selectedLine = utils.getSelectedLine(ui.selectedLineId, files)
+        }
+        if (!selectedLine) return
+        // const selectedTrack = getSelectedTrack(tracks)
+        // // console.log('selectedTrack', selectedTrack)
+        // const line = getLine(selectedTrack)
         // console.log('line', line)
-        const coordinates = cloneDeep(line.geometry.coordinates)
-        const coordTimes = cloneDeep(line.properties.coordTimes)
+        const coordinates = cloneDeep(selectedLine.geometry.coordinates)
+        const coordTimes = cloneDeep(selectedLine.properties.coordTimes)
 
         // console.log('coordinates', coordinates)
         console.log('coordTimes', coordTimes)
@@ -513,7 +518,7 @@ class EditMap extends Component {
         console.log('new times', times)
 
         // now build a new track
-        const newLine = cloneDeep(line)
+        const newLine = cloneDeep(selectedLine)
         newLine.geometry.coordinates = coordinates
         newLine.properties.coordTimes = coordTimes
 
@@ -554,6 +559,7 @@ class EditMap extends Component {
         overlayLayers[trackName] = newtracksLayer
 
         // add track layer to layer control
+        console.log('TODO - layersControl is undefined here')
         layersControl.addOverlay(newtracksLayer, trackName)
 
 

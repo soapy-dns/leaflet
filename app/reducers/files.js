@@ -95,9 +95,11 @@ export default function(fileState = [], action) {
             return newState
 
         case UPDATE_WAYPOINT_POSITION:
+        console.log('update waypoint position - reducer')
+        debugger
             newState = Object.assign([], fileState)
 
-            foundFile = _getMatchingFile(newState, action.fileName)
+            foundFile = _getMatchingFile(newState, action.fileId)
             foundFile.altered = true
 
             foundFeature = _getMatchingFeatureById(foundFile.featureCollection, action.pointId)
