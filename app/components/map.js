@@ -40,7 +40,7 @@ import {
     selectFile,
     selectLatLng,
     clearLatLng,
-    showTrackMenu,
+    showDrawingMenu,
     showMainMenu,
     unselectLine
 } from '../actions/ui'
@@ -64,10 +64,12 @@ let initialTrack = {
 }
 
 let map
+
 let overlayLayers
 let layersControl
-let currentTrackLayerGroup
+// let currentTrackLayerGroup
 const fileLayerGroups = []
+let drawingLayer // the layer used to keep the drawing details (when drawing)
 
 let geo
 
@@ -89,7 +91,17 @@ const _getInitialLineGeojsonFeature = (latlng) => {
 
 // creates line by from the current track geojson (not sure where this is stored now.
 // for each point in a line add a waypoint aswell as a point in a line
-function onDrawLineClick(e) {
+
+// HOLD ON - THIS MIGHT BE MY ANCIENT EFFORT - CAN I RE-USE THE EDIT
+/**
+ * create a new 'drawing layer' - later we will add it to the appropriate layer group
+ * @param {object} e
+ */
+const onDrawLineClick = (e) => {
+    console.log('onDrawLineClik');
+    // get the layer associated with the open file
+    const { selectedFileId } = this.props
+
     const currentGeoJson = currentTrackLayerGroup.toGeoJSON()
 
     // get all the Points
@@ -225,6 +237,19 @@ class EditMap extends Component {
         map.on('moveend', function(e) {
             dispatch(saveMapDetails({ center: map.getCenter(), zoom: map.getZoom() }))
         })
+        map.on('pm:drawend', function(e) {
+            console.log('end draw', drawingLayer.toGeoJSON())
+            // TODO - NOW ADD THIS INTO THE APPROPRIATE FILE GROUP LAYER
+          })
+          map.on('pm:create', function(e) {
+            e.shape; // the name of the shape being drawn (i.e. 'Circle')
+            e.layer; // the leaflet layer created
+          });
+          map.on('pm:drawstart', function(e) {
+              console.log('drawStart')
+            drawingLayer = e.workingLayer
+
+          });
         map.zoomControl.setPosition('bottomright')
 
 
@@ -249,11 +274,12 @@ class EditMap extends Component {
         scale.setPosition('topright')
         scale.addTo(map)
 
+        // each file is becomes a layerGroup which is added to the map
         files.forEach(file => {
             console.log('PROCESSING FILE', file)
-            const layerGroup = geo.getGeoJsonLayer(file.name, file.id, file.featureCollection.features, ui)
+            const layerGroup = geo.createGeoJsonLayerFromFile(file, ui)
 
-            // each file is a layer
+
             layerGroup.addTo(map)
         })
         // map.eachLayer(layer => {
@@ -350,7 +376,7 @@ class EditMap extends Component {
             console.log('layer', layer.id, layer)
             if (layer.id === newFile.id) {
                 map.removeLayer(layer)
-                const newGeoJsonLayer = geo.getGeoJsonLayer(newFile.name, newFile.id, newFile.featureCollection.features, ui)
+                const newGeoJsonLayer = geo.createGeoJsonLayerFromFile(newFile, ui)
                 newGeoJsonLayer.addTo(map)
             }
         })
@@ -402,10 +428,19 @@ class EditMap extends Component {
 
         const featureCollection = geo.getGeoJsonObject(fileText, fileName)
 
+
         // get the name from the lineString
         const line = featureCollection.features.find(it => it.geometry.type === 'LineString')
 
-        const newFilesLayer = geo.getGeoJsonLayer(fileName, fileId, featureCollection.features, ui)
+        const file  = {
+            name: fileName,
+            id: fileId,
+            featureCollection: {
+                features: [line] // TODO - CHECK THAT I JUST NEED THIS LINE ONLY
+            }
+        }
+
+        const newFilesLayer = geo.createGeoJsonLayerFromFile(file, ui)
         newFilesLayer.addTo(map)
 
         // set bounds to fit this new layer
@@ -454,7 +489,7 @@ class EditMap extends Component {
             majorIncidents.addTo(map)
             // dispatch(contactFormSuccess());
         }).catch((err) => {
-            console.log('ERROR', err)
+            console.log('ERROR getting major incidents', err)
             // dispatch(contactFormFailed(err.message));
         });
     }
@@ -632,12 +667,17 @@ class EditMap extends Component {
         }
     }
 
+
     /*
      remove crosshairs cursor and click functionality
      */
     stopDrawLine() {
-        L.DomUtil.removeClass(map._container, 'leaflet-crosshair')
-        map.off('click', onDrawLineClick)
+        console.log('stopDrawLine')
+        map.pm.disableDraw('Line')
+        this.props.dispatch(showMainMenu())
+
+        // L.DomUtil.removeClass(map._container, 'leaflet-crosshair')
+        // map.off('click', onDrawLineClick)
     }
 
     /*
@@ -660,9 +700,10 @@ class EditMap extends Component {
     drawLine() {
         const { dispatch } = this.props
         console.log('drawLine')
-        L.DomUtil.addClass(map._container, 'leaflet-crosshair')
-        map.on('click', onDrawLineClick)
-        dispatch(showTrackMenu())
+        // L.DomUtil.addClass(map._container, 'leaflet-crosshair')
+        // map.on('click', onDrawLineClick)
+        map.pm.enableDraw('Line', { snappable: false });
+        dispatch(showDrawingMenu())
     }
 
     /*
@@ -726,7 +767,15 @@ class EditMap extends Component {
             const fileFeatures = Object.assign([], foundFile.featureCollection)
             fileFeatures.push(waypointFeature)
 
-            const layerGroup = geo.getGeoJsonLayer(foundFile.name, foundFile.id, fileFeatures, ui)
+            const file = {
+                id: foundFile.id,
+                name: foundFile.name,
+                featureCollection: {
+                    features: [fileFeatures]
+                }
+            }
+
+            const layerGroup = geo.createGeoJsonLayerFromFile(file, ui)
 
             layerGroup.addTo(map)
 
@@ -735,13 +784,14 @@ class EditMap extends Component {
             dispatch(clearLatLng())  // clear the selected lat lng (for resetting based on the waypoint?)
         } else {
             // create new file and add waypoint
-            const fileName = moment().format('YYYY-MM-DD hh:mm:ss')
-            const featureCollection = {
-                features: [waypointFeature]
+            const file = {
+                id: uuidv4(), // give file a unique id
+                name: fmoment().format('YYYY-MM-DD hh:mm:ss'),
+                featureCollection: {
+                    features: [waypointFeature]
+                }
             }
-            const fileId = uuidv4() // give file a unique id
-
-            const newFilesLayer = geo.getGeoJsonLayer(fileName, fileId, featureCollection.features, ui)
+            const newFilesLayer = geo.createGeoJsonLayerFromFile(file, ui)
             newFilesLayer.addTo(map)
 
             // ADD TO REDUX
@@ -772,26 +822,29 @@ class EditMap extends Component {
 
         //NOTE:- the line has already been updated in leaflet.  Just need to disable editing, and update redux
 
-        map.eachLayer(layer => {
-            if (layer.id === ui.selectedLineId) {
-                layer.pm.disable() // disable editing
-                layerGroup.resetStyle(layer) // reset style back to the original
-                dispatch(unselectLine()) // update redux as this line is no longer selected for editing
-                dispatch(showMainMenu())
-            }
+        // TODO -SAVE LINE
+        // map.eachLayer(layer => {
+        //     if (layer.id === ui.selectedLineId) {
+        //         layer.pm.disable() // disable editing
+        //         // layerGroup.resetStyle(layer) // reset style back to the original
+        //         layer.resetStyle(this) // reset style back to the original - no idea what I am doing hee
 
-            if (layer.id === ui.selectedFileId) {
-                const geoJson = layer.toGeoJSON()
-                console.log('geoJson', geoJson)
-                console.log('files', files)
-                const newFile = find(files, it => it.id === layer.id)
-                console.log('newfile is false here!!')
-                console.log('newFile', newFile)
-                newFile.featureCollection = geoJson
+        //         dispatch(unselectLine()) // update redux as this line is no longer selected for editing
+        //         dispatch(showMainMenu())
+        //     }
 
-                dispatch(updateFile(newFile))
-            }
-        })
+        //     if (layer.id === ui.selectedFileId) {
+        //         const geoJson = layer.toGeoJSON()
+        //         console.log('geoJson', geoJson)
+        //         console.log('files', files)
+        //         const newFile = find(files, it => it.id === layer.id)
+        //         console.log('newfile is false here!!')
+        //         console.log('newFile', newFile)
+        //         newFile.featureCollection = geoJson
+
+        //         dispatch(updateFile(newFile))
+        //     }
+        // })
     }
 
     render() {
@@ -844,7 +897,7 @@ class EditMap extends Component {
                         awaitingFunctionality={this.showAwaitingFunctionalityModal}
                         centreOnCurrentLocation={this.centreOnCurrentLocation}
                         drawLine={this.drawLine}
-                        stopDrawLine={this.stopDrawLine}
+                        // stopDrawLine={this.stopDrawLine}
                         addWaypoint={this.waypointModal}
                         getMajorIncidents={this.getMajorIncidents}
                         // autoCorrectTrack={this.autoCorrectTrack}
@@ -854,7 +907,8 @@ class EditMap extends Component {
                     />
                 ) : (
                     <TrackMenu
-                        onStop={this.onStopLineEdit}
+                        // onStop={this.onStopLineEdit}
+                        onStop={this.stopDrawLine} // NEED A WAY TO DETERMINE IF DRAWING A NEW LINE, OR EDITING AN EXISTING LINE
                         onCancel={this.onCancelDraw}
                         onHelp={this.showAwaitingFunctionalityModal}
                         trackElevation={this.showElevationPlot}

@@ -10,7 +10,7 @@ Defining features of this vs other offerings are
 
 
 ## Babel
-uses babel to transpile javascript, so can use ES2015.  .babelrc also has 2 plugins
+uses babel to transpile javascript, so can use more modern versions of javascript.  .babelrc also has 2 plugins
 transform-object-assign - allows the use of Object.assign
 transform-object-rest-spread -allows the use of the object spread operator '...'
 
@@ -79,3 +79,15 @@ It seems that rather than using geojson for lines, I'd be better using L.Polylin
 
 id in leaflet layers
 https://stackoverflow.com/questions/34322864/finding-a-specific-layer-in-a-leaflet-layergroup-where-layers-are-polygons
+
+## Dependencies
+@mapbox/togeojson -
+chart.js -
+esri-leaflet
+leaflet -
+leaflet.pm
+leaflet.utm - I don't think this is still used
+react-dnd - drag and drop
+react-dnd-html5-backend - draga and drop
+react-chartjs-2
+utm
