@@ -147,6 +147,19 @@ const onDrawLineClick = (e) => {
     currentTrackLayerGroup.addLayer(line)
 }
 
+const _refreshFileOnMap = (file, ui, geo) => {
+    // geo = new Geo(dispatch)
+    map.eachLayer(layer => {
+        console.log('layer', layer.id, layer)
+        if (layer.id === file.id) {
+            map.removeLayer(layer)
+            const newGeoJsonLayer = geo.createGeoJsonLayerFromFile(file, ui)
+            newGeoJsonLayer.addTo(map)
+        }
+    })
+}
+
+
 class EditMap extends Component {
     constructor(props) {
         super(props)
@@ -155,7 +168,7 @@ class EditMap extends Component {
         this.onCancelAction = this.onCancelAction.bind(this)
         this.showAwaitingFunctionalityModal = this.showAwaitingFunctionalityModal.bind(this)
         this.showLocateModal = this.showLocateModal.bind(this)
-        this.showOpenFileModal = this.showOpenFileModal.bind(this)
+        // this.showOpenFileModal = this.showOpenFileModal.bind(this)
         this.onLocate = this.onLocate.bind(this)
         this.onOpenFile = this.onOpenFile.bind(this)
         this.centreOnCurrentLocation = this.centreOnCurrentLocation.bind(this)
@@ -178,6 +191,8 @@ class EditMap extends Component {
         this.drawLine = this.drawLine.bind(this)
         this.stopDrawLine = this.stopDrawLine.bind(this)
         this.showHelpModal = this.showHelpModal.bind(this)
+        this.addLineToFile = this.addLineToFile.bind(this)
+
 
         this.waypointModal = this.waypointModal.bind(this)
 
@@ -237,19 +252,17 @@ class EditMap extends Component {
         map.on('moveend', function(e) {
             dispatch(saveMapDetails({ center: map.getCenter(), zoom: map.getZoom() }))
         })
-        map.on('pm:drawend', function(e) {
-            console.log('end draw', drawingLayer.toGeoJSON())
-            // TODO - NOW ADD THIS INTO THE APPROPRIATE FILE GROUP LAYER
-          })
-          map.on('pm:create', function(e) {
-            e.shape; // the name of the shape being drawn (i.e. 'Circle')
-            e.layer; // the leaflet layer created
-          });
-          map.on('pm:drawstart', function(e) {
-              console.log('drawStart')
-            drawingLayer = e.workingLayer
+        const addLineToFile = this.addLineToFile
 
-          });
+        map.on('pm:drawend', function(e) {
+            // add to open file
+            // dispatch(addFeatureToFile(waypointFeature, ui.selectedFileId))
+
+            addLineToFile(drawingLayer.toGeoJSON()) // add line to file in redux
+          })
+        map.on('pm:drawstart', function(e) {
+        drawingLayer = e.workingLayer
+        })
         map.zoomControl.setPosition('bottomright')
 
 
@@ -297,6 +310,34 @@ class EditMap extends Component {
     //     return true
     // }
 
+    /**
+     *
+     * @param {*} feature
+     * Issues - getting the file in this method and in the dispatch action
+     * passing too many complicated objects around in an unobvious manner
+     */
+    addLineToFile(feature) {
+        const { dispatch, files, ui } = this.props
+        const { selectedFileId } = ui
+
+        const file = files.find(it => it.id === selectedFileId) // we do seem to find this file here, and in the addFeatureToFile action which seems wastefull
+        if (feature.properties.name === undefined) feature.properties.name = moment().format() // add default name
+        dispatch(addFeatureToFile(feature, selectedFileId))
+        _refreshFileOnMap(file, ui, geo)
+
+
+        // files.find(file => file.id === fileId)
+        // // refresh file
+        // map.eachLayer(layer => {
+        //     console.log('layer', layer.id, layer)
+        //     if (layer.id === fileId) {
+        //         map.removeLayer(layer)
+        //         const newGeoJsonLayer = geo.createGeoJsonLayerFromFile(newFile, ui)
+        //         newGeoJsonLayer.addTo(map)
+        //     }
+        // })
+    }
+
     onCancelAction() {
         // console.log ('cancelAction')
         this.setState({ modal: null })
@@ -329,8 +370,8 @@ class EditMap extends Component {
         if (ui.selectedFileId === this.state.removeFileId) dispatch(selectFile(null, null))
 
         map.eachLayer(layer => {
-            console.log('layer.id', layer.id)
-            console.log('fileId', this.state.removeFileId)
+            // console.log('layer.id', layer.id)
+            // console.log('fileId', this.state.removeFileId)
             if (layer.id === this.state.removeFileId) map.removeLayer(layer)
         })
 

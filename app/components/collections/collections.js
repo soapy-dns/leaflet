@@ -69,7 +69,7 @@ class Collections extends Component {
     onSelectFile(fileId) {
         console.log('Collections - onSelectFile', fileId)
         const {files} = this.props
-        console.log('files', files)
+        // console.log('files', files)
 
         this.props.onSelectFile(fileId)
     }

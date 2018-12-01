@@ -37,9 +37,16 @@ class Geo {
         return waypointFeature
     }
 
+    // getFileFromFilesById(fileId, files) {
+    //     return files.find(file => file.id === fileId)
+    // }
+
+    // addLineToLayerGroup() {
+    //     const newFilesLayer = geo.createGeoJsonLayerFromFile(file, ui)
+    //     newFilesLayer.addTo(map)
+    // }
 
     /**
-     * TODO - RENAME TO createGeoJsonLayerFromFile
      * Get the layer group for file -
      * @param {object} file
      * @param {*} ui
@@ -47,9 +54,9 @@ class Geo {
     createGeoJsonLayerFromFile(file, ui) {
         const { id, featureCollection } = file
         const { features } = featureCollection
-        console.log('id :', id);
-        console.log('featureCollection :', JSON.stringify(featureCollection, null, 4));
-        const dispatch = this.dispatch
+        // console.log('id :', id);
+        // console.log('featureCollection :', JSON.stringify(featureCollection, null, 4));
+        const dispatch = this.dispatch // dispatch is used for any actions required on the features
 
         // todo - this is only getting the first line in the collection
         const line = features.find(feature => feature.geometry.type === 'LineString')
