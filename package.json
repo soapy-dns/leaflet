@@ -5,6 +5,9 @@
   "main": "app/index.html",
   "author": "Neil",
   "license": "ISC",
+  "engines": {
+    "node": "9.9.0"
+  },
   "scripts": {
     "dev": "webpack-dev-server --progress -p --history-api-fallback --hot --port 9001 --open",
     "build": "webpack --progress -p",
