@@ -147,10 +147,14 @@ const onDrawLineClick = (e) => {
     currentTrackLayerGroup.addLayer(line)
 }
 
+/**
+ * update the file on the map (separate from redux)
+ * @param {*} file
+ * @param {*} ui
+ * @param {*} geo
+ */
 const _refreshFileOnMap = (file, ui, geo) => {
-    // geo = new Geo(dispatch)
     map.eachLayer(layer => {
-        console.log('layer', layer.id, layer)
         if (layer.id === file.id) {
             map.removeLayer(layer)
             const newGeoJsonLayer = geo.createGeoJsonLayerFromFile(file, ui)
@@ -158,6 +162,14 @@ const _refreshFileOnMap = (file, ui, geo) => {
         }
     })
 }
+
+// const _removeFileFromMap = (fileId) => {
+//     map.eachLayer(layer => {
+//         if (layer.id === file.id) {
+//             map.removeLayer(layer)
+//         }
+//     })
+// }
 
 
 class EditMap extends Component {
@@ -168,7 +180,7 @@ class EditMap extends Component {
         this.onCancelAction = this.onCancelAction.bind(this)
         this.showAwaitingFunctionalityModal = this.showAwaitingFunctionalityModal.bind(this)
         this.showLocateModal = this.showLocateModal.bind(this)
-        // this.showOpenFileModal = this.showOpenFileModal.bind(this)
+        this.showOpenFileModal = this.showOpenFileModal.bind(this)
         this.onLocate = this.onLocate.bind(this)
         this.onOpenFile = this.onOpenFile.bind(this)
         this.centreOnCurrentLocation = this.centreOnCurrentLocation.bind(this)
@@ -192,8 +204,6 @@ class EditMap extends Component {
         this.stopDrawLine = this.stopDrawLine.bind(this)
         this.showHelpModal = this.showHelpModal.bind(this)
         this.addLineToFile = this.addLineToFile.bind(this)
-
-
         this.waypointModal = this.waypointModal.bind(this)
 
         this.state = {
@@ -203,7 +213,6 @@ class EditMap extends Component {
             removeFeatureId: null,
             loading: true
         }
-
     }
 
     /*
@@ -255,6 +264,7 @@ class EditMap extends Component {
         const addLineToFile = this.addLineToFile
 
         map.on('pm:drawend', function(e) {
+            console.log('drawend');
             // add to open file
             // dispatch(addFeatureToFile(waypointFeature, ui.selectedFileId))
 
@@ -300,16 +310,6 @@ class EditMap extends Component {
         // })
     }
 
-    // /*
-    //  The source of truth is the redux state.
-    //  If this changes, we may need to re-render.  However this is expensive, so only re-render when necessary.
-    //  */
-    // shouldComponentUpdate(nextProps, nextState) {
-    //     // return a boolean value  - add test
-    //     console.log ('shouldComponentUpdate')
-    //     return true
-    // }
-
     /**
      *
      * @param {*} feature
@@ -317,29 +317,25 @@ class EditMap extends Component {
      * passing too many complicated objects around in an unobvious manner
      */
     addLineToFile(feature) {
+        console.log('addLineToFile');
         const { dispatch, files, ui } = this.props
         const { selectedFileId } = ui
 
-        const file = files.find(it => it.id === selectedFileId) // we do seem to find this file here, and in the addFeatureToFile action which seems wastefull
         if (feature.properties.name === undefined) feature.properties.name = moment().format() // add default name
-        dispatch(addFeatureToFile(feature, selectedFileId))
-        _refreshFileOnMap(file, ui, geo)
+       feature.properties.id = uuidv4()
 
 
-        // files.find(file => file.id === fileId)
-        // // refresh file
-        // map.eachLayer(layer => {
-        //     console.log('layer', layer.id, layer)
-        //     if (layer.id === fileId) {
-        //         map.removeLayer(layer)
-        //         const newGeoJsonLayer = geo.createGeoJsonLayerFromFile(newFile, ui)
-        //         newGeoJsonLayer.addTo(map)
-        //     }
-        // })
+        const file = files.find(it => it.id === selectedFileId) // we do seem to find this file here, and in the addFeatureToFile action which seems wastefull
+        if (file) {
+            // todo - one method uses fileId and the other uses file.  should make it consistent
+            dispatch(addFeatureToFile(feature, selectedFileId))
+            _refreshFileOnMap(file, ui, geo)
+        } else {
+            alert('todo - add new file if none exists yet')
+        }
     }
 
     onCancelAction() {
-        // console.log ('cancelAction')
         this.setState({ modal: null })
     }
 
@@ -348,7 +344,7 @@ class EditMap extends Component {
      */
     onLocate(locateData) {
         const { latitude, longitude } = toLatLon(locateData.easting, locateData.northing, locateData.zone, undefined, false)
-        console.log('latitude', latitude, 'longitude', longitude)
+        // console.log('latitude', latitude, 'longitude', longitude)
         map.panTo(new L.LatLng(latitude, longitude))
         this.setState({ modal: null })
     }
@@ -366,14 +362,14 @@ class EditMap extends Component {
 
         dispatch(removeFileFromStore(this.state.removeFileId))
 
-        // clear selected filename in redux
-        if (ui.selectedFileId === this.state.removeFileId) dispatch(selectFile(null, null))
+        if (ui.selectedFileId === this.state.removeFileId) dispatch(selectFile(null, null)) // clear selectedFileId
 
-        map.eachLayer(layer => {
-            // console.log('layer.id', layer.id)
-            // console.log('fileId', this.state.removeFileId)
-            if (layer.id === this.state.removeFileId) map.removeLayer(layer)
-        })
+        _removeFileFromMap(removeFileId)
+        // map.eachLayer(layer => {
+        //     // console.log('layer.id', layer.id)
+        //     // console.log('fileId', this.state.removeFileId)
+        //     if (layer.id === this.state.removeFileId) map.removeLayer(layer)
+        // })
 
         this.setState({ modal: null, removeFileId: null })
 
@@ -387,40 +383,29 @@ class EditMap extends Component {
 
     /*
      removes the feature from the file, and marks the file as altered
+
+     TODO - IF LAST FEATURE IN FILE  - DO WE NOT SHOW THE DELETE ICON??  SOME ISSUE WITH DRAG AND DROP.  SAVE EMPTY FILE = REMOVE IT?
      */
     removeFeature() {
         console.log('removeFeature', this.state.removeFeatureId)
-        const { dispatch, files, ui } = this.props
+        // const { dispatch, files, ui, removeFeatureId } = this.props
 
-        // todo - don't change props
-        // remove feature from redux
-        let newFile
-        files.forEach(file => {
-            newFile = Object.assign({}, file)
+        // // find the file that contains the feature
+        // const foundFile = files.find(file => {
+        //     const foundFeature = file.featureCollection.features.find(feature => {
+        //         return feature.id === removeFeatureId
+        //     })
+        //     return !!foundFeature
+        // })
 
-            // console.log('newFile', newFile)
-            remove(newFile.featureCollection.features, feature => {
-                // console.log('feature>', feature)
-                if (feature.properties) {
-                    if (feature.properties.id === this.state.removeFeatureId) {
-                        return true
-                    }
-                }
-            })
-            // console.log('newFile - updated', newFile)
-            dispatch(updateFile(newFile))
-            this.setState({ modal: null, removeFeatureId: null })
-        })
+        // // find index of feature
+        // const featureIndex = foundFile.featureCollection.features.findIndex(feature => feature.id === removeFeatureId)
 
-        // remove feature from map
-        map.eachLayer(layer => {
-            console.log('layer', layer.id, layer)
-            if (layer.id === newFile.id) {
-                map.removeLayer(layer)
-                const newGeoJsonLayer = geo.createGeoJsonLayerFromFile(newFile, ui)
-                newGeoJsonLayer.addTo(map)
-            }
-        })
+        // const updatedFile = cloneDeep(foundFile).featureCollection.features.splice(featureIndex, 1)
+
+        // dispatch(updateFile(updatedFile))
+        // this.setState({ modal: null, removeFeatureId: null })
+        // _refreshFileOnMap(updatedFile, ui, geo)
     }
 
     onEdit() {
@@ -440,12 +425,12 @@ class EditMap extends Component {
      show open track modal
      */
     showOpenFileModal() {
-        console.log('showOpenFile')
+        // console.log('showOpenFile')
         this.setState({ modal: 'openTrack' })
     }
 
     showHelpModal() {
-        console.log('showHelp - change modal state to help')
+        // console.log('showHelp - change modal state to help')
         this.setState({ modal: 'help' })
     }
 
@@ -456,7 +441,7 @@ class EditMap extends Component {
     }
 
     hideElevationPlot() {
-        console.log('hideElevationPlot')
+        // console.log('hideElevationPlot')
         this.props.dispatch(toggleElevation(false))
     }
 
@@ -469,16 +454,10 @@ class EditMap extends Component {
 
         const featureCollection = geo.getGeoJsonObject(fileText, fileName)
 
-
-        // get the name from the lineString
-        const line = featureCollection.features.find(it => it.geometry.type === 'LineString')
-
         const file  = {
             name: fileName,
             id: fileId,
-            featureCollection: {
-                features: [line] // TODO - CHECK THAT I JUST NEED THIS LINE ONLY
-            }
+            featureCollection
         }
 
         const newFilesLayer = geo.createGeoJsonLayerFromFile(file, ui)
@@ -713,7 +692,16 @@ class EditMap extends Component {
      remove crosshairs cursor and click functionality
      */
     stopDrawLine() {
+        const { ui } = this.props
         console.log('stopDrawLine')
+
+        // stop editing existing line
+        if (ui.selectedLineId) {
+            this.props.dispatch(showMainMenu())
+            return this.onStopLineEdit()
+        }
+
+        // stop drawing a new line
         map.pm.disableDraw('Line')
         this.props.dispatch(showMainMenu())
 
@@ -857,43 +845,46 @@ class EditMap extends Component {
 
     }
 
-    onStopLineEdit() {
-        console.log('onStopLineEdit')
+    onStopLineEdit() {  // ISN'T USED BUT SHOULD BE FOR EDITING
+        console.log('--onStopLineEdit--')
         const { ui, dispatch, files } = this.props
 
-        //NOTE:- the line has already been updated in leaflet.  Just need to disable editing, and update redux
+        // NOTE:- the line has already been updated in leaflet.  Just need to disable editing, and update redux
 
         // TODO -SAVE LINE
-        // map.eachLayer(layer => {
-        //     if (layer.id === ui.selectedLineId) {
-        //         layer.pm.disable() // disable editing
-        //         // layerGroup.resetStyle(layer) // reset style back to the original
-        //         layer.resetStyle(this) // reset style back to the original - no idea what I am doing hee
+        map.eachLayer(layer => {
+            console.log('ui.selectedLineId :', ui.selectedLineId);
+            console.log('layer :', layer.id, layer.featureCollection);
+            if (layer.id === ui.selectedLineId) {
+                console.log('matches line', layer);
+                layer.pm.disable() // disable editing
+                // layerGroup.resetStyle(layer) // reset style back to the original
+                layer.resetStyle(this) // reset style back to the original - no idea what I am doing hee
 
-        //         dispatch(unselectLine()) // update redux as this line is no longer selected for editing
-        //         dispatch(showMainMenu())
-        //     }
+                dispatch(unselectLine()) // update redux as this line is no longer selected for editing
+                dispatch(showMainMenu())
+            }
 
-        //     if (layer.id === ui.selectedFileId) {
-        //         const geoJson = layer.toGeoJSON()
-        //         console.log('geoJson', geoJson)
-        //         console.log('files', files)
-        //         const newFile = find(files, it => it.id === layer.id)
-        //         console.log('newfile is false here!!')
-        //         console.log('newFile', newFile)
-        //         newFile.featureCollection = geoJson
+            // if (layer.id === ui.selectedFileId) {
+            //     const geoJson = layer.toGeoJSON()
+            //     console.log('geoJson', geoJson)
+            //     console.log('files', files)
+            //     const newFile = find(files, it => it.id === layer.id)
+            //     console.log('newfile is false here!!')
+            //     console.log('newFile', newFile)
+            //     newFile.featureCollection = geoJson
 
-        //         dispatch(updateFile(newFile))
-        //     }
-        // })
+            //     dispatch(updateFile(newFile))
+            // }
+        })
     }
 
     render() {
-        console.log('render')
+        // console.log('render')
         const { ui, currentLayer, files, dispatch } = this.props
-        console.log('state', this.state)
+        // console.log('state', this.state)
         const { modal } = this.state
-        console.log('modal', modal)
+        // console.log('modal', modal)
         let selectedLine
         if (ui.selectedLineId) {
             selectedLine = utils.getSelectedLine(ui.selectedLineId, files)
@@ -938,11 +929,8 @@ class EditMap extends Component {
                         awaitingFunctionality={this.showAwaitingFunctionalityModal}
                         centreOnCurrentLocation={this.centreOnCurrentLocation}
                         drawLine={this.drawLine}
-                        // stopDrawLine={this.stopDrawLine}
                         addWaypoint={this.waypointModal}
                         getMajorIncidents={this.getMajorIncidents}
-                        // autoCorrectTrack={this.autoCorrectTrack}
-                        // showElevationPlot={this.showElevationPlot}
                         showHelp={this.showHelpModal}
                         onEdit={this.onEdit}
                     />
@@ -966,7 +954,6 @@ class EditMap extends Component {
 
                 <div id="mapid"></div>
                 <div>showElevation { ui.showElevation }</div>
-                {console.log('show elevaton?', ui.showElevation)}
                 {ui.showElevation && selectedLine && <Elevation hideElevationPlot={this.hideElevationPlot} track={selectedLine} />}
 
 
