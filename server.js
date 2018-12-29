@@ -1,4 +1,3 @@
-'use strict'
 
 const express = require("express")
 const path = require("path")
@@ -29,7 +28,7 @@ app.use(ensureSecure)
 // serve static assets normally - I guess static assets are files
 // app.use(express.static(path.join(__dirname, "/dist/")))  // if trying to run the 'dist' version of the app from the non 'dist' server.js
 app.use(express.static(path.join(__dirname, "/")))
-console.log("__dirname", __dirname)
+// console.log("__dirname", __dirname)
 // app.use('/bundle.js', express.static(path.join(__dirname, '/dist/bundle.js')))
 
 // Handles all routes so you do not get a not found error

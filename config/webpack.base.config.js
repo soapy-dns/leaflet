@@ -3,7 +3,7 @@ const Config = require('webpack-config').default;
 const path = require('path');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const FaviconsWebpackPlugin = require('favicons-webpack-plugin');
+// const FaviconsWebpackPlugin = require('favicons-webpack-plugin');
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 const webpack = require('webpack')
 
@@ -66,7 +66,7 @@ module.exports = new Config().merge({
             // {from: './app/styles', to: 'styles'},
             {from: './server.js'}
         ]),
-        new FaviconsWebpackPlugin('./app/assets/images/map.png'),
+        // new FaviconsWebpackPlugin('./app/assets/images/map.png'),
         // new BundleAnalyzerPlugin(),  // uncomment this to analyse the bundle
         new webpack.DefinePlugin({
             'process.env.NODE_ENV': '"production"'
