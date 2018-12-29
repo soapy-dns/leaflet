@@ -119,7 +119,7 @@ class Collections extends Component {
         return (
             <div id="collections" className={ui.showFileSlider ? "open" : null}>
                 <button className="hamburger" onClick={this.toggleVisibility}>
-                    <span>Collections</span>
+                    <span>Files & Features</span>
                 </button>
 
                 <div className="side-panel-top">
