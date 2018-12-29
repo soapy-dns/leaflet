@@ -102,6 +102,7 @@ body {
     border-bottom-right-radius: 3px;
     border: 1px solid #333;
     cursor: pointer;
+    outline: none;
 }
 
 .hamburger span {
