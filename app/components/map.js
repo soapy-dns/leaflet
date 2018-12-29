@@ -859,7 +859,7 @@ class EditMap extends Component {
                 console.log('matches line', layer);
                 layer.pm.disable() // disable editing
                 // layerGroup.resetStyle(layer) // reset style back to the original
-                layer.resetStyle(this) // reset style back to the original - no idea what I am doing hee
+                // layer.resetStyle(this) // reset style back to the original - no idea what I am doing hee
 
                 dispatch(unselectLine()) // update redux as this line is no longer selected for editing
                 dispatch(showMainMenu())

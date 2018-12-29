@@ -74,6 +74,12 @@ class Geo {
                 }
             },
 
+            // could I do something to reset it.  What is e.target?
+            // reset: () => {
+            //     // console.log('layerGroup', e.target)
+            //     layerGroup.resetStyle(e.target)
+            // },
+
             // config for each point
             pointToLayer: (pointFeature, latlng) => {
                 if (!latlng) return
@@ -106,18 +112,16 @@ class Geo {
                     layer.on('mouseout', resetStyle)
 
                     layer.on('click', function() {
-                        layer.off('mouseout', resetStyle)
-                        console.log('onClick - showDrawingMenu', layer.feature.properties.id)
                         dispatch(showDrawingMenu())
                         dispatch(selectLine(layer.feature.properties.id))
+                        resetStyle // reset style before changing it for editing - ensures it goes back to this
                         layer.pm.enable(editableLineOptions)
                         layer.id = layer.feature.properties.id  // todo - do I need this as it is in there all the time?
                     })
+
                     // check to see if a line is already selected and if so, make it editable
                     if (ui.selectedLineId && layer.feature.properties.id === ui.selectedLineId) {
-                        // todo - how come this doesn't work?
                         layer.pm.enable(editableLineOptions)
-                        console.log('made editable', layer.pm.enabled())
                     }
                 }
             }
