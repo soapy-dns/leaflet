@@ -4,12 +4,12 @@ import { BasemapLayer, TiledMapLayer } from 'esri-leaflet'
 import { toLatLon } from 'utm'
 import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
-import { cloneDeep, remove, filter } from 'lodash'
+import { cloneDeep } from 'lodash'
 import moment from 'moment'
-import { DragDropContext } from 'react-dnd'
+// import { DragDropContext } from 'react-dnd'
 import 'leaflet.pm'
 const uuidv4 = require('uuid/v4')
-import { Dimmer, Loader, Image, Segment } from 'semantic-ui-react'
+// import { Dimmer, Loader, Image, Segment } from 'semantic-ui-react'
 
 import Api from '../utils/api'
 import Collections from './collections/collections'
@@ -68,7 +68,7 @@ let map
 let overlayLayers
 let layersControl
 // let currentTrackLayerGroup
-const fileLayerGroups = []
+// const fileLayerGroups = []
 let drawingLayer // the layer used to keep the drawing details (when drawing)
 
 let geo
@@ -119,7 +119,7 @@ const onDrawLineClick = (e) => {
     // create temp waypoint
     const points = L.geoJSON(pointFeatures, {
         // each point will be converted to a marker with the defined options
-        pointToLayer: function(feature) {
+        pointToLayer: function (feature) {
             const featureLatlng = [feature.geometry.coordinates[1], feature.geometry.coordinates[0]]
             if (feature.properties.type !== "user") {
                 return L.circleMarker(featureLatlng, geojsonLineMarkerOptions);
@@ -129,10 +129,10 @@ const onDrawLineClick = (e) => {
         }
     })
     const line = L.geoJSON(lineFeature, {
-        style: function(feature) {
+        style: function (feature) {
             return { color: feature.properties.color };
         },
-        onEachFeature: function(feature, layer) {
+        onEachFeature: function (feature, layer) {
             if (feature.properties && feature.properties.name) {
                 layer.bindPopup(feature.properties.name);
             }
@@ -258,20 +258,20 @@ class EditMap extends Component {
             // layers: [baseLayer],
             editable: true
         })
-        map.on('moveend', function(e) {
+        map.on('moveend', function (e) {
             dispatch(saveMapDetails({ center: map.getCenter(), zoom: map.getZoom() }))
         })
         const addLineToFile = this.addLineToFile
 
-        map.on('pm:drawend', function(e) {
+        map.on('pm:drawend', function (e) {
             console.log('drawend');
             // add to open file
             // dispatch(addFeatureToFile(waypointFeature, ui.selectedFileId))
 
             addLineToFile(drawingLayer.toGeoJSON()) // add line to file in redux
-          })
-        map.on('pm:drawstart', function(e) {
-        drawingLayer = e.workingLayer
+        })
+        map.on('pm:drawstart', function (e) {
+            drawingLayer = e.workingLayer
         })
         map.zoomControl.setPosition('bottomright')
 
@@ -322,7 +322,7 @@ class EditMap extends Component {
         const { selectedFileId } = ui
 
         if (feature.properties.name === undefined) feature.properties.name = moment().format() // add default name
-       feature.properties.id = uuidv4()
+        feature.properties.id = uuidv4()
 
 
         const file = files.find(it => it.id === selectedFileId) // we do seem to find this file here, and in the addFeatureToFile action which seems wastefull
@@ -454,7 +454,7 @@ class EditMap extends Component {
 
         const featureCollection = geo.getGeoJsonObject(fileText, fileName)
 
-        const file  = {
+        const file = {
             name: fileName,
             id: fileId,
             featureCollection
@@ -483,7 +483,7 @@ class EditMap extends Component {
             // create waypoint
             const majorIncidents = L.geoJSON(data.data, {
                 // each point will be converted to a marker with the defined options
-                pointToLayer: function(feature, latlng) {
+                pointToLayer: function (feature, latlng) {
                     // return L.circleMarker(e.latlng, geojsonMarkerOptions);
                     return L.marker(latlng, { icon: flameIcon })
                     // L.marker([51.5, -0.09], {icon: greenIcon}).addTo(map);
@@ -493,7 +493,7 @@ class EditMap extends Component {
                 //     console.log('open modal')
                 //     // todo - allow a popup to be set to add content / change the marker
                 // }
-                onEachFeature: function(feature, layer) {
+                onEachFeature: function (feature, layer) {
                     if (feature.properties && feature.properties.title) {
                         layer.bindPopup(feature.properties.title);
                     }
@@ -581,23 +581,23 @@ class EditMap extends Component {
         let newtracksLayer
         // create new geojson layer for this track
         newtracksLayer = new GeoJSON([newLine], {
-            style: function(feature) {
+            style: function (feature) {
                 return {
                     // color: line.properties.color || 'red',
                     color: 'green',
                     weight: 3,
                 };
             },
-            onEachFeature: function(feature, layer) {
-                layer.on('mouseover', function() {
+            onEachFeature: function (feature, layer) {
+                layer.on('mouseover', function () {
                     this.setStyle({
                         weight: 5
                     })
                 })
-                layer.on('mouseout', function() {
+                layer.on('mouseout', function () {
                     newtracksLayer.resetStyle(this)
                 })
-                layer.on('click', function() {
+                layer.on('click', function () {
                     console.log('select3')
                     layer.off(mouseout, mouseout())
                     dispatch(selectTrack(newtracksLayer))
@@ -851,31 +851,21 @@ class EditMap extends Component {
 
         // NOTE:- the line has already been updated in leaflet.  Just need to disable editing, and update redux
 
-        // TODO -SAVE LINE
         map.eachLayer(layer => {
-            console.log('ui.selectedLineId :', ui.selectedLineId);
-            console.log('layer :', layer.id, layer.featureCollection);
             if (layer.id === ui.selectedLineId) {
-                console.log('matches line', layer);
                 layer.pm.disable() // disable editing
-                // layerGroup.resetStyle(layer) // reset style back to the original
-                // layer.resetStyle(this) // reset style back to the original - no idea what I am doing hee
 
-                dispatch(unselectLine()) // update redux as this line is no longer selected for editing
+                dispatch(unselectLine()) // update state as this line is no longer selected for editing
                 dispatch(showMainMenu())
             }
 
-            // if (layer.id === ui.selectedFileId) {
-            //     const geoJson = layer.toGeoJSON()
-            //     console.log('geoJson', geoJson)
-            //     console.log('files', files)
-            //     const newFile = find(files, it => it.id === layer.id)
-            //     console.log('newfile is false here!!')
-            //     console.log('newFile', newFile)
-            //     newFile.featureCollection = geoJson
+            if (layer.id === ui.selectedFileId) { // save updated file in state
+                const geoJson = layer.toGeoJSON()
+                const newFile = files.find(it => it.id === layer.id)
+                newFile.featureCollection = geoJson
 
-            //     dispatch(updateFile(newFile))
-            // }
+                dispatch(updateFile(newFile))
+            }
         })
     }
 
@@ -893,20 +883,20 @@ class EditMap extends Component {
         return (
             <div id="mapwrap">
                 {(modal === 'locate') ? (
-                    <Locate cancelAction={this.onCancelAction} okAction={this.onLocate}/>
+                    <Locate cancelAction={this.onCancelAction} okAction={this.onLocate} />
                 ) : null}
-                 {(modal === 'help') ? (
+                {(modal === 'help') ? (
                     <Help cancelAction={this.onCancelAction} />
                 ) : null}
                 {(modal === 'awaitingFunctionality') ? (
-                    <AwaitingFunctionality cancelAction={this.onCancelAction}/>
+                    <AwaitingFunctionality cancelAction={this.onCancelAction} />
                 ) : null}
                 {(modal === 'openTrack') ? (
-                    <LoadTrackModal cancelAction={this.onCancelAction} okAction={this.onOpenFile}/>
+                    <LoadTrackModal cancelAction={this.onCancelAction} okAction={this.onOpenFile} />
                 ) : null}
                 {(modal === 'waypoint') ? (
                     <WaypointModal cancelAction={this.onCancelAction} okAction={this.addWaypoint}
-                                   selectedLatitude={ui.selectedLatitude} selectedLongitude={ui.selectedLongitude}/>
+                        selectedLatitude={ui.selectedLatitude} selectedLongitude={ui.selectedLongitude} />
                 ) : null}
                 {(modal === 'removeFile') ? (
                     <RemoveFileModal
@@ -935,15 +925,15 @@ class EditMap extends Component {
                         onEdit={this.onEdit}
                     />
                 ) : (
-                    <TrackMenu
-                        // onStop={this.onStopLineEdit}
-                        onStop={this.stopDrawLine} // NEED A WAY TO DETERMINE IF DRAWING A NEW LINE, OR EDITING AN EXISTING LINE
-                        onCancel={this.onCancelDraw}
-                        onHelp={this.showAwaitingFunctionalityModal}
-                        trackElevation={this.showElevationPlot}
-                        autoCorrectTrack={this.autoCorrectTrack}
-                    />
-                )}
+                        <TrackMenu
+                            // onStop={this.onStopLineEdit}
+                            onStop={this.stopDrawLine} // NEED A WAY TO DETERMINE IF DRAWING A NEW LINE, OR EDITING AN EXISTING LINE
+                            onCancel={this.onCancelDraw}
+                            onHelp={this.showAwaitingFunctionalityModal}
+                            trackElevation={this.showElevationPlot}
+                            autoCorrectTrack={this.autoCorrectTrack}
+                        />
+                    )}
 
                 <Collections
                     onSelectFile={this.onSelectFile}
@@ -953,7 +943,7 @@ class EditMap extends Component {
                 />
 
                 <div id="mapid"></div>
-                <div>showElevation { ui.showElevation }</div>
+                <div>showElevation {ui.showElevation}</div>
                 {ui.showElevation && selectedLine && <Elevation hideElevationPlot={this.hideElevationPlot} track={selectedLine} />}
 
 
