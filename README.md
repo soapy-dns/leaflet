@@ -86,7 +86,6 @@ chart.js -
 esri-leaflet
 leaflet -
 leaflet.pm
-leaflet.utm - I don't think this is still used
 react-dnd - drag and drop
 react-dnd-html5-backend - draga and drop
 react-chartjs-2
