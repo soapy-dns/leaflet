@@ -22,29 +22,43 @@ module.exports = new Config().merge({
         publicPath: '/'
     },
 
-    // use loaders to do stuff with non js files
     module: {
         rules: [
             {
                 test: /\.(js|jsx)$/,
                 exclude: /node_modules/,
+                use: [
+                    {
+                        loader: 'babel-loader' // transpile according to babel rules
+                    }
+                ]
                 // loader: 'babel-loader',
-                loader: 'babel-loader?cacheDirectory=true',  // this is supposed to cache files and make the build faster - i didn't notice a difference
+                // loader: 'babel-loader?cacheDirectory=true',  // this is supposed to cache files and make the build faster - i didn't notice a difference
                 // loader: 'babel',
-                options: {
-                    plugins: ['lodash'],  // this is supposed to pull out only the functionality required - I can't get it to work.
-                    presets: ['react', 'es2015']
-                }
+                // options: {
+                //     plugins: ['lodash'],  // this is supposed to pull out only the functionality required - I can't get it to work.
+                //     presets: ['react', 'es2015']
+                // }
             },
 
             {
                 // test: /\.(png|jpg|jpeg|gif)$/,
                 test: /\.(png|jpg|jpeg|gif|svg)$/,
-                loader: 'file-loader?limit=8192&name=assets/[name].[ext]?[hash]'
+                // loader: 'file-loader?limit=8192&name=assets/[name].[ext]?[hash]'
+                use: [
+                    {
+                        loader: 'file-loader?limit=8192&name=assets/[name].[ext]?[hash]'
+                    }
+                ]
             },
             {
                 test: /\.(ttf|woff|woff2|eot)$/,
-                loader: 'url-loader'
+                // loader: 'url-loader'
+                use: [
+                    {
+                        loader: 'url-loader'
+                    }
+                ]
             }
             // {
             //     // css-loader interprets @import and url() like import/require()

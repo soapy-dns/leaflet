@@ -67,7 +67,7 @@ class Collections extends Component {
     }
 
     onSelectFile(fileId) {
-        console.log('Collections - onSelectFile', fileId)
+        // console.log('Collections - onSelectFile', fileId)
         const {files} = this.props
         // console.log('files', files)
 
@@ -178,7 +178,7 @@ Collections.propTypes = {
 }
 
 function mapStateToProps(state) {
-    console.log('state.ui', state.ui)
+    // console.log('state.ui', state.ui)
     return {
         ui: state.ui,
         files: state.files

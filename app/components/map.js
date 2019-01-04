@@ -67,14 +67,12 @@ let map
 
 let overlayLayers
 let layersControl
-// let currentTrackLayerGroup
-// const fileLayerGroups = []
 let drawingLayer // the layer used to keep the drawing details (when drawing)
 
 let geo
 
 const _getInitialLineGeojsonFeature = (latlng) => {
-    console.log('_getInitialLineFeature')
+    // console.log('_getInitialLineFeature')
     return {
         type: "Feature",
         properties: {
@@ -835,7 +833,7 @@ class EditMap extends Component {
      */
     onSelectFile(fileId) {
         // todo use fileId rather than fileName
-        console.log('map - onSelectFile', fileId)
+        // console.log('map - onSelectFile', fileId)
         this.props.dispatch(selectFile(fileId))
     }
 

@@ -1,4 +1,21 @@
+
 {
-    "presets": ["es2015"],
-    "plugins": ["transform-object-assign", "lodash", "transform-semantic-ui-react-imports"]
-}
+    // "plugins": ["transform-object-assign", "lodash", "transform-semantic-ui-react-imports"]
+    "presets": [
+      [
+        "@babel/preset-env",
+        {
+          "targets": {
+            "browsers": ["last 2 versions", "not dead", "> 0.5%"],
+            // "node": "9.9"
+          },
+          "useBuiltIns": "usage",
+          "forceAllTransforms": true,
+          "ignoreBrowserslistConfig": true,
+          "modules": false,
+          "debug": true
+        }
+      ],
+      ["@babel/preset-react"]
+    ]
+  }
