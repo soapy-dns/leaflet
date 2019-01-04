@@ -291,7 +291,11 @@ class EditMap extends Component {
         mouseControl.addTo(map)
 
         //add scale
-        const scale = new Control.Scale()
+        const scaleOptions = {
+            metric: true,
+            imperial: false
+        }
+        const scale = new Control.Scale(scaleOptions)
         scale.setPosition('topright')
         scale.addTo(map)
 
