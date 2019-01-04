@@ -10,9 +10,10 @@ Defining features of this vs other offerings are
 
 
 ## Babel
-uses babel to transpile javascript, so can use more modern versions of javascript.  .babelrc also has 2 plugins
-transform-object-assign - allows the use of Object.assign
-transform-object-rest-spread -allows the use of the object spread operator '...'
+uses babel to transpile javascript, so can use more modern versions of javascript.
+uses @babel/polyfill.  Something causes the wrong version of core-js to be used, so as a work around I included the correct version of this as a dependency.
+https://github.com/facebook/react/issues/13018
+
 
 ## Notes
 I'm pretty certain that the semantic-ui.css cdn didn't properly scale models
