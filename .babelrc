@@ -13,7 +13,7 @@
           "forceAllTransforms": true,
           "ignoreBrowserslistConfig": true,
           "modules": false,
-          "debug": true
+          "debug": false
         }
       ],
       ["@babel/preset-react"]

@@ -199,5 +199,9 @@ body {
     padding: 6px 10px 6px 6px;
 }
 
+.leaflet-input {
+    padding: .6em 0em;
+}
+
 
 

@@ -38,6 +38,10 @@ class Collections extends Component {
         this.props.onRemoveFeature(featureId)
     }
 
+    updateFileName() {
+        alert('todo - update file name')
+    }
+
     saveFile(fileName, fileId) {
         const {files} = this.props
         const element = document.createElement("a")
@@ -135,6 +139,7 @@ class Collections extends Component {
                                     onMoveFeature={this.onMoveFeature}
                                     onSaveFile={this.saveFile}
                                     onRemoveFile={this.onRemoveFile}
+                                    updateFileName={this.updateFileName}
                                 />
                                 <Icon name="delete" color="red" size="large"
                                       onClick={(e) => this.onRemoveFile(e, file.id)}/>

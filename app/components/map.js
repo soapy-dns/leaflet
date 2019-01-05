@@ -229,8 +229,8 @@ class EditMap extends Component {
 
         // topo layer
         const topoLayer = new TiledMapLayer({
-            // url: 'http://maps.six.nsw.gov.au/arcgis/rest/services/public/NSW_Topo_Map/MapServer',
-            url: 'http://maps4.six.nsw.gov.au/arcgis/rest/services/sixmaps/LPIMap/MapServer',
+            url: 'http://maps.six.nsw.gov.au/arcgis/rest/services/public/NSW_Topo_Map/MapServer',
+            // url: 'http://maps4.six.nsw.gov.au/arcgis/rest/services/sixmaps/LPIMap/MapServer',
             maxZoom: 17,
             maxNativeZoom: 15
         })

@@ -1,6 +1,5 @@
 import React, {Component} from 'react'
 import PropTypes from 'prop-types'
-import { Input } from 'semantic-ui-react'
 
 
 class ChangeableField extends Component {
@@ -12,10 +11,11 @@ class ChangeableField extends Component {
         }
         this.handleClick = this.handleClick.bind(this)
         this.handleBlur = this.handleBlur.bind(this)
+        this.onChange = this.onChange.bind(this)
     }
 
     handleClick(e) {
-        // console.log('handleClick')
+        // console.log('handle click', this)
         // cancel previous callback
         if (this.timeout) clearTimeout(this.timeout)
 
@@ -34,12 +34,17 @@ class ChangeableField extends Component {
 
             // reset count
             this.count = 0
-        }, 250) // 250 ms
+        }, 500) // 250 ms
+    }
+
+    onChange(e) {
+        const { value } = e.target.value
+        this.setState({ value })
     }
 
     handleBlur (e) {
-        // TODO - handle saving here
-        console.log('handleBlur')
+        // save
+        this.props.onSave(this.state.value)
 
         // close edit mode
         this.setState({
@@ -51,14 +56,12 @@ class ChangeableField extends Component {
     // todo - have updateable field component so can re-use
     render() {
         const { edit, value } = this.state
-        // console.log('--------------------------------')
-        // console.log('value', value)
-        // console.log('--------------------------------')
 
         if (edit) {
+            // make input take focus when rendered with autoFocus
             return (
                 <span>
-                    <span><Input name="collectionName" onBlur={this.handleBlur} value={value} /></span>
+                    <input  className="leaflet-input" name="collectionName" onBlur={this.handleBlur} value={value} autoFocus onChange={this.onChange} />
                 </span>
 
             )
@@ -73,7 +76,8 @@ class ChangeableField extends Component {
 }
 
 ChangeableField.propTypes = {
-    value: PropTypes.string
+    value: PropTypes.string.isRequired,
+    onSave: PropTypes.func.isRequired
 }
 
 export default ChangeableField

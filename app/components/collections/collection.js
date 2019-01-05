@@ -33,34 +33,11 @@ class Collection extends Component {
         this.renderIcons = this.renderIcons.bind(this)
     }
 
-    // handleClick(e) {
-    //     // cancel previous callback
-    //     console.log('handleClick')
-    //     if (this.timeout) clearTimeout(this.timeout)
 
-    //     // increment count
-    //     this.count++
-
-    //     // schedule new callback  [timeBetweenClicks] ms after last click
-    //     this.timeout = setTimeout(() => {
-    //         // listen for double clicks
-    //         if (this.count === 2) {
-    //             // turn on edit mode
-    //             this.setState({
-    //                 edit: true,
-    //             })
-    //         }
-
-    //         // reset count
-    //         this.count = 0
-    //     }, 250) // 250 ms
-    // }
 
     renderIcons() {
-        console.log('renderIcons')
         const { fileId, altered, onSaveFile, fileName, selectedFileId } = this.props
         const icon = (fileId === selectedFileId) ? 'folder open outline' : 'folder outline'
-        console.log('renderIcons', fileName)
 
         return (
             <span>
@@ -75,36 +52,16 @@ class Collection extends Component {
     }
 
 
-    // todo - have updateable field component so can re-use
     render() {
         const {fileId, fileName, selectedFileId} = this.props
         const { edit } = this.state
-        console.log('render collection')
 
         return (
             <span>
                 {this.renderIcons()}
-                <ChangeableField value={fileName} />
+                <ChangeableField value={fileName} onSave={this.props.updateFileName} />
             </span>
         )
-
-        // if (edit) {
-        //     return (
-        //         <span>
-        //             {this.renderIcons()}
-        //             <span><Input name="collectionName"/></span>
-        //         </span>
-
-        //     )
-        // } else {
-        //     return this.props.connectDropTarget(
-        //         <span onClick={this.handleClick}>
-        //             {this.renderIcons()}
-
-        //             {fileName}
-        //         </span>
-        //     )
-        // }
     }
 }
 
@@ -116,6 +73,7 @@ Collection.propTypes = {
     onMoveFeature: PropTypes.func,
     saveFile: PropTypes.func,
     onRemoveFile: PropTypes.func,
+    updateFileName: PropTypes.func.isRequired,
 
     // injected by dnd
     connectDropTarget: PropTypes.func.isRequired,
