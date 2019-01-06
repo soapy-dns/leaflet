@@ -9,6 +9,7 @@ class ChangeableField extends Component {
             edit: false,
             value: props.value
         }
+        this.count = 0
         this.handleClick = this.handleClick.bind(this)
         this.handleBlur = this.handleBlur.bind(this)
         this.onChange = this.onChange.bind(this)

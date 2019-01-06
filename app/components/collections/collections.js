@@ -41,8 +41,8 @@ class Collections extends Component {
 
     /**
      * Update file in state
-     * @param {*} newFileName
-     * @param {*} fileId
+     * @param {String} newFileName
+     * @param {String} fileId
      */
     updateFileName(newFileName, fileId) {
         const { files, dispatch } = this.props
