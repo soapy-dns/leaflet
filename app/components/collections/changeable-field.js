@@ -15,7 +15,6 @@ class ChangeableField extends Component {
     }
 
     handleClick(e) {
-        // console.log('handle click', this)
         // cancel previous callback
         if (this.timeout) clearTimeout(this.timeout)
 
@@ -38,7 +37,7 @@ class ChangeableField extends Component {
     }
 
     onChange(e) {
-        const { value } = e.target.value
+        const { value } = e.target
         this.setState({ value })
     }
 

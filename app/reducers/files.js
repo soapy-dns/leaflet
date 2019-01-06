@@ -74,7 +74,6 @@ export default function(fileState = [], action) {
             remove(newState, it => it.id === action.file.id)
             console.log('files after remove', newState[0])
 
-
             newState.push(newFile)
             console.log('files after add', newState[0], newState[1])
 

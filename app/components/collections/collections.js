@@ -8,7 +8,7 @@ import {cloneDeep, has, isEmpty} from 'lodash'
 import Feature from './feature'
 import Collection from './collection'
 import {selectFile, toggleFileSlider} from '../../actions/ui'
-import {updateFiles, markFileAsSaved} from '../../actions/files'
+import { updateFile, updateFiles, markFileAsSaved}  from '../../actions/files'
 import utils from '../../common/utils'
 
 class Collections extends Component {
@@ -23,6 +23,7 @@ class Collections extends Component {
         this.onSelectFile = this.onSelectFile.bind(this)
         this.onMoveFeature = this.onMoveFeature.bind(this)
         this.onRemoveFile = this.onRemoveFile.bind(this)
+        this.updateFileName = this.updateFileName.bind(this)
     }
 
     onRemoveFile(e, fileId) {
@@ -38,12 +39,27 @@ class Collections extends Component {
         this.props.onRemoveFeature(featureId)
     }
 
-    updateFileName() {
-        alert('todo - update file name')
+    /**
+     * Update file in state
+     * @param {*} newFileName
+     * @param {*} fileId
+     */
+    updateFileName(newFileName, fileId) {
+        const { files, dispatch } = this.props
+
+        const file = utils.getFileById(files, fileId)
+        file.name = newFileName
+
+        dispatch(updateFile(file))
     }
 
+    /**
+     * save file to system
+     * @param {*} fileName
+     * @param {*} fileId
+     */
     saveFile(fileName, fileId) {
-        const {files} = this.props
+        const { files, dispatch } = this.props
         const element = document.createElement("a")
         const file = utils.getFileById(files, fileId)
 

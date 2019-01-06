@@ -31,6 +31,7 @@ class Collection extends Component {
         }
         // this.handleClick = this.handleClick.bind(this)
         this.renderIcons = this.renderIcons.bind(this)
+        this.onSave = this.onSave.bind(this)
     }
 
 
@@ -51,6 +52,12 @@ class Collection extends Component {
         )
     }
 
+    onSave(newFileName) {
+        const { fileId, fileName, updateFileName } = this.props
+
+        if (newFileName !== fileName) updateFileName(newFileName, fileId)
+    }
+
 
     render() {
         const {fileId, fileName, selectedFileId} = this.props
@@ -59,7 +66,7 @@ class Collection extends Component {
         return (
             <span>
                 {this.renderIcons()}
-                <ChangeableField value={fileName} onSave={this.props.updateFileName} />
+                <ChangeableField value={fileName} onSave={this.onSave} />
             </span>
         )
     }
@@ -71,8 +78,8 @@ Collection.propTypes = {
     altered: PropTypes.boolean,
     selectedFileId: PropTypes.string,
     onMoveFeature: PropTypes.func,
-    saveFile: PropTypes.func,
-    onRemoveFile: PropTypes.func,
+    saveFile: PropTypes.func.isRequired,
+    onRemoveFile: PropTypes.func.isRequired,
     updateFileName: PropTypes.func.isRequired,
 
     // injected by dnd
