@@ -17,12 +17,12 @@ class MainMenu extends Component {
     render() {
         const {
             locate,
-            awaitingFunctionality,
+            // awaitingFunctionality,
             openFile,
-            newFile,
+            addEmptyFile,
             centreOnCurrentLocation,
-            drawLine,
-            stopDrawLine,
+            onDrawLine,
+            // stopDrawLine,
             addWaypoint,
             getMajorIncidents,
             // autoCorrectTrack,
@@ -40,8 +40,8 @@ class MainMenu extends Component {
                 <Dropdown text='New' className='link item'>
                     <Dropdown.Menu>
                         <Dropdown.Item onClick={addWaypoint}>Waypoint</Dropdown.Item>
-                        <Dropdown.Item onClick={drawLine}>Track</Dropdown.Item>
-                        <Dropdown.Item onClick={newFile}>File</Dropdown.Item>
+                        <Dropdown.Item onClick={onDrawLine}>Track</Dropdown.Item>
+                        <Dropdown.Item onClick={addEmptyFile}>File</Dropdown.Item>
                     </Dropdown.Menu>
                 </Dropdown>
 
@@ -68,11 +68,11 @@ MainMenu.propTypes = {
     awaitingFunctionality: PropTypes.func,
     centreOnCurrentLocation: PropTypes.func,
     openFile: PropTypes.func,
-    newFile: PropTypes.func,
+    addEmptyFile: PropTypes.func,
     okAction: PropTypes.func,
     cancelAction: PropTypes.func,
     addWaypoint: PropTypes.func,
-    drawLine: PropTypes.func,
+    onDrawLine: PropTypes.func,
     stopDrawLine: PropTypes.func,
     getMajorIncidents: PropTypes.func,
     showHelp: PropTypes.func

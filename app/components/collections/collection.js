@@ -22,7 +22,9 @@ function collect(connect, monitor) {
         isOver: monitor.isOver()
     }
 }
-
+/**
+ * A file
+ */
 class Collection extends Component {
     constructor(props) {
         super(props)
@@ -45,7 +47,7 @@ class Collection extends Component {
                 {altered ? (
                     <Icon color="blue" size="large" name="save"
                         onClick={(e) => onSaveFile(fileName, fileId)} />
-                    ) : <span>no icons</span>
+                    ) : null
                 }
                 <Icon color="blue" size="large" name={icon} />
             </span>

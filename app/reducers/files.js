@@ -1,7 +1,7 @@
 import { isEmpty, remove } from 'lodash'
 import {
     ADD_FILE,
-    NEW_FILE,
+    // NEW_FILE,
     ADD_FEATURE_TO_FILE,
     UPDATE_FILES,
     UPDATE_FILE,
@@ -28,25 +28,16 @@ export default function(fileState = [], action) {
          */
         case ADD_FILE:
             newState = Object.assign([], fileState)
-            newState.push({
-                name: action.fileName,
-                id: action.fileId,
-                altered: false,
-                featureCollection: action.fileText
-            })
+            newState.push(action.file)
 
             return newState
 
-        case NEW_FILE:
-            // new file is being called from open file, and when adding a new waypoint - todo - fix it
-            newState = Object.assign([], fileState)
-            newState.push({
-                name: action.fileName,
-                altered: true,
-                featureCollection: action.fileText
-            })
+        // case NEW_FILE:
+        //     // new file is being called from open file, and when adding a new waypoint - todo - fix it
+        //     newState = Object.assign([], fileState)
+        //     newState.push(file)
 
-            return newState
+        //     return newState
 
         case ADD_FEATURE_TO_FILE:
             newState = Object.assign([], fileState)
@@ -54,6 +45,7 @@ export default function(fileState = [], action) {
             foundFile = _getMatchingFile(newState, action.selectedFileId)
 
             // add the new feature to it
+            console.log('foundFile', foundFile)
             foundFile.featureCollection.features.push(action.feature)
             foundFile.altered = true
 

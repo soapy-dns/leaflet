@@ -7,7 +7,6 @@ import 'normalize.css'  // I added this to get rid of the annoying blue outline 
 import './styles/main.css'
 import 'semantic-ui-css/semantic.min.css'
 import 'leaflet/dist/leaflet.css'  //
-import './styles/face-styles.css'
 
 import 'leaflet.pm/dist/leaflet.pm.css'
 

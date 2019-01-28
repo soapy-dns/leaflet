@@ -57,6 +57,11 @@ class Geo {
         // console.log('id :', id);
         // console.log('featureCollection :', JSON.stringify(featureCollection, null, 4));
         const dispatch = this.dispatch // dispatch is used for any actions required on the features
+        // console.log('featureCollection', JSON.stringify(featureCollection, null, 4))
+        console.log('featureCollection', featureCollection)
+        console.log('features', features)
+        if (!features) return
+
 
         // todo - this is only getting the first line in the collection
         const line = features.find(feature => feature.geometry.type === 'LineString')

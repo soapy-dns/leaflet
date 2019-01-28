@@ -11,6 +11,9 @@ import {selectFile, toggleFileSlider} from '../../actions/ui'
 import { updateFile, updateFiles, markFileAsSaved}  from '../../actions/files'
 import utils from '../../common/utils'
 
+/**
+ * Collections is now synonymous with Files
+ */
 class Collections extends Component {
     constructor(props) {
         super(props)
@@ -125,7 +128,8 @@ class Collections extends Component {
         const selectedFile = files.find(it => it.id === ui.selectedFileId)
 
         const features = []
-        if (selectedFile && has(selectedFile, 'featureCollection')) {
+        console.log('selectedFile', selectedFile)
+        if (selectedFile && selectedFile.featureCollection && selectedFile.featureCollection.features) {
             selectedFile.featureCollection.features.map(feature => {
                 features.push({
                     name: feature.properties.name,
