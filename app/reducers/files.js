@@ -45,7 +45,6 @@ export default function(fileState = [], action) {
             foundFile = _getMatchingFile(newState, action.selectedFileId)
 
             // add the new feature to it
-            console.log('foundFile', foundFile)
             foundFile.featureCollection.features.push(action.feature)
             foundFile.altered = true
 
@@ -57,17 +56,13 @@ export default function(fileState = [], action) {
 
         case UPDATE_FILE:
             newState = Object.assign([], fileState)
-            console.log('action.file', action.file)
 
             const newFile = action.file
             newFile.altered = true
 
-            console.log('files before remove', newState[0])
             remove(newState, it => it.id === action.file.id)
-            console.log('files after remove', newState[0])
 
             newState.push(newFile)
-            console.log('files after add', newState[0], newState[1])
 
             return newState
 
@@ -86,7 +81,6 @@ export default function(fileState = [], action) {
             return newState
 
         case UPDATE_WAYPOINT_POSITION:
-        console.log('update waypoint position - reducer')
         debugger
             newState = Object.assign([], fileState)
 

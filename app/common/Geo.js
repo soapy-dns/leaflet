@@ -52,8 +52,16 @@ class Geo {
      * @param {*} ui
      */
     createGeoJsonLayerFromFile(file, ui) {
+        console.log('createGeoJsonLayerFromFile', file)
         const { id, featureCollection } = file
+        if (!featureCollection) {
+            console.log('There is no featureCollection for file', file)
+            alert('there is no featureCollection - This is a BUG')
+            return
+        }
         const { features } = featureCollection
+
+
         // console.log('id :', id);
         // console.log('featureCollection :', JSON.stringify(featureCollection, null, 4));
         const dispatch = this.dispatch // dispatch is used for any actions required on the features
@@ -62,9 +70,11 @@ class Geo {
         console.log('features', features)
         if (!features) return
 
+        // console.log('features', JSON.stringify(features, null, 4))
 
         // todo - this is only getting the first line in the collection
         const line = features.find(feature => feature.geometry.type === 'LineString')
+        console.log('line', line)
 
         const resetStyle = (e) => {
             // console.log('layerGroup', e.target)

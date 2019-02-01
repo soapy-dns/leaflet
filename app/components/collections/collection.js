@@ -64,6 +64,7 @@ class Collection extends Component {
     render() {
         const {fileId, fileName, selectedFileId} = this.props
         const { edit } = this.state
+        console.log('fileName ', fileName )
 
         return (
             <span>

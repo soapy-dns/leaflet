@@ -154,8 +154,9 @@ const _refreshFileOnMap = (file, ui, geo) => {
     map.eachLayer(layer => {
         if (layer.id === file.id) {
             map.removeLayer(layer)
-            console.log('refreshFileOnMap')
+            // console.log('refreshFileOnMap')
             const newGeoJsonLayer = geo.createGeoJsonLayerFromFile(file, ui)
+            // console.log('newGeoJsonLayer', newGeoJsonLayer)
             newGeoJsonLayer.addTo(map)
         }
     })
@@ -167,7 +168,7 @@ const _refreshFileOnMap = (file, ui, geo) => {
  */
 const _removeFileFromMap = (fileId) => {
     map.eachLayer(layer => {
-        if (layer.id === file.id) {
+        if (layer.id === fileId) {
             map.removeLayer(layer)
         }
     })
@@ -267,7 +268,6 @@ class EditMap extends Component {
         const addLineToFile = this.addLineToFile
 
         map.on('pm:drawend', function (e) {
-            console.log('drawend');
             // add to open file
             // dispatch(addFeatureToFile(waypointFeature, ui.selectedFileId))
 
@@ -306,14 +306,10 @@ class EditMap extends Component {
 
         // each file is becomes a layerGroup which is added to the map
         files.forEach(file => {
-            console.log('PROCESSING FILE', file)
             const layerGroup = geo.createGeoJsonLayerFromFile(file, ui)
 
             if (layerGroup) layerGroup.addTo(map)
         })
-        // map.eachLayer(layer => {
-        //     console.log('layer', layer.id, layer)
-        // })
     }
 
     /**
@@ -367,24 +363,24 @@ class EditMap extends Component {
      */
     removeFeature() {
         console.log('removeFeature', this.state.removeFeatureId)
-        // const { dispatch, files, ui, removeFeatureId } = this.props
+        const { dispatch, files, ui, removeFeatureId } = this.props
 
-        // // find the file that contains the feature
-        // const foundFile = files.find(file => {
-        //     const foundFeature = file.featureCollection.features.find(feature => {
-        //         return feature.id === removeFeatureId
-        //     })
-        //     return !!foundFeature
-        // })
+        // find the file that contains the feature
+        const foundFile = files.find(file => {
+            const foundFeature = file.featureCollection.features.find(feature => {
+                return feature.id === removeFeatureId
+            })
+            return !!foundFeature
+        })
 
-        // // find index of feature
-        // const featureIndex = foundFile.featureCollection.features.findIndex(feature => feature.id === removeFeatureId)
+        // find index of feature
+        const featureIndex = foundFile.featureCollection.features.findIndex(feature => feature.id === removeFeatureId)
 
-        // const updatedFile = cloneDeep(foundFile).featureCollection.features.splice(featureIndex, 1)
+        const updatedFile = cloneDeep(foundFile).featureCollection.features.splice(featureIndex, 1)
 
-        // dispatch(updateFile(updatedFile))
-        // this.setState({ modal: null, removeFeatureId: null })
-        // _refreshFileOnMap(updatedFile, ui, geo)
+        dispatch(updateFile(updatedFile))
+        this.setState({ modal: null, removeFeatureId: null })
+        _refreshFileOnMap(updatedFile, ui, geo)
     }
 
     onEdit() {
@@ -438,32 +434,30 @@ class EditMap extends Component {
     onOpenFile(fileText, fileName, fileId) {
         const { dispatch, ui } = this.props
 
-        const featureCollection = geo.getGeoJsonObject(fileText, fileName)
-
+        // build file
         const file = {
             name: fileName,
             id: fileId,
-            featureCollection
+            featureCollection: geo.getGeoJsonObject(fileText, fileName)
         }
 
-        console.log('create geojson layer on open file')
-        const newFilesLayer = geo.createGeoJsonLayerFromFile(file, ui)
-        newFilesLayer.addTo(map)
-
-        // set bounds to fit this new layer
-        map.fitBounds(newFilesLayer.getBounds())
+        const layerGroup = geo.createGeoJsonLayerFromFile(file, ui)
+        if (layerGroup) {
+            layerGroup.addTo(map)
+            map.fitBounds(layerGroup.getBounds()) // set bounds to fit this new layer
+        } else {
+            console.log('no layer group created = WHY?')
+        }
 
         // add to redux
-        dispatch(addFile(featureCollection, fileName, fileId))
+        dispatch(addFile(file))
         dispatch(selectFile(fileId))
 
         // turn modal off
         this.setState({ modal: null })
     }
 
-
     onDrawLine() {
-        console.log('onDrawLine')
         const { selectedFileId } = this.props.ui
         if (!selectedFileId) {
             alert('There is no selected file to add a track to.  Add or select a file first')
@@ -741,8 +735,9 @@ class EditMap extends Component {
 
         console.log('strop drawing a new line')
         // stop drawing a new line
-        map.pm.disableDraw('Line')
+        map.pm.disableDraw('Line') // what does this do
         this.props.dispatch(showMainMenu())
+        console.log('need to add it to the map!!')
 
         // L.DomUtil.removeClass(map._container, 'leaflet-crosshair')
         // map.off('click', onDrawLineClick)
@@ -832,20 +827,21 @@ class EditMap extends Component {
             const foundFile = utils.getFileById(files, ui.selectedFileId)
 
             // add the new waypoint to the features
-            const fileFeatures = Object.assign([], foundFile.featureCollection)
+            const fileFeatures = Object.assign([], foundFile.featureCollection.features)
             fileFeatures.push(waypointFeature)
 
             const file = {
                 id: foundFile.id,
                 name: foundFile.name,
                 featureCollection: {
-                    features: [fileFeatures]
+                    features: fileFeatures
                 }
             }
 
             console.log('create layer on add waypoint for selected file')
             const layerGroup = geo.createGeoJsonLayerFromFile(file, ui)
 
+            console.log('add waypoint to map')
             layerGroup.addTo(map)
 
             // ADD TO REDUX
@@ -946,12 +942,12 @@ class EditMap extends Component {
                         okAction={this.removeFeature}
                     />
                 ) : null}
-                { modal === Constants.modal.ON_DRAW ? (
+                {modal === Constants.modal.ON_DRAW ? (
                     <AddFeatureModal // todo could have a separate one for line and waypoint.
                         cancelAction={this.onCancelAction}
                         okAction={this.addFeature} // line or waypoint
                     />
-                ) : null }
+                ) : null}
 
                 {(ui.menuType === 'main') ? (
                     <MainMenu
