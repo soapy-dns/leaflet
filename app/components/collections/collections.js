@@ -9,7 +9,8 @@ import Feature from './feature'
 import Collection from './collection'
 import {selectFile, toggleFileSlider} from '../../actions/ui'
 import { updateFile, updateFiles, markFileAsSaved}  from '../../actions/files'
-import utils from '../../common/utils'
+// import utils from '../../common/utils'
+import Constants from '../../common/constants'
 
 /**
  * Collections is now synonymous with Files
@@ -19,14 +20,15 @@ class Collections extends Component {
         super(props)
 
         this.toggleVisibility = this.toggleVisibility.bind(this)
-        this.saveFile = this.saveFile.bind(this)
         this.state = {
             activeItem: null,
         }
         this.onSelectFile = this.onSelectFile.bind(this)
         this.onMoveFeature = this.onMoveFeature.bind(this)
         this.onRemoveFile = this.onRemoveFile.bind(this)
-        this.updateFileName = this.updateFileName.bind(this)
+        this.onUpdateFileDetails = this.onUpdateFileDetails.bind(this)
+        // this.updateFileName = this.updateFileName.bind(this)
+        // this.onSaveFile = this.onSaveFile.bind(this)
     }
 
     onRemoveFile(e, fileId) {
@@ -47,35 +49,17 @@ class Collections extends Component {
      * @param {String} newFileName
      * @param {String} fileId
      */
-    updateFileName(newFileName, fileId) {
-        const { files, dispatch } = this.props
+    // updateFileName(newFileName, fileId) {
+    //     const { files, dispatch } = this.props
 
-        const file = utils.getFileById(files, fileId)
-        file.name = newFileName
+    //     const file = utils.getFileById(files, fileId)
+    //     file.name = newFileName
 
-        dispatch(updateFile(file))
-    }
-
-    /**
-     * save file to system
-     * @param {*} fileName
-     * @param {*} fileId
-     */
-    saveFile(fileName, fileId) {
-        const { files, dispatch } = this.props
-        const element = document.createElement("a")
-        const file = utils.getFileById(files, fileId)
-
-        const blob = new Blob([JSON.stringify(file.featureCollection)], {type: 'application/json'})
-
-        element.href = URL.createObjectURL(blob)
-        element.download = `${fileName}`
-
-        element.click()
-
-        file.altered = false  // possibly shouldn't be updating this.  saving it via dispatch anyway
-        dispatch(markFileAsSaved(file))
-
+    //     dispatch(updateFile(file))
+    // }
+    onUpdateFileDetails() {
+        console.log('collections onSelectFile')
+        this.props.onUpdateFileDetails()
     }
 
     toggleVisibility() {
@@ -122,7 +106,7 @@ class Collections extends Component {
     }
 
     render() {
-        const {files, ui, onSelectFeature } = this.props
+        const {files, ui, onSelectFeature, onSaveFile } = this.props
         if (isEmpty(files)) return null
 
         const selectedFile = files.find(it => it.id === ui.selectedFileId)
@@ -156,9 +140,9 @@ class Collections extends Component {
                                     altered={file.altered}
                                     selectedFileId={ui.selectedFileId}
                                     onMoveFeature={this.onMoveFeature}
-                                    onSaveFile={this.saveFile}
+                                    onSaveFile={onSaveFile}
                                     onRemoveFile={this.onRemoveFile}
-                                    updateFileName={this.updateFileName}
+                                    onUpdateFileDetails={this.onUpdateFileDetails}
                                 />
                                 <Icon name="delete" color="red" size="large"
                                       onClick={(e) => this.onRemoveFile(e, file.id)}/>
@@ -198,7 +182,9 @@ Collections.propTypes = {
     onSelectFile: PropTypes.func,
     onSelectFeature: PropTypes.func,
     onRemoveFile: PropTypes.func,
-    onRemoveFeature: PropTypes.func
+    onRemoveFeature: PropTypes.func,
+    onSaveFile: PropTypes.func,
+    onUpdateFileDetails: PropTypes.func
 }
 
 function mapStateToProps(state) {

@@ -8,6 +8,7 @@ import { cloneDeep } from 'lodash'
 import moment from 'moment'
 import 'leaflet.pm'
 const uuidv4 = require('uuid/v4')
+import toGpx from 'togpx'
 
 import Api from '../utils/api'
 import Collections from './collections/collections'
@@ -16,22 +17,25 @@ import TrackMenu from './menu/track-menu'
 import Locate from './locate-modal'
 import Help from './help-modal'
 import AwaitingFunctionality from './awaiting-functionality-modal'
-import LoadTrackModal from './load-track-modal'
+import LoadFileModal from './load-file-modal'
 import WaypointModal from './waypoint-modal'
 import RemoveFileModal from './collections/remove-file-modal'
 import RemoveFeatureModal from './collections/remove-feature-modal'
 import AddFeatureModal from './drawing/add-feature-error-modal'
+import OnSaveFileModal from './modals/onSaveFile'
+import FileDetailsUpdateModal from './modals/fileDetailsUpdate'
 import Elevation from '../components/stats/elevation'
 import utils from '../common/utils'
 import MouseControl from '../common/Mouse-control'
 import Constants from '../common/constants'
 
-import { selectTrack } from '../actions/tracks'
+// import { selectTrack } from '../actions/tracks'
 import {
     addFile,
     addFeatureToFile,
     updateFile,
-    removeFileFromStore
+    removeFileFromStore,
+    markFileAsSaved
 } from '../actions/files'
 import { saveMapDetails } from '../actions/current'
 import {
@@ -41,7 +45,8 @@ import {
     clearLatLng,
     showDrawingMenu,
     showMainMenu,
-    unselectLine
+    unselectLine,
+    selectFileIdToSave
 } from '../actions/ui'
 import { getSelectedTrack, getLine, getDistanceBetween2Points, getMillisecsBetween2Points } from '../utils/index'
 import { flameIcon, startIcon, markerIcon, pinIcon } from '../common/icons'
@@ -209,6 +214,9 @@ class EditMap extends Component {
         this.showHelpModal = this.showHelpModal.bind(this)
         this.addLineToFile = this.addLineToFile.bind(this)
         this.waypointModal = this.waypointModal.bind(this)
+        this.onSaveFile = this.onSaveFile.bind(this)
+        this.saveFile = this.saveFile.bind(this)
+        this.onUpdateFileDetails = this.onUpdateFileDetails.bind(this)
 
         this.state = {
             locate: false,
@@ -431,14 +439,17 @@ class EditMap extends Component {
      * @param {*} fileName - the name of the file
      * @param {*} fileId - the id of the file
      */
-    onOpenFile(fileText, fileName, fileId) {
+    onOpenFile(fileText, fileDetails) {
         const { dispatch, ui } = this.props
+        console.log('fileDetails', fileDetails)
+        // console.log('features', geo.getGeoJsonObject(fileText, fileDetails.filename, fileDetails.type))
 
-        // build file
+        // build file - todo - put in an _ext object
         const file = {
-            name: fileName,
-            id: fileId,
-            featureCollection: geo.getGeoJsonObject(fileText, fileName)
+            name: fileDetails.filename,
+            id: fileDetails.fileId,
+            type: fileDetails.type,
+            featureCollection: geo.getGeoJsonObject(fileText, fileDetails.filename, fileDetails.type)
         }
 
         const layerGroup = geo.createGeoJsonLayerFromFile(file, ui)
@@ -446,15 +457,52 @@ class EditMap extends Component {
             layerGroup.addTo(map)
             map.fitBounds(layerGroup.getBounds()) // set bounds to fit this new layer
         } else {
-            console.log('no layer group created = WHY?')
+            alert('There are no features in this file')
         }
 
         // add to redux
         dispatch(addFile(file))
-        dispatch(selectFile(fileId))
+        dispatch(selectFile(fileDetails.fileId))
 
         // turn modal off
         this.setState({ modal: null })
+    }
+
+    onSaveFile(fileId) {
+        console.log('maps - onSaveFile')
+        const { dispatch } = this.props
+        this.setState({modal: Constants.modal.ON_SAVE_FILE})
+        dispatch(selectFileIdToSave(fileId))
+    }
+
+    /**
+     *
+     * TODO - IN PROGRESS
+     * save file to system
+     * @param {*} fileName
+     * @param {*} fileId
+     */
+    saveFile() { // TODO - I could just call it with the fileId and reduce the need for the dispatch(selectFileIdToSave(fileId))
+        const { files, ui, dispatch } = this.props
+        const { selectedFileIdToSave } = ui
+        const element = document.createElement("a")
+        const file = utils.getFileById(files, selectedFileIdToSave)
+        const text = toGpx(file.featureCollection) // todo - garmen didn't like the waypoints
+        const blob = new Blob([text], {type: 'application/gpx+xml'})
+
+        // const text = JSON.stringify(file.featureCollection)
+        // const blob = new Blob([text], {type: 'application/json'})
+        console.log('text', text)
+        console.log('type', typeof text)
+
+        element.href = URL.createObjectURL(blob)
+        element.download = `${file.name}`
+
+        element.click()
+
+        // file.altered = false  // possibly shouldn't be updating this.  saving it via dispatch anyway
+        // dispatch(markFileAsSaved(file))
+        // dispatch(selectFileIdToSave(null))
     }
 
     onDrawLine() {
@@ -505,6 +553,10 @@ class EditMap extends Component {
         // todo - removes from the collections, but not from the map
     }
 
+    updateFileDetails() {
+        console.log('updateFileDetails')
+    }
+
     getMajorIncidents() {
         // todo - move to redux
         //https://stackoverflow.com/questions/43871637/no-access-control-allow-origin-header-is-present-on-the-requested-resource-whe
@@ -543,6 +595,22 @@ class EditMap extends Component {
             console.log('ERROR getting major incidents', err)
             // dispatch(contactFormFailed(err.message));
         });
+    }
+
+    getTrackLength() {
+        const { ui, files } = this.props
+
+        selectedLine = utils.getSelectedLine(ui.selectedLineId, files)
+
+        const coordinates = cloneDeep(selectedLine.geometry.coordinates)
+
+        const distances = []
+        const limit = coordinates.length - 1
+        for (let i = 0; i < limit; i++) {
+            distances.push(getDistanceBetween2Points(coordinates[i], coordinates[i + 1]))
+        }
+
+
     }
 
     autoCorrectTrack() {
@@ -901,6 +969,18 @@ class EditMap extends Component {
         })
     }
 
+    onUpdateFileDetails() {
+        console.log('map - onUpdateFileDetails')
+        // const { dispatch } = this.props
+        // import Constants from '../../common/constants'
+        // console.log('fileDetailsUpdateModal', fileId)
+
+        // set ui
+        // dispatch(selectFile(fileId))
+        this.setState({ modal: Constants.modal.UPDATE_FILE_DETAILS })
+
+    }
+
     render() {
         // console.log('render')
         const { ui, currentLayer, files, dispatch } = this.props
@@ -911,6 +991,8 @@ class EditMap extends Component {
         if (ui.selectedLineId) {
             selectedLine = utils.getSelectedLine(ui.selectedLineId, files)
         }
+        console.log('ui - in render', ui)
+        const { selectedFileIdToSave, selectedFileId } = ui // Whats the difference between these 2?
 
         return (
             <div id="mapwrap">
@@ -924,7 +1006,7 @@ class EditMap extends Component {
                     <AwaitingFunctionality cancelAction={this.onCancelAction} />
                 ) : null}
                 {(modal === 'openTrack') ? (
-                    <LoadTrackModal cancelAction={this.onCancelAction} okAction={this.onOpenFile} />
+                    <LoadFileModal cancelAction={this.onCancelAction} okAction={this.onOpenFile} />
                 ) : null}
                 {(modal === Constants.modal.WAYPOINT) ? (
                     <WaypointModal cancelAction={this.onCancelAction} okAction={this.addWaypoint}
@@ -946,6 +1028,21 @@ class EditMap extends Component {
                     <AddFeatureModal // todo could have a separate one for line and waypoint.
                         cancelAction={this.onCancelAction}
                         okAction={this.addFeature} // line or waypoint
+                    />
+                ) : null}
+                {modal === Constants.modal.ON_SAVE_FILE ? (
+                    <OnSaveFileModal // todo could have a separate one for line and waypoint.
+                        cancelAction={this.onCancelAction}
+                        okAction={this.saveFile}
+                        selectedFileIdToSave = {selectedFileIdToSave}
+                        files= {files}
+                    />
+                ) : null}
+                {modal === Constants.modal.UPDATE_FILE_DETAILS ? (
+                    <FileDetailsUpdateModal // todo could have a separate one for line and waypoint.
+                        cancelAction={this.onCancelAction}
+                        okAction={this.updateFileDetails}
+                        selectedFileId = {selectedFileId} // todo - pass in the fileid to update
                     />
                 ) : null}
 
@@ -978,6 +1075,8 @@ class EditMap extends Component {
                     onSelectFeature={this.onSelectFeature}
                     onRemoveFile={this.onRemoveFile}
                     onRemoveFeature={this.onRemoveFeature}
+                    onSaveFile = {this.onSaveFile}
+                    onUpdateFileDetails={this.onUpdateFileDetails}
                 />
 
                 <div id="mapid"></div>

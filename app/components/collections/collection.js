@@ -4,7 +4,7 @@ import { Icon, Input } from 'semantic-ui-react'
 
 import {DropTarget} from 'react-dnd'
 import Constants from '../../common/constants'
-import ChangeableField from './changeable-field'
+import DoubleClickString from './doubleclick-field'
 
 const collectionTarget = {
     drop(props, monitor) {
@@ -33,20 +33,22 @@ class Collection extends Component {
         }
         // this.handleClick = this.handleClick.bind(this)
         this.renderIcons = this.renderIcons.bind(this)
-        this.onSave = this.onSave.bind(this)
+        this.onSelect = this.onSelect.bind(this)
+        this.onSaveFile = this.onSaveFile.bind(this)
     }
 
-
-
+    /**
+     * 'Save' and 'Open' file icons before the text
+     */
     renderIcons() {
-        const { fileId, altered, onSaveFile, fileName, selectedFileId } = this.props
+        const { fileId, altered, fileName, selectedFileId } = this.props
         const icon = (fileId === selectedFileId) ? 'folder open outline' : 'folder outline'
 
         return (
             <span>
                 {altered ? (
                     <Icon color="blue" size="large" name="save"
-                        onClick={(e) => onSaveFile(fileName, fileId)} />
+                        onClick={(e) => this.onSaveFile(fileId)} />
                     ) : null
                 }
                 <Icon color="blue" size="large" name={icon} />
@@ -54,22 +56,33 @@ class Collection extends Component {
         )
     }
 
-    onSave(newFileName) {
-        const { fileId, fileName, updateFileName } = this.props
+    // /**
+    //  * Change the file name
+    //  * @deprecated
+    //  * @param {*} newFileName
+    //  */
+    onSaveFile() {
+        console.log('collection - onSaveFile')
+        this.props.onSaveFile()
+        // const { fileId, fileName, updateFileName } = this.props
 
-        if (newFileName !== fileName) updateFileName(newFileName, fileId)
+        // if (newFileName !== fileName) updateFileName(newFileName, fileId)
+    }
+    onSelect() {
+        const { onUpdateFileDetails } = this.props
+        console.log('collection - onSelect')
+        onUpdateFileDetails()
     }
 
 
     render() {
-        const {fileId, fileName, selectedFileId} = this.props
-        const { edit } = this.state
+        const { fileName } = this.props
         console.log('fileName ', fileName )
 
         return (
             <span>
                 {this.renderIcons()}
-                <ChangeableField value={fileName} onSave={this.onSave} />
+                <DoubleClickString value={fileName} onSelect={this.onSelect} />
             </span>
         )
     }
@@ -79,11 +92,12 @@ Collection.propTypes = {
     fileId: PropTypes.string,
     fileName: PropTypes.string,
     altered: PropTypes.boolean,
-    selectedFileId: PropTypes.string,
+    // selectedFileId: PropTypes.string,
     onMoveFeature: PropTypes.func,
-    saveFile: PropTypes.func.isRequired,
-    onRemoveFile: PropTypes.func.isRequired,
-    updateFileName: PropTypes.func.isRequired,
+    onSaveFile: PropTypes.func.isRequired, // what to do on save
+    onRemoveFile: PropTypes.func.isRequired, // what to do on remove file
+    // updateFileName: PropTypes.func.isRequired,
+    onUpdateFileDetails: PropTypes.func.isRequired,
 
     // injected by dnd
     connectDropTarget: PropTypes.func.isRequired,

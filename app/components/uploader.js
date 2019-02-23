@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 import PropTypes from 'prop-types'
-const uuidv4 = require('uuid/v4')
+import uuidv4 from 'uuid/v4'
+import utils from '../common/utils'
 
 import { Icon } from 'semantic-ui-react'
 
@@ -73,11 +74,21 @@ class Uploader extends Component {
 
         // read file into memory
         const reader = new FileReader()
-        const filename = uploadedFiles[0].name
-        const fileId = uuidv4() // give file a unique id
+
+        const index = uploadedFiles[0].name.lastIndexOf('.')
+        const filename = uploadedFiles[0].name.substring(0, index)
+        // const type = uploadedFiles[0].name.substring(index + 1)
+        const type = utils.getFileType(uploadedFiles[0].name)
+
+        const fileDetails = {
+            filename,
+            type,
+            fileId: uuidv4(), // give file a unique id
+            altered: false
+        }
 
         reader.onload = (subEvent) => {
-            this.props.onUploaded(subEvent.target.result, filename, fileId)
+            this.props.onUploaded(subEvent.target.result, fileDetails)
         }
         reader.readAsText(uploadedFiles[0])
     }

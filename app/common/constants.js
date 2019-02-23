@@ -6,7 +6,9 @@ const Constants = {
     },
     modal: {
         WAYPOINT: 'WAYPOINT',
-        ON_DRAW: 'ON_DRAW'
+        ON_DRAW: 'ON_DRAW',
+        ON_SAVE_FILE: 'ON_SAVE_FILE',
+        UPDATE_FILE_DETAILS: 'UPDATE_FILE_DETAILS'
     }
 }
 

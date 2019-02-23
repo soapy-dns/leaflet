@@ -62,3 +62,9 @@ export const UNSELECT_LINE = 'ui/UNSELECT_LINE'
 export const unselectLine = () => ({
     type: UNSELECT_LINE
 })
+
+export const SELECT_FILE_ID_TO_SAVE = 'ui/SELECT_FILE_ID_TO_SAVE'
+export const selectFileIdToSave = (selectedFileIdToSave) => ({
+    type: SELECT_FILE_ID_TO_SAVE,
+    selectedFileIdToSave
+})

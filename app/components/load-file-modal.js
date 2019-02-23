@@ -4,7 +4,7 @@ import { Button, Modal } from 'semantic-ui-react'
 
 import Uploader from './uploader'
 
-class LoadTrackModal extends Component {
+class LoadFileModal extends Component {
     constructor (props) {
         super(props)
         this.state = {
@@ -19,11 +19,11 @@ class LoadTrackModal extends Component {
     /*
      performs the ok action on file upload.  No need for submit.  todo - remove submit, or allow changes
      */
-    onUploaded (fileText, filename, fileId) {
+    onUploaded (fileText, fileDetails) {
         console.log('onUploaded')
         this.setState({ uploaded: true })
 
-        this.props.okAction(fileText, filename, fileId)
+        this.props.okAction(fileText, fileDetails)
     }
 
     onChange (event) {
@@ -42,7 +42,7 @@ class LoadTrackModal extends Component {
 
     render () {
         const { cancelAction } = this.props
-        console.log('load-track-modal')
+        console.log('load-file-modal')
         return (
             <Modal size='small' open>
                 <Modal.Header>Upload your track</Modal.Header>
@@ -57,8 +57,8 @@ class LoadTrackModal extends Component {
         )
     }
 }
-LoadTrackModal.propTypes = {
+LoadFileModal.propTypes = {
     okAction: PropTypes.func,
     cancelAction: PropTypes.func,
 }
-export default LoadTrackModal
+export default LoadFileModal

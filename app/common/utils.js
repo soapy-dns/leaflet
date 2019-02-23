@@ -9,6 +9,7 @@ const _ext = (filename) => {
 
 const service = {
     getFileById: (files, fileId) => {
+        console.log('getFileById', fileId, files.length)
         return files.find(it => it.id === fileId)
     },
 

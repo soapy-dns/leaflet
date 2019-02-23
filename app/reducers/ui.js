@@ -7,7 +7,8 @@ import {
     SHOW_DRAWING_MENU,
     SHOW_MAIN_MENU,
     SELECT_LINE,
-    UNSELECT_LINE
+    UNSELECT_LINE,
+    SELECT_FILE_ID_TO_SAVE
 } from '../actions/ui'
 
 const merge = (uiState, thing) => Object.assign({}, uiState, thing)
@@ -51,6 +52,10 @@ export default function (uiState = defaultState, action) {
 
         case UNSELECT_LINE:
             return merge(uiState, {selectedLineId: undefined})
+
+        case SELECT_FILE_ID_TO_SAVE:
+        console.log('action', JSON.stringify(action, null, 4))
+            return merge(uiState, { selectedFileIdToSave: action.selectedFileIdToSave })
 
         default:
             return uiState
