@@ -19,22 +19,17 @@ class FileDetailsUpdate extends Component {
         this.validate = this.validate.bind(this)
 
         this.state = {
-            filename: null,
+            fileName: null,
             fileType: null,
             errors: {}
         }
     }
 
     componentDidMount() {
-        const { selectedFileIdToSave, files } = this.props
-        console.log('FileDetailsUpdate this.props.', this.props)
-        // console.log('selectedFileIdToSave', selectedFileIdToSave)
+        const { selectedFileId, files } = this.props
 
-        // const file = utils.getFileById(files, selectedFileIdToSave)
-        // const fileFullName = file.name
-        // const parts = fileFullName.split('.')
-
-        // this.setState({ fileName: parts[0], fileType: parts[1] }).
+        const file = utils.getFileById(files, selectedFileId)
+        this.setState({ fileName: file.name, fileType: file.type })
     }
 
     onChange(event) {
@@ -43,12 +38,9 @@ class FileDetailsUpdate extends Component {
     }
 
     validate() {
-        console.log('validate')
         const errors = {}
         const { fileName, fileType } = this.state
-        console.log('state-', this.state)
         if (!fileName) errors.fileName = 'Please enter a name for the file'
-        console.log('fileName', fileName, fileName.indexOf('.'))
         if (fileName.indexOf('.') > -1) errors.fileName = 'File name must not include "."'
         if (!['gpx', 'json', 'geojson'].includes(fileType)) errors.fileType = 'Invalid field type'
 
@@ -56,21 +48,19 @@ class FileDetailsUpdate extends Component {
     }
 
     onSubmit(event) {
-        console.log('onSubmit')
         const { fileName, fileType } = this.state
+        const { selectedFileId } = this.props
         event.preventDefault()  // todo - check if still need this
         const errors = this.validate()
-        console.log('validation errors', errors)
 
         const { okAction } = this.props
 
         const formData = {
-            fileFullName: fileName.concat(fileType),
+            fileName: fileName,
+            fileType: fileType
         }
-        // validate
-        console.log('onSubmit - okAction', okAction)
-        console.log('locate errors?', errors)
-        if (isEmpty(errors)) okAction(formData)
+
+        if (isEmpty(errors)) okAction(selectedFileId, formData)
         this.setState({ errors: errors })
     }
 
@@ -108,14 +98,10 @@ class FileDetailsUpdate extends Component {
 
 
 FileDetailsUpdate.propTypes = {
-    // heading: PropTypes.string,
-    // content: PropTypes.string,
     okAction: PropTypes.func,
     cancelAction: PropTypes.func,
-    selectedFileIdToSave: PropTypes.string,
+    selectedFileId: PropTypes.string,
     files: PropTypes.array // TODO - IS THIS TOO MUCH CRAP TO PUSH THRU?
-    // selectedLatitude: PropTypes.number,
-    // selectedLongitude: PropTypes.number
 
 }
 

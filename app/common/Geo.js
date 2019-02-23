@@ -148,12 +148,9 @@ class Geo {
     }
 
     getGeoJsonObject(fileText, fileName, fileType) {
-        let geojson
-        // const fileType = utils.getFileType(fileName)
-        console.log('getGeoJsonObject - fileType', fileType)
-
         if (!fileType) return null
 
+        let geojson
         if (fileType === 'geojson') geojson = JSON.parse(fileText)
 
         if (fileType === 'gpx') {

@@ -7,7 +7,7 @@ import {
     UPDATE_FILE,
     UPDATE_WAYPOINT_POSITION,
     REMOVE_FILE,
-    MARK_FILE_AS_ALTERED
+    TOGGLE_FILE_STATUS
 } from '../actions/files'
 
 
@@ -66,11 +66,11 @@ export default function(fileState = [], action) {
 
             return newState
 
-        case MARK_FILE_AS_ALTERED:
+        case TOGGLE_FILE_STATUS:
             newState = Object.assign([], fileState)
 
             foundFile = _getMatchingFile(newState, action.fileId)
-            foundFile.altered = true
+            foundFile.altered = foundFile.altered ? !foundFile.altered : foundFile.altered // if no altered status assuming it is unaltered
 
             return newState
 

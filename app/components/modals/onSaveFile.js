@@ -30,8 +30,6 @@ class OnSaveFileModal extends Component {
         console.log('onSaveFile - selectedFileIdToSave', selectedFileIdToSave)
 
         const file = utils.getFileById(files, selectedFileIdToSave)
-        const fileFullName = file.name
-        const parts = fileFullName.split('.')
 
         this.setState({ fileName: parts[0], fileType: parts[1] })
     }

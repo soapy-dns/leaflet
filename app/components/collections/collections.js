@@ -8,7 +8,7 @@ import {cloneDeep, has, isEmpty} from 'lodash'
 import Feature from './feature'
 import Collection from './collection'
 import {selectFile, toggleFileSlider} from '../../actions/ui'
-import { updateFile, updateFiles, markFileAsSaved}  from '../../actions/files'
+import { updateFile, updateFiles, toggleFileStatus}  from '../../actions/files'
 // import utils from '../../common/utils'
 import Constants from '../../common/constants'
 

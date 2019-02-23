@@ -59,6 +59,6 @@ class LoadFileModal extends Component {
 }
 LoadFileModal.propTypes = {
     okAction: PropTypes.func,
-    cancelAction: PropTypes.func,
+    cancelAction: PropTypes.func
 }
 export default LoadFileModal

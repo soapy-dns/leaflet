@@ -35,7 +35,7 @@ import {
     addFeatureToFile,
     updateFile,
     removeFileFromStore,
-    markFileAsSaved
+    toggleFileStatus
 } from '../actions/files'
 import { saveMapDetails } from '../actions/current'
 import {
@@ -217,6 +217,7 @@ class EditMap extends Component {
         this.onSaveFile = this.onSaveFile.bind(this)
         this.saveFile = this.saveFile.bind(this)
         this.onUpdateFileDetails = this.onUpdateFileDetails.bind(this)
+        this.updateFileDetails = this.updateFileDetails.bind(this)
 
         this.state = {
             locate: false,
@@ -441,7 +442,7 @@ class EditMap extends Component {
      */
     onOpenFile(fileText, fileDetails) {
         const { dispatch, ui } = this.props
-        console.log('fileDetails', fileDetails)
+        // console.log('fileDetails', fileDetails)
         // console.log('features', geo.getGeoJsonObject(fileText, fileDetails.filename, fileDetails.type))
 
         // build file - todo - put in an _ext object
@@ -469,10 +470,12 @@ class EditMap extends Component {
     }
 
     onSaveFile(fileId) {
-        console.log('maps - onSaveFile')
+        console.log('maps - onSaveFile', fileId)
         const { dispatch } = this.props
-        this.setState({modal: Constants.modal.ON_SAVE_FILE})
-        dispatch(selectFileIdToSave(fileId))
+
+        if (confirm('Are you sure?')) {
+            this.saveFile(fileId)
+        }
     }
 
     /**
@@ -482,9 +485,8 @@ class EditMap extends Component {
      * @param {*} fileName
      * @param {*} fileId
      */
-    saveFile() { // TODO - I could just call it with the fileId and reduce the need for the dispatch(selectFileIdToSave(fileId))
+    saveFile(selectedFileIdToSave) { // TODO - I could just call it with the fileId and reduce the need for the dispatch(selectFileIdToSave(fileId))
         const { files, ui, dispatch } = this.props
-        const { selectedFileIdToSave } = ui
         const element = document.createElement("a")
         const file = utils.getFileById(files, selectedFileIdToSave)
         const text = toGpx(file.featureCollection) // todo - garmen didn't like the waypoints
@@ -492,17 +494,17 @@ class EditMap extends Component {
 
         // const text = JSON.stringify(file.featureCollection)
         // const blob = new Blob([text], {type: 'application/json'})
-        console.log('text', text)
-        console.log('type', typeof text)
+        // console.log('text', text)
+        // console.log('type', typeof text)
 
         element.href = URL.createObjectURL(blob)
         element.download = `${file.name}`
 
         element.click()
 
-        // file.altered = false  // possibly shouldn't be updating this.  saving it via dispatch anyway
-        // dispatch(markFileAsSaved(file))
-        // dispatch(selectFileIdToSave(null))
+        // set file status to saved (ie no longer altered)
+        console.log('set file status to saved')
+        dispatch(toggleFileStatus(selectedFileIdToSave))
     }
 
     onDrawLine() {
@@ -553,8 +555,16 @@ class EditMap extends Component {
         // todo - removes from the collections, but not from the map
     }
 
-    updateFileDetails() {
-        console.log('updateFileDetails')
+    updateFileDetails(fileId, formData) {
+        console.log('updateFileDetails', formData, fileId)
+        const { files, dispatch } = this.props
+        const file = utils.getFileById(files, fileId)
+        console.log('updateFileDetails file found', file)
+        file.name = formData.fileName
+        file.type = formData.fileType
+
+        dispatch(updateFile(file))
+        this.setState({ modal: null })
     }
 
     getMajorIncidents() {
@@ -970,15 +980,7 @@ class EditMap extends Component {
     }
 
     onUpdateFileDetails() {
-        console.log('map - onUpdateFileDetails')
-        // const { dispatch } = this.props
-        // import Constants from '../../common/constants'
-        // console.log('fileDetailsUpdateModal', fileId)
-
-        // set ui
-        // dispatch(selectFile(fileId))
         this.setState({ modal: Constants.modal.UPDATE_FILE_DETAILS })
-
     }
 
     render() {
@@ -991,7 +993,6 @@ class EditMap extends Component {
         if (ui.selectedLineId) {
             selectedLine = utils.getSelectedLine(ui.selectedLineId, files)
         }
-        console.log('ui - in render', ui)
         const { selectedFileIdToSave, selectedFileId } = ui // Whats the difference between these 2?
 
         return (
@@ -1030,19 +1031,20 @@ class EditMap extends Component {
                         okAction={this.addFeature} // line or waypoint
                     />
                 ) : null}
-                {modal === Constants.modal.ON_SAVE_FILE ? (
+                {/* {modal === Constants.modal.ON_SAVE_FILE ? (
                     <OnSaveFileModal // todo could have a separate one for line and waypoint.
                         cancelAction={this.onCancelAction}
                         okAction={this.saveFile}
                         selectedFileIdToSave = {selectedFileIdToSave}
                         files= {files}
                     />
-                ) : null}
+                ) : null} */}
                 {modal === Constants.modal.UPDATE_FILE_DETAILS ? (
                     <FileDetailsUpdateModal // todo could have a separate one for line and waypoint.
                         cancelAction={this.onCancelAction}
                         okAction={this.updateFileDetails}
                         selectedFileId = {selectedFileId} // todo - pass in the fileid to update
+                        files={files}
                     />
                 ) : null}
 

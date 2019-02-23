@@ -62,11 +62,8 @@ class Collection extends Component {
     //  * @param {*} newFileName
     //  */
     onSaveFile() {
-        console.log('collection - onSaveFile')
-        this.props.onSaveFile()
-        // const { fileId, fileName, updateFileName } = this.props
-
-        // if (newFileName !== fileName) updateFileName(newFileName, fileId)
+        const { fileId, onSaveFile } = this.props
+        onSaveFile(fileId)
     }
     onSelect() {
         const { onUpdateFileDetails } = this.props

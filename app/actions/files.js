@@ -44,9 +44,9 @@ export const updateFile = (file) => ({
     file
 })
 
-export const MARK_FILE_AS_ALTERED = 'file/MARK_FILE_AS_ALTERED'
-export const markFileAsAltered = (fileId) => ({
-    type: UPDATE_FILE,
+export const TOGGLE_FILE_STATUS = 'file/TOGGLE_FILE_STATUS'
+export const toggleFileStatus = (fileId) => ({
+    type: TOGGLE_FILE_STATUS,
     fileId
 })
 
@@ -58,12 +58,6 @@ export const removeFileFromStore = (fileId) => {
         fileId
     }
 }
-
-export const MARK_FILE_AS_SAVED = 'file/MARK_FILE_AS_SAVED'
-export const markFileAsSaved = file => ({
-    type: MARK_FILE_AS_SAVED,
-    collection: file
-})
 
 // TODO - wip
 export const UPDATE_WAYPOINT_POSITION = 'file/UPDATE_WAYPOINT_POSITION'
